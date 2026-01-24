@@ -10,3 +10,4 @@ vless://fd20cc20-5a4f-426d-91cf-58c7ac95c8d6@netherlands3.digitalcity2.fun:14776
 vless://9ca5c4ce-0d2f-40f4-8994-42d3412714d9@arv66.digitalcity21.info:443?type=tcp&security=none&headerType=http&path=/&host=speedtest.net#Arv66-51024
 vless://ada0e014-397a-4e59-b90b-f970e74a458b@turkey.digitalcity1.com:34567?type=tcp&security=none&headerType=http&path=/&host=speedtest.net#Trukey-22809
 vless://cb98c3b9-3cd9-4d1f-a0e1-a6d93ccaefb0@netherlands.fastosos.com:29017?type=tcp&security=none&headerType=http&path=/&host=speedtest.net#Netherlands-82285
+vless://f6022f37-b40b-4489-abfb-5287fdc4d0a3@185.78.76.253:443?encryption=none&security=tls&sni=shryrr.sh-snt6930.workers.dev&fp=chrome&type=ws&host=shryrr.sh-snt6930.workers.dev&path=/?ed=2048#DE-%2525E9%2525A2%252591%2525E9%252581%252593%252540kejiland00-443-WS-TLS
