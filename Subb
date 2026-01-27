@@ -155,3 +155,7 @@ vless://29e49ac1-72f2-470d-b70b-00060404bc2c@160.153.168.122:2096?encryption=non
 vless://ea1dc99b-4adc-4485-852e-f21483bf8beb@188.114.98.0:443?path=%2F35.78.229.176%3A443&security=tls&encryption=none&host=delta090.qzz.io&type=ws&sni=delta090.qzz.io#%5B%F0%9F%9A%80%5D
 vless://22e7f0d3-8d3b-40c7-a1c5-8a912f6a16b3@8.6.112.0:443?security=tls&allowInsecure=0&encryption=none&type=ws&host=cdn.55994421.xyz&path=/memo&sni=cdn.55994421.xyz&fragment=50-100,10-20,tlshello#
 vless://e65da911-ce94-46b8-b6bd-e2dd4d8f4751@104.17.74.206:443?path=%2F211.48.77.114%3A12312&security=tls&encryption=none&insecure=1&host=delta090.qzz.io&fp=chrome&type=ws&allowInsecure=1&sni=delta090.qzz.io#%2540Spotify_Porteghali%25204713
+vless://a3c39b04-68cc-4211-8de8-b4e70e766dce@sd1vhwfe.bgpmap.xyz:22176?encryption=none&security=none&alpn=http%2F1.1&type=tcp&headerType=http&path=/&host=bale.ai,web.igap.net,igap.net#🇺🇸 sd1VhWfE Dakheli (Domain)
+vless://a3c39b04-68cc-4211-8de8-b4e70e766dce@195.190.144.21:22176?encryption=none&security=none&alpn=http%2F1.1&type=tcp&headerType=http&path=/&host=bale.ai,soroushplus.com,web.igap.net#🇺🇸 sd1VhWfE Dakheli (IP)
+vless://a3c39b04-68cc-4211-8de8-b4e70e766dce@94.184.25.121:51503?encryption=none&security=none&alpn=http%2F1.1&type=tcp&headerType=http&path=/&host=bale.ai,soroushplus.com,web.splus.ir#🇺🇸 sd1VhWfE Backup (Domain)
+vless://a3c39b04-68cc-4211-8de8-b4e70e766dce@94.184.25.121:51503?encryption=none&security=none&alpn=http%2F1.1&type=tcp&headerType=http&path=/&host=bale.ai,igap.net,soroushplus.com#🇺🇸 sd1VhWfE Backup (IP)
