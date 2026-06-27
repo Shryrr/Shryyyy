@@ -48,16 +48,28 @@ function createAppHeader(): HTMLElement {
 }
 
 async function bootstrap(): Promise<void> {
+  console.log('[boot] starting');
   initThemeWatcher();
   initOnlineWatcher();
+  console.log('[boot] watchers initialized');
 
-  if (await db.isDatabaseEmpty()) {
+  const empty = await db.isDatabaseEmpty();
+  console.log('[boot] isDatabaseEmpty:', empty);
+  if (empty) {
+    console.log('[boot] seeding database...');
     await seedDatabase();
+    console.log('[boot] seeding complete');
   }
+
+  console.log('[boot] refreshing store...');
   await refreshAll();
+  console.log('[boot] store refreshed');
 
   const app = document.getElementById('app');
-  if (!app) return;
+  if (!app) {
+    console.error('[boot] #app element not found, aborting');
+    return;
+  }
   app.innerHTML = '';
 
   const main = el('main', { class: 'app-main' });
@@ -76,6 +88,22 @@ async function bootstrap(): Promise<void> {
   ]);
 
   startRouter(main);
+  console.log('[boot] router started, app ready');
+}
+
+function showBootError(error: unknown): void {
+  console.error('[boot] bootstrap failed:', error);
+  const app = document.getElementById('app');
+  if (!app) return;
+  const message = error instanceof Error ? error.message : String(error);
+  app.innerHTML = '';
+  app.append(
+    el('div', { class: 'boot-splash boot-splash--error', role: 'alert' }, [
+      el('div', { class: 'boot-logo' }, ['⚠️']),
+      el('p', {}, ['خطا در بارگذاری برنامه']),
+      el('p', { style: 'font-size: 12px; opacity: 0.7; direction: ltr;' }, [message]),
+    ]),
+  );
 }
 
 function watchForUpdates(registration: ServiceWorkerRegistration): void {
@@ -112,7 +140,7 @@ function watchForUpdates(registration: ServiceWorkerRegistration): void {
   });
 }
 
-bootstrap();
+bootstrap().catch(showBootError);
 
 // Attached synchronously at script-evaluation time, not inside bootstrap(): bootstrap()
 // awaits DB seeding before it would reach this point, and on a fresh install that can
