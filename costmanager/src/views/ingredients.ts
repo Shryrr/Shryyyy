@@ -1,5 +1,5 @@
 import * as db from '../db';
-import { hasRole } from '../auth';
+import { hasFullAccess, hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { emptyState, el, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
@@ -237,7 +237,7 @@ async function handleDelete(ingredient: Ingredient): Promise<void> {
 function renderIngredientCard(ingredient: Ingredient): HTMLElement {
   const pct = ingredient.maxStock > 0 ? Math.min(100, Math.max(0, (ingredient.currentStock / ingredient.maxStock) * 100)) : 0;
   const status = ingredient.currentStock <= ingredient.minStock ? 'low' : ingredient.currentStock >= ingredient.maxStock ? 'full' : 'ok';
-  const canEdit = hasRole('admin');
+  const canEdit = hasFullAccess() || hasRole('warehouse');
 
   return el('div', { class: 'ingredient-card' }, [
     el('div', { class: 'ingredient-card__main' }, [
@@ -282,7 +282,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['انبار مواد اولیه']),
-      hasRole('admin')
+      hasFullAccess() || hasRole('warehouse')
         ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openIngredientFormModal() }, ['+ افزودن ماده اولیه'])
         : null,
     ]),
@@ -321,8 +321,8 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
           icon: '📦',
           title: all.length ? 'نتیجه‌ای یافت نشد' : 'هنوز مواد اولیه‌ای ثبت نشده است',
           message: all.length ? 'فیلترها را تغییر دهید.' : 'اولین ماده اولیه را اضافه کنید.',
-          ctaLabel: all.length || !hasRole('admin') ? undefined : 'افزودن ماده اولیه',
-          onCta: all.length || !hasRole('admin') ? undefined : () => openIngredientFormModal(),
+          ctaLabel: all.length || !(hasFullAccess() || hasRole('warehouse')) ? undefined : 'افزودن ماده اولیه',
+          onCta: all.length || !(hasFullAccess() || hasRole('warehouse')) ? undefined : () => openIngredientFormModal(),
         }),
       );
       return;

@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  AppUser, AuthConfig, BulkSaleBreakdownEntry, Employee, Expense, FullBackup, Ingredient, MenuItem, PurchaseRecord,
-  Sale, Settings, ShoppingListItem, SubscriptionPlan, UserRole,
+  AppUser, AuthConfig, BulkSaleBreakdownEntry, Employee, Expense, FullBackup, Ingredient, MenuItem, PaidSubscriptionPlan,
+  PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SubscriptionPlan, UserRole,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 
@@ -24,16 +24,17 @@ interface Schema extends DBSchema {
 type StoreName = 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const MAX_PURCHASE_HISTORY = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const UNLIMITED_EXPIRY = '2099-12-31T00:00:00.000Z';
 
 let dbPromise: Promise<IDBPDatabase<Schema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<Schema>> {
   if (!dbPromise) {
     dbPromise = openDB<Schema>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
+      upgrade(db, oldVersion, _newVersion, transaction) {
         if (oldVersion < 1) {
           const ingredients = db.createObjectStore('ingredients', { keyPath: 'id' });
           ingredients.createIndex('byCategory', 'category');
@@ -55,6 +56,30 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
         }
         if (oldVersion < 2) {
           db.createObjectStore('auth', { keyPath: 'id' });
+        }
+        if (oldVersion > 0 && oldVersion < 3) {
+          // Migrate the old 3-role system (admin/buyer/viewer) to the new 4-role system
+          // (superadmin/manager/warehouse/buyer): the first 'admin' becomes the sole superadmin,
+          // any further 'admin' or 'viewer' users fall back to 'manager' (closest full-access role).
+          const authStore = transaction.objectStore('auth');
+          type LegacyUser = Omit<AppUser, 'role'> & { role: string };
+          authStore.get('auth').then((config) => {
+            if (!config) return;
+            let superadminAssigned = false;
+            const users: AppUser[] = (config.users as LegacyUser[]).map((u): AppUser => {
+              const createdAt = u.createdAt ?? nowISO();
+              if (u.role === 'admin') {
+                if (!superadminAssigned) {
+                  superadminAssigned = true;
+                  return { ...u, role: 'superadmin', subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY, createdAt };
+                }
+                return { ...u, role: 'manager', createdAt };
+              }
+              if (u.role === 'viewer') return { ...u, role: 'manager', createdAt };
+              return { ...u, role: u.role as UserRole, createdAt };
+            });
+            authStore.put({ id: 'auth', isSetup: config.isSetup, users });
+          });
         }
       },
     });
@@ -379,6 +404,7 @@ export interface RecordSaleInput {
   quantity: number;
   date: string;
   note?: string;
+  source?: SaleSource;
 }
 
 export async function recordSale(input: RecordSaleInput): Promise<Sale> {
@@ -398,6 +424,7 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
     unitSalePrice: menuItem.salePrice,
     unitCost,
     note: input.note,
+    source: input.source ?? 'manual',
   };
 
   const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
@@ -413,6 +440,57 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
   }
   await tx.done;
   await regenerateShoppingList();
+  return sale;
+}
+
+export interface RecordImportedSaleInput {
+  menuItemId: string;
+  quantity: number;
+  unitSalePrice: number;
+  date: string;
+  source: 'cashier' | 'snappfood';
+  note?: string;
+  snappfood?: { grossSales: number; discount: number; commission: number; netReceived: number };
+}
+
+/**
+ * Like recordSale, but for Excel-imported rows (POS cashier / Snappfood): the sale's unit price
+ * comes from the imported row (which may differ from the menu item's current catalog price), and
+ * the shopping list is NOT regenerated per-row — the caller regenerates once after the whole batch.
+ */
+export async function recordImportedSale(input: RecordImportedSaleInput): Promise<Sale> {
+  const db = await getDB();
+  const menuItem = await db.get('menu_items', input.menuItemId);
+  if (!menuItem) throw new Error('menu item not found');
+  const ingredients = await db.getAll('ingredients');
+  const ingredientsById = new Map(ingredients.map((i) => [i.id, i]));
+  const unitCost = recipeCost(menuItem.recipe, ingredientsById);
+
+  const sale: Sale = {
+    id: uuid(),
+    date: input.date,
+    menuItemId: menuItem.id,
+    menuItemName: menuItem.name,
+    quantity: input.quantity,
+    unitSalePrice: input.unitSalePrice,
+    unitCost,
+    note: input.note,
+    source: input.source,
+    snappfood: input.snappfood,
+  };
+
+  const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
+  await tx.objectStore('sales').put(sale);
+  for (const ri of menuItem.recipe) {
+    const ingredient = ingredientsById.get(ri.ingredientId);
+    if (!ingredient) continue;
+    await tx.objectStore('ingredients').put({
+      ...ingredient,
+      currentStock: ingredient.currentStock - ri.quantity * input.quantity,
+      updatedAt: nowISO(),
+    });
+  }
+  await tx.done;
   return sale;
 }
 
@@ -495,6 +573,7 @@ export async function recordBulkSale(input: RecordBulkSaleInput): Promise<Sale> 
     unitSalePrice: input.totalRevenue,
     unitCost: totalEstimatedCost,
     type: 'bulk',
+    source: 'bulk',
     estimatedBreakdown: breakdown,
     ingredientDeltas: Array.from(ingredientDeltas.entries()).map(([ingredientId, quantity]) => ({ ingredientId, quantity })),
   };
@@ -615,14 +694,22 @@ const DEFAULT_SETTINGS: Settings = {
   currency: 'toman',
   targetFoodCostPercent: 30,
   theme: 'auto',
+  subscriptionPrices: { '1m': 0, '3m': 0, '6m': 0, '12m': 0 },
 };
 
 export async function getSettings(): Promise<Settings> {
   const db = await getDB();
   const settings = await db.get('settings', 'global');
-  if (settings) return settings;
-  await db.put('settings', DEFAULT_SETTINGS);
-  return DEFAULT_SETTINGS;
+  if (!settings) {
+    await db.put('settings', DEFAULT_SETTINGS);
+    return DEFAULT_SETTINGS;
+  }
+  if (!settings.subscriptionPrices) {
+    const patched: Settings = { ...settings, subscriptionPrices: DEFAULT_SETTINGS.subscriptionPrices };
+    await db.put('settings', patched);
+    return patched;
+  }
+  return settings;
 }
 
 export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Promise<Settings> {
@@ -635,8 +722,7 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Prom
 
 // ---------- Auth ----------
 
-const DEFAULT_ADMIN_PIN = '1234';
-const PLAN_MONTHS: Record<SubscriptionPlan, number> = { '1m': 1, '3m': 3, '6m': 6, '12m': 12 };
+const PLAN_MONTHS: Record<PaidSubscriptionPlan, number> = { '1m': 1, '3m': 3, '6m': 6, '12m': 12 };
 
 function addMonthsISO(iso: string, months: number): string {
   const d = new Date(iso);
@@ -644,31 +730,45 @@ function addMonthsISO(iso: string, months: number): string {
   return d.toISOString();
 }
 
+function planExpiryISO(plan: SubscriptionPlan, fromISO: string = nowISO()): string {
+  if (plan === 'unlimited') return UNLIMITED_EXPIRY;
+  return addMonthsISO(fromISO, PLAN_MONTHS[plan]);
+}
+
 export async function getAuthConfig(): Promise<AuthConfig> {
   const db = await getDB();
   const config = await db.get('auth', 'auth');
   if (config) return config;
-  const fresh: AuthConfig = { id: 'auth', adminPin: DEFAULT_ADMIN_PIN, isSetup: false, users: [] };
+  const fresh: AuthConfig = { id: 'auth', isSetup: false, users: [] };
   await db.put('auth', fresh);
   return fresh;
 }
 
-/** First-launch setup wizard: sets the admin PIN and creates the initial admin user record. */
-export async function completeAuthSetup(adminPin: string): Promise<AuthConfig> {
+export async function hasSuperadmin(): Promise<boolean> {
+  const config = await getAuthConfig();
+  return config.users.some((u) => u.role === 'superadmin');
+}
+
+/** First-launch setup wizard: creates the single superadmin user with an unlimited plan. */
+export async function createSuperadmin(name: string, pin: string): Promise<AppUser> {
   const db = await getDB();
   const config = await getAuthConfig();
-  const adminUser: AppUser = {
+  if (config.users.some((u) => u.role === 'superadmin')) {
+    throw new Error('مدیر اصلی سیستم از قبل تعریف شده است');
+  }
+  const user: AppUser = {
     id: uuid(),
-    name: 'مدیر',
-    pin: adminPin,
-    role: 'admin',
-    subscriptionPlan: '12m',
-    subscriptionExpiry: addMonthsISO(nowISO(), 12),
+    name,
+    pin,
+    role: 'superadmin',
     isActive: true,
+    subscriptionPlan: 'unlimited',
+    subscriptionExpiry: UNLIMITED_EXPIRY,
+    createdAt: nowISO(),
   };
-  const updated: AuthConfig = { ...config, adminPin, isSetup: true, users: [adminUser] };
+  const updated: AuthConfig = { ...config, isSetup: true, users: [...config.users, user] };
   await db.put('auth', updated);
-  return updated;
+  return user;
 }
 
 export async function findUserByPin(pin: string): Promise<AppUser | undefined> {
@@ -681,14 +781,31 @@ export async function getUser(id: string): Promise<AppUser | undefined> {
   return config.users.find((u) => u.id === id);
 }
 
+export async function listUsers(): Promise<AppUser[]> {
+  const config = await getAuthConfig();
+  return config.users;
+}
+
+export async function recordLogin(id: string): Promise<void> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.id === id);
+  if (idx === -1) return;
+  const users = [...config.users];
+  users[idx] = { ...users[idx], lastLogin: nowISO() };
+  await db.put('auth', { ...config, users });
+}
+
 export interface NewUserInput {
   name: string;
   pin: string;
   role: UserRole;
   subscriptionPlan: SubscriptionPlan;
+  subscriptionPricesPaid?: number;
 }
 
 export async function createUser(input: NewUserInput): Promise<AppUser> {
+  if (input.role === 'superadmin') throw new Error('امکان ایجاد مدیر اصلی دوم وجود ندارد');
   const db = await getDB();
   const config = await getAuthConfig();
   const user: AppUser = {
@@ -696,9 +813,11 @@ export async function createUser(input: NewUserInput): Promise<AppUser> {
     name: input.name,
     pin: input.pin,
     role: input.role,
-    subscriptionPlan: input.subscriptionPlan,
-    subscriptionExpiry: addMonthsISO(nowISO(), PLAN_MONTHS[input.subscriptionPlan]),
     isActive: true,
+    subscriptionPlan: input.subscriptionPlan,
+    subscriptionExpiry: planExpiryISO(input.subscriptionPlan),
+    subscriptionPricesPaid: input.subscriptionPricesPaid,
+    createdAt: nowISO(),
   };
   await db.put('auth', { ...config, users: [...config.users, user] });
   return user;
@@ -709,27 +828,45 @@ export async function updateUser(id: string, patch: Partial<Omit<AppUser, 'id'>>
   const config = await getAuthConfig();
   const idx = config.users.findIndex((u) => u.id === id);
   if (idx === -1) throw new Error('user not found');
-  const updated: AppUser = { ...config.users[idx], ...patch };
+  const existing = config.users[idx];
+  if (existing.role === 'superadmin') {
+    if (patch.role && patch.role !== 'superadmin') throw new Error('نقش مدیر اصلی قابل تغییر نیست');
+    if (patch.isActive === false) throw new Error('مدیر اصلی قابل غیرفعال‌سازی نیست');
+  } else if (patch.role === 'superadmin') {
+    throw new Error('امکان تغییر نقش به مدیر اصلی وجود ندارد');
+  }
+  const updated: AppUser = { ...existing, ...patch };
   const users = [...config.users];
   users[idx] = updated;
-  const nextConfig: AuthConfig = { ...config, users };
-  if (updated.role === 'admin' && patch.pin) nextConfig.adminPin = patch.pin;
-  await db.put('auth', nextConfig);
+  await db.put('auth', { ...config, users });
   return updated;
 }
 
 export async function deleteUser(id: string): Promise<void> {
   const db = await getDB();
   const config = await getAuthConfig();
+  const target = config.users.find((u) => u.id === id);
+  if (target?.role === 'superadmin') throw new Error('مدیر اصلی قابل حذف نیست');
   await db.put('auth', { ...config, users: config.users.filter((u) => u.id !== id) });
 }
 
-export async function changeAdminPin(newPin: string): Promise<AuthConfig> {
+/** Overwrites the entire user list, used by cloud sync to mirror cross-device user management. */
+export async function replaceAuthUsers(users: AppUser[]): Promise<void> {
   const db = await getDB();
   const config = await getAuthConfig();
-  const users = config.users.map((u) => (u.role === 'admin' ? { ...u, pin: newPin } : u));
-  const updated: AuthConfig = { ...config, adminPin: newPin, users };
-  await db.put('auth', updated);
+  await db.put('auth', { ...config, isSetup: true, users });
+}
+
+export async function changeSuperadminPin(currentPin: string, newPin: string): Promise<AppUser> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.role === 'superadmin');
+  if (idx === -1) throw new Error('مدیر اصلی یافت نشد');
+  if (config.users[idx].pin !== currentPin) throw new Error('پین فعلی نادرست است');
+  const updated: AppUser = { ...config.users[idx], pin: newPin };
+  const users = [...config.users];
+  users[idx] = updated;
+  await db.put('auth', { ...config, users });
   return updated;
 }
 
@@ -740,11 +877,19 @@ export async function extendSubscription(id: string, months: number, plan?: Subs
   const idx = config.users.findIndex((u) => u.id === id);
   if (idx === -1) throw new Error('user not found');
   const user = config.users[idx];
-  const base = new Date(user.subscriptionExpiry).getTime() > Date.now() ? user.subscriptionExpiry : nowISO();
+  if (plan === 'unlimited') {
+    const updated: AppUser = { ...user, subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY };
+    const users = [...config.users];
+    users[idx] = updated;
+    await db.put('auth', { ...config, users });
+    return updated;
+  }
+  const stillActive = user.subscriptionPlan !== 'unlimited' && new Date(user.subscriptionExpiry).getTime() > Date.now();
+  const base = stillActive ? user.subscriptionExpiry : nowISO();
   const updated: AppUser = {
     ...user,
     subscriptionExpiry: addMonthsISO(base, months),
-    subscriptionPlan: plan ?? user.subscriptionPlan,
+    subscriptionPlan: plan ?? (user.subscriptionPlan === 'unlimited' ? '12m' : user.subscriptionPlan),
   };
   const users = [...config.users];
   users[idx] = updated;

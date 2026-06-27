@@ -73,6 +73,7 @@ export interface Employee {
 }
 
 export type SaleType = 'itemized' | 'bulk';
+export type SaleSource = 'manual' | 'cashier' | 'snappfood' | 'bulk';
 
 export interface BulkSaleBreakdownEntry {
   menuItemId: string;
@@ -102,6 +103,15 @@ export interface Sale {
   estimatedBreakdown?: BulkSaleBreakdownEntry[];
   /** Only present on bulk sales: exact ingredient amounts deducted, for accurate deleteSale reversal. */
   ingredientDeltas?: IngredientDelta[];
+  /** Absent on legacy records means 'manual' (or 'bulk' when type === 'bulk') — used for accounting's by-source breakdown. */
+  source?: SaleSource;
+  /** Snappfood-specific revenue breakdown, only present when source === 'snappfood'. */
+  snappfood?: {
+    grossSales: number;
+    discount: number;
+    commission: number;
+    netReceived: number;
+  };
 }
 
 export interface ShoppingListItem {
@@ -122,22 +132,25 @@ export interface ShoppingListItem {
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
-export type UserRole = 'admin' | 'buyer' | 'viewer';
-export type SubscriptionPlan = '1m' | '3m' | '6m' | '12m';
+export type UserRole = 'superadmin' | 'manager' | 'warehouse' | 'buyer';
+export type SubscriptionPlan = '1m' | '3m' | '6m' | '12m' | 'unlimited';
+export type PaidSubscriptionPlan = '1m' | '3m' | '6m' | '12m';
 
 export interface AppUser {
   id: string;
   name: string;
   pin: string;
   role: UserRole;
-  subscriptionExpiry: string;
-  subscriptionPlan: SubscriptionPlan;
   isActive: boolean;
+  subscriptionPlan: SubscriptionPlan;
+  subscriptionExpiry: string;
+  subscriptionPricesPaid?: number;
+  createdAt: string;
+  lastLogin?: string;
 }
 
 export interface AuthConfig {
   id: 'auth';
-  adminPin: string;
   isSetup: boolean;
   users: AppUser[];
 }
@@ -150,8 +163,11 @@ export interface Settings {
   targetFoodCostPercent: number;
   theme: Theme;
   lastBackup?: string;
-  subscriptionPrices?: Record<SubscriptionPlan, number>;
+  subscriptionPrices: Record<PaidSubscriptionPlan, number>;
   notificationsEnabled?: boolean;
+  githubToken?: string;
+  gistId?: string;
+  lastSyncAt?: string;
 }
 
 export interface FullBackup {

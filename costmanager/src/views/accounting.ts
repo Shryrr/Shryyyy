@@ -1,6 +1,6 @@
 import { destroyChart, palette, renderChart } from '../components/chart';
-import { el, selectEl } from '../utils/dom';
-import { formatDateShort, formatMoney, formatPct } from '../utils/format';
+import { el, emptyState, selectEl } from '../utils/dom';
+import { formatDateShort, formatMoney, formatPct, toPersian } from '../utils/format';
 import { downloadCSV, downloadJSON } from '../utils/export';
 import type { RouteCleanup } from '../router';
 import { employees, expenses, sales } from '../store';
@@ -13,6 +13,7 @@ import {
   salesInPeriod,
   type PeriodPL,
 } from '../utils/calc';
+import type { Sale, SaleSource } from '../types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -46,6 +47,99 @@ function plStatement(pl: PeriodPL, periodLabel: string): HTMLElement {
   ]);
 }
 
+const SOURCE_LABELS: Record<SaleSource, string> = {
+  manual: 'ثبت دستی',
+  cashier: 'صندوق فروش',
+  snappfood: 'اسنپ‌فود',
+  bulk: 'فروش کلی (تخمینی)',
+};
+
+const SOURCE_COLORS: Record<SaleSource, string> = {
+  manual: palette.primary,
+  cashier: palette.mint,
+  snappfood: palette.coral,
+  bulk: palette.amber,
+};
+
+function effectiveSource(s: Sale): SaleSource {
+  return s.source ?? (s.type === 'bulk' ? 'bulk' : 'manual');
+}
+
+interface SourceBreakdownEntry {
+  source: SaleSource;
+  count: number;
+  revenue: number;
+  cogs: number;
+}
+
+function bySourceBreakdown(periodSales: Sale[]): SourceBreakdownEntry[] {
+  const map = new Map<SaleSource, SourceBreakdownEntry>();
+  for (const s of periodSales) {
+    const source = effectiveSource(s);
+    const entry = map.get(source) ?? { source, count: 0, revenue: 0, cogs: 0 };
+    entry.count += 1;
+    entry.revenue += s.unitSalePrice * s.quantity;
+    entry.cogs += s.unitCost * s.quantity;
+    map.set(source, entry);
+  }
+  return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
+}
+
+function sourceBreakdownRow(label: string, count: string, revenue: string, cogs: string, profit: string, opts?: { strong?: boolean }): HTMLElement {
+  return el('div', { class: `source-breakdown-row${opts?.strong ? ' source-breakdown-row--strong' : ''}` }, [
+    el('span', { class: 'source-breakdown-row__name' }, [label]),
+    el('span', {}, [count]),
+    el('span', {}, [revenue]),
+    el('span', {}, [cogs]),
+    el('span', {}, [profit]),
+  ]);
+}
+
+function sourceBreakdownPanel(rows: SourceBreakdownEntry[], canvas: HTMLCanvasElement): HTMLElement {
+  if (!rows.length) {
+    return el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['گزارش تفکیک فروش بر اساس منبع']),
+      emptyState({ icon: '📊', title: 'فروشی در این دوره ثبت نشده است' }),
+    ]);
+  }
+
+  const totalCount = rows.reduce((s, r) => s + r.count, 0);
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  const totalCogs = rows.reduce((s, r) => s + r.cogs, 0);
+
+  const table = el('div', { class: 'source-breakdown-table' }, [
+    sourceBreakdownRow('منبع', 'تعداد', 'فروش', 'بهای تمام‌شده', 'سود'),
+    ...rows.map((r) =>
+      sourceBreakdownRow(SOURCE_LABELS[r.source], toPersian(r.count), formatMoney(r.revenue), formatMoney(r.cogs), formatMoney(r.revenue - r.cogs)),
+    ),
+    sourceBreakdownRow(
+      'مجموع',
+      toPersian(totalCount),
+      formatMoney(totalRevenue),
+      formatMoney(totalCogs),
+      formatMoney(totalRevenue - totalCogs),
+      { strong: true },
+    ),
+  ]);
+
+  renderChart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: rows.map((r) => SOURCE_LABELS[r.source]),
+      datasets: [{ data: rows.map((r) => r.revenue), backgroundColor: rows.map((r) => SOURCE_COLORS[r.source]) }],
+    },
+    options: { responsive: true, maintainAspectRatio: false },
+  });
+
+  return el('div', { class: 'accounting-grid' }, [
+    el('div', { class: 'chart-card' }, [el('h3', { class: 'chart-card__title' }, ['گزارش تفکیک فروش بر اساس منبع']), table]),
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['سهم هر منبع از فروش']),
+      el('div', { class: 'chart-card__canvas-wrap' }, [canvas]),
+    ]),
+  ]);
+}
+
 function breakEvenPanel(monthlyFixed: number, marginRatio: number): HTMLElement {
   const dailyFixed = monthlyFixed / 30;
   const breakEven = dailyBreakEven(monthlyFixed, marginRatio);
@@ -75,6 +169,7 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
   );
 
   let activeCanvas: HTMLCanvasElement | null = null;
+  let sourceCanvas: HTMLCanvasElement | null = null;
   let currentPL: PeriodPL | null = null;
   let currentLabel = '';
 
@@ -91,10 +186,13 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     const marginRatio = avgGrossMarginRatio(sales.get(), now);
 
     if (activeCanvas) destroyChart(activeCanvas);
+    if (sourceCanvas) destroyChart(sourceCanvas);
     contentEl.innerHTML = '';
 
     const canvas = el('canvas');
     activeCanvas = canvas;
+    const sourceChartCanvas = el('canvas');
+    sourceCanvas = sourceChartCanvas;
 
     contentEl.append(
       el('div', { class: 'accounting-grid' }, [
@@ -105,6 +203,7 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
         ]),
       ]),
       breakEvenPanel(monthlyFixed, marginRatio),
+      sourceBreakdownPanel(bySourceBreakdown(periodSales), sourceChartCanvas),
     );
 
     const series = dailySeries(sales.get(), Math.min(periodDays, 30), now);
@@ -171,5 +270,6 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     unsubExpenses();
     unsubEmployees();
     if (activeCanvas) destroyChart(activeCanvas);
+    if (sourceCanvas) destroyChart(sourceCanvas);
   };
 }

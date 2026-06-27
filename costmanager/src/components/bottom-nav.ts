@@ -13,12 +13,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/', label: 'داشبورد', icon: '🏠', roles: ['admin', 'viewer'] },
-  { path: '/ingredients', label: 'انبار', icon: '📦', roles: ['admin', 'buyer'] },
-  { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️', roles: ['admin', 'viewer'] },
-  { path: '/accounting', label: 'حسابداری', icon: '📊', roles: ['admin'] },
-  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['admin', 'buyer'] },
-  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['admin'] },
+  { path: '/', label: 'داشبورد', icon: '🏠', roles: ['superadmin', 'manager'] },
+  { path: '/ingredients', label: 'انبار', icon: '📦', roles: ['superadmin', 'manager', 'warehouse'] },
+  { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️', roles: ['superadmin', 'manager'] },
+  { path: '/accounting', label: 'حسابداری', icon: '📊', roles: ['superadmin', 'manager'] },
+  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
+  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['superadmin'] },
 ];
 
 export function createAppNav(): HTMLElement {

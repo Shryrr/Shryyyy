@@ -298,6 +298,284 @@ canvas {
   width: 100%;
 }
 
+.auth-card--wide {
+  max-width: 480px;
+}
+
+.auth-logo {
+  margin-bottom: 0;
+}
+
+.auth-back-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.auth-user-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.auth-user-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--line-strong);
+}
+
+.auth-user-card:active {
+  transform: scale(0.97);
+}
+
+.auth-user-card__avatar {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.auth-user-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+
+.auth-role-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.auth-role-badge--superadmin {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.auth-role-badge--manager {
+  background: rgba(61, 155, 255, 0.15);
+  color: var(--blue);
+}
+
+.auth-role-badge--warehouse {
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--amber);
+}
+
+.auth-role-badge--buyer {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.auth-pin-circles {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.auth-pin-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.auth-pin-circle--filled {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.auth-pin-circles--shake {
+  animation: auth-pin-shake 0.3s;
+}
+
+@keyframes auth-pin-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.auth-pin-hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.admin-extend-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.low-stock-alert-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.low-stock-alert-list__item {
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.low-stock-alert__footer {
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  padding: var(--space-2);
+}
+
+/* ==========================================================================
+   Excel import (sales)
+   ========================================================================== */
+
+.import-mapping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.import-mapping .field {
+  min-width: 160px;
+  flex: 1;
+}
+
+.import-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.import-table__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  min-width: max-content;
+}
+
+.import-table__row:last-child {
+  border-bottom: none;
+}
+
+.import-table__row > span {
+  flex: 1 0 100px;
+}
+
+.import-table__row--head {
+  font-weight: 700;
+  background: var(--surface-alt);
+  position: sticky;
+  top: 0;
+}
+
+.import-table__match {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 2 0 200px;
+}
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.match-badge--exact {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.match-badge--fuzzy {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.match-badge--none {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.import-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+}
+
+.import-summary-card__line {
+  font-size: 14px;
+}
+
+.import-summary-card__line--strong {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--success);
+}
+
+.import-summary-card__inventory {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-top: var(--space-2);
+}
+
+.tabs--sub {
+  margin-top: var(--space-1);
+}
+
 /* ==========================================================================
    App shell
    ========================================================================== */
@@ -1320,6 +1598,11 @@ body.modal-open {
   white-space: nowrap;
 }
 
+.recipe-ingredient-row__name--deleted {
+  color: var(--red);
+  font-weight: 700;
+}
+
 .recipe-ingredient-row__unit {
   color: var(--ink-3);
   font-size: 12px;
@@ -1653,6 +1936,42 @@ body.modal-open {
 }
 .pl-row--negative .pl-row__value {
   color: var(--red);
+}
+
+.source-breakdown-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+.source-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  min-width: max-content;
+}
+.source-breakdown-row:last-child {
+  border-bottom: none;
+}
+.source-breakdown-row > span {
+  flex: 1 0 110px;
+}
+.source-breakdown-row__name {
+  color: var(--ink-2);
+  flex: 1.4 0 140px;
+}
+
+.source-breakdown-row--strong {
+  font-weight: 700;
+  background: var(--surface-alt);
+}
+.source-breakdown-row--strong .source-breakdown-row__name {
+  color: var(--ink);
 }
 
 /* ==========================================================================

@@ -2,11 +2,11 @@ import * as db from '../db';
 import { openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
-import { formatDateShort, formatIngredientCategory, formatMoney, formatUnit, toPersian } from '../utils/format';
+import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian } from '../utils/format';
 import { shareOrCopyText } from '../utils/export';
 import type { RouteCleanup } from '../router';
 import { ingredientsById, refreshShoppingList, shoppingList } from '../store';
-import type { Ingredient, IngredientCategory, ShoppingListItem } from '../types';
+import type { AppUser, Ingredient, IngredientCategory, ShoppingListItem } from '../types';
 
 function buildShareText(items: ShoppingListItem[]): string {
   const lines = ['🛒 لیست خرید مواد اولیه', ''];
@@ -23,7 +23,8 @@ function buildShareText(items: ShoppingListItem[]): string {
 function lastPurchaseLabel(ingredient: Ingredient | undefined): string | null {
   if (!ingredient?.purchaseHistory?.length) return null;
   const latest = [...ingredient.purchaseHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-  return `آخرین خرید: ${formatDateShort(latest.date)} · ${formatMoney(latest.pricePerUnit)}`;
+  const days = Math.max(0, Math.floor((Date.now() - new Date(latest.date).getTime()) / 86_400_000));
+  return `آخرین خرید: ${toPersian(days)} روز پیش — قیمت: ${formatMoney(latest.pricePerUnit)}/واحد`;
 }
 
 function budgetTone(amount: number): 'positive' | 'warning' | 'negative' {
@@ -175,33 +176,61 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
   return () => unsub();
 }
 
-export function openBuyerShoppingModal(): void {
-  const items = [...shoppingList.get()].sort((a, b) => {
-    if (a.checked !== b.checked) return a.checked ? 1 : -1;
-    return a.ingredientName.localeCompare(b.ingredientName, 'fa');
-  });
-  const idMap = ingredientsById();
+function buildBuyerReportText(user: AppUser, items: ShoppingListItem[], total: number): string {
+  const lines = [
+    `📋 گزارش خرید — ${formatDate(new Date().toISOString())}`,
+    `مسئول خرید: ${user.name}`,
+    '',
+    'اقلام مورد نیاز:',
+    ...items.map((item) => `• ${item.ingredientName}: ${toPersian(item.suggestedQty)} ${formatUnit(item.unit)} — ${formatMoney(item.estimatedCost)}`),
+    '',
+    `مجموع تخمینی: ${formatMoney(total)}`,
+    '',
+    'ارسال‌شده از منوبان',
+  ];
+  return lines.join('\n');
+}
 
-  const listBody = items.length
-    ? el('div', { class: 'shopping-list' }, items.map((item) => renderShoppingRow(item, idMap.get(item.ingredientId))))
-    : emptyState({ icon: '🛒', title: 'لیست خرید خالی است' });
+/** Shows the unmissable buyer low-stock alert if any item needs purchasing; returns whether it was shown. */
+export function maybeShowBuyerLowStockAlert(user: AppUser): boolean {
+  const items = [...shoppingList.get()].sort((a, b) => a.ingredientName.localeCompare(b.ingredientName, 'fa'));
+  if (!items.length) return false;
 
-  async function handleSendToManager(): Promise<void> {
+  const total = items.reduce((sum, i) => sum + i.estimatedCost, 0);
+
+  const listEl = el(
+    'ul',
+    { class: 'low-stock-alert-list' },
+    items.map((item) =>
+      el('li', { class: 'low-stock-alert-list__item' }, [
+        `${item.ingredientName} — موجودی: ${toPersian(item.currentStock)} ${formatUnit(item.unit)} — پیشنهاد خرید: ${toPersian(item.suggestedQty)} ${formatUnit(item.unit)} — ~${formatMoney(item.estimatedCost)}`,
+      ]),
+    ),
+  );
+
+  async function handleSendReport(): Promise<void> {
     try {
-      const result = await shareOrCopyText(buildShareText(items));
-      showToast(result === 'shared' ? 'لیست خرید به اشتراک گذاشته شد' : 'لیست خرید در کلیپ‌بورد کپی شد', 'success');
+      await navigator.clipboard.writeText(buildBuyerReportText(user, items, total));
+      showToast('متن گزارش در کلیپ‌بورد کپی شد ✓', 'success');
     } catch {
-      showToast('خطا در اشتراک‌گذاری', 'error');
+      showToast('خطا در کپی گزارش', 'error');
     }
   }
 
-  const body = el('div', { class: 'form' }, [
-    listBody,
+  function handleConfirm(): void {
+    modal.close();
+    location.hash = '#/shopping';
+  }
+
+  const body = el('div', { class: 'form low-stock-alert' }, [
+    listEl,
+    el('div', { class: 'low-stock-alert__footer' }, [`مجموع تخمینی هزینه خرید: ${formatMoney(total)}`]),
     el('div', { class: 'modal-actions' }, [
-      el('button', { type: 'button', class: 'btn btn-secondary', onclick: handleSendToManager }, ['ارسال به مدیر']),
-      el('button', { type: 'button', class: 'btn btn-primary', onclick: () => modal.close() }, ['تأیید']),
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: handleSendReport }, ['ارسال گزارش به مدیر']),
+      el('button', { type: 'button', class: 'btn btn-primary', onclick: handleConfirm }, ['تأیید — فردا می‌روم برای خرید']),
     ]),
   ]);
 
-  const modal = openModal({ title: '🛒 لیست خرید امروز', body, maxWidth: '480px' });
+  const modal = openModal({ title: '⚠️ لیست خرید آماده است', body, maxWidth: '480px', dismissible: false });
+  return true;
 }

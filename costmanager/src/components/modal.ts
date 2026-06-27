@@ -8,11 +8,14 @@ export interface ModalOptions {
   body: HTMLElement;
   maxWidth?: string;
   onClose?: () => void;
+  /** When false, hides the close button and disables Escape/overlay-click dismissal. Defaults to true. */
+  dismissible?: boolean;
 }
 
 let openCount = 0;
 
 export function openModal(opts: ModalOptions): ModalHandle {
+  const dismissible = opts.dismissible ?? true;
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
 
@@ -27,11 +30,15 @@ export function openModal(opts: ModalOptions): ModalHandle {
   const titleEl = document.createElement('h3');
   titleEl.className = 'modal-title';
   titleEl.textContent = opts.title;
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'modal-close';
-  closeBtn.setAttribute('aria-label', 'بستن');
-  closeBtn.textContent = '✕';
-  header.append(titleEl, closeBtn);
+  header.appendChild(titleEl);
+  let closeBtn: HTMLButtonElement | null = null;
+  if (dismissible) {
+    closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.setAttribute('aria-label', 'بستن');
+    closeBtn.textContent = '✕';
+    header.appendChild(closeBtn);
+  }
 
   const body = document.createElement('div');
   body.className = 'modal-body';
@@ -58,11 +65,13 @@ export function openModal(opts: ModalOptions): ModalHandle {
     opts.onClose?.();
   }
 
-  document.addEventListener('keydown', onKey);
-  closeBtn.addEventListener('click', close);
-  overlay.addEventListener('mousedown', (e) => {
-    if (e.target === overlay) close();
-  });
+  if (dismissible) {
+    document.addEventListener('keydown', onKey);
+    closeBtn?.addEventListener('click', close);
+    overlay.addEventListener('mousedown', (e) => {
+      if (e.target === overlay) close();
+    });
+  }
 
   requestAnimationFrame(() => overlay.classList.add('modal-overlay--visible'));
   return { close, el: dialog };

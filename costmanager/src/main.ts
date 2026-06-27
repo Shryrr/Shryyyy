@@ -1,14 +1,15 @@
 import * as db from './db';
 import { createAlertBanner } from './components/alert-banner';
 import { createAppNav } from './components/bottom-nav';
-import { el } from './utils/dom';
+import { el, emptyState } from './utils/dom';
 import { navigate, registerRoutes, startRouter } from './router';
-import type { Route } from './router';
+import type { Route, RouteCleanup } from './router';
 import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll } from './store';
 import { seedDatabase } from './seed';
-import { daysUntilExpiry, isExpired, isExpiringSoon, restoreSession } from './auth';
+import { daysUntilExpiry, isExpired, isExpiringSoon, logout, restoreSession } from './auth';
 import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
-import { toPersian } from './utils/format';
+import { formatDate, toPersian } from './utils/format';
+import { checkForNewerCloudVersion, setupAutoSync, syncFromCloud } from './utils/sync';
 import { renderAuthGate } from './views/login';
 import { renderAccounting } from './views/accounting';
 import { renderAdmin } from './views/admin';
@@ -18,26 +19,34 @@ import { renderIngredients } from './views/ingredients';
 import { renderRecipes } from './views/recipes';
 import { renderSales } from './views/sales';
 import { renderSettings } from './views/settings';
-import { openBuyerShoppingModal, renderShopping } from './views/shopping';
-import type { UserRole } from './types';
+import { maybeShowBuyerLowStockAlert, renderShopping } from './views/shopping';
+import type { AppUser, UserRole } from './types';
 
 const HEADER_LINKS: { path: string; label: string; icon: string; roles?: UserRole[] }[] = [
-  { path: '/sales', label: 'فروش', icon: '🧾', roles: ['admin'] },
-  { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['admin'] },
-  { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['admin'] },
+  { path: '/sales', label: 'فروش', icon: '🧾', roles: ['superadmin', 'manager'] },
+  { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['superadmin', 'manager'] },
+  { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['superadmin'] },
 ];
 
 const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
-  { path: '/', title: 'داشبورد', render: renderDashboard, roles: ['admin', 'viewer'] },
-  { path: '/ingredients', title: 'انبار مواد اولیه', render: renderIngredients, roles: ['admin', 'buyer'] },
-  { path: '/recipes', title: 'منو و فودکاست', render: renderRecipes, roles: ['admin', 'viewer'] },
-  { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses, roles: ['admin'] },
-  { path: '/sales', title: 'فروش', render: renderSales, roles: ['admin'] },
-  { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['admin'] },
-  { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['admin', 'buyer'] },
-  { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['admin'] },
-  { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['admin'] },
+  { path: '/', title: 'داشبورد', render: renderDashboard, roles: ['superadmin', 'manager'] },
+  { path: '/ingredients', title: 'انبار مواد اولیه', render: renderIngredients, roles: ['superadmin', 'manager', 'warehouse'] },
+  { path: '/recipes', title: 'منو و فودکاست', render: renderRecipes, roles: ['superadmin', 'manager'] },
+  { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses, roles: ['superadmin', 'manager'] },
+  { path: '/sales', title: 'فروش', render: renderSales, roles: ['superadmin', 'manager'] },
+  { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['superadmin', 'manager'] },
+  { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
+  { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['superadmin'] },
+  { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['superadmin'] },
 ];
+
+function renderAccessDenied(container: HTMLElement): RouteCleanup {
+  container.appendChild(
+    el('div', { class: 'view view-access-denied' }, [
+      emptyState({ icon: '🚫', title: 'دسترسی ندارید', message: 'شما اجازهٔ دسترسی به این بخش را ندارید.' }),
+    ]),
+  );
+}
 
 function createAppHeader(role: UserRole): HTMLElement {
   const offlineBadge = el('span', { class: 'app-header__offline-badge' }, ['آفلاین']);
@@ -68,10 +77,40 @@ function createAppHeader(role: UserRole): HTMLElement {
   return header;
 }
 
+function renderExpiredScreen(app: HTMLElement, user: AppUser): void {
+  app.append(
+    el('div', { class: 'boot-splash', role: 'alert' }, [
+      el('div', { class: 'auth-card' }, [
+        el('div', { class: 'boot-logo' }, ['⛔']),
+        el('h2', { class: 'auth-title' }, ['اشتراک شما منقضی شده است']),
+        el('p', { class: 'auth-subtitle' }, [`اشتراک شما در ${formatDate(user.subscriptionExpiry)} منقضی شده`]),
+        el('p', { class: 'auth-subtitle' }, ['برای تمدید با مدیر اصلی تماس بگیرید']),
+        el('button', { type: 'button', class: 'btn btn-secondary', onclick: logout }, ['خروج از حساب']),
+      ]),
+    ]),
+  );
+}
+
+async function checkCloudVersionBanner(bannerHost: HTMLElement): Promise<void> {
+  const newer = await checkForNewerCloudVersion();
+  if (!newer) return;
+  const banner = createAlertBanner({
+    id: 'cloud-sync-newer',
+    message: 'نسخهٔ جدیدتری در ابر موجود است',
+    tone: 'info',
+    actionLabel: 'دریافت',
+    onAction: () => {
+      void syncFromCloud();
+    },
+  });
+  if (banner) bannerHost.appendChild(banner);
+}
+
 async function bootstrap(): Promise<void> {
   console.log('[boot] starting');
   initThemeWatcher();
   initOnlineWatcher();
+  setupAutoSync();
   console.log('[boot] watchers initialized');
 
   const empty = await db.isDatabaseEmpty();
@@ -102,15 +141,7 @@ async function bootstrap(): Promise<void> {
   app.innerHTML = '';
 
   if (isExpired(user)) {
-    app.append(
-      el('div', { class: 'boot-splash', role: 'alert' }, [
-        el('div', { class: 'auth-card' }, [
-          el('div', { class: 'boot-logo' }, ['⛔']),
-          el('h2', { class: 'auth-title' }, ['اشتراک شما منقضی شده است']),
-          el('p', { class: 'auth-subtitle' }, ['برای ادامه استفاده از برنامه، لطفاً با مدیر سیستم تماس بگیرید.']),
-        ]),
-      ]),
-    );
+    renderExpiredScreen(app, user);
     console.log('[boot] subscription expired, blocking app');
     return;
   }
@@ -131,13 +162,21 @@ async function bootstrap(): Promise<void> {
   }
 
   registerRoutes(
-    ALL_ROUTES.filter((r) => r.roles.includes(user.role)).map((r) => ({ path: r.path, title: r.title, render: r.render })),
+    ALL_ROUTES.map((r) => ({ path: r.path, title: r.title, render: r.roles.includes(user.role) ? r.render : renderAccessDenied })),
   );
+
+  const allowedPaths = new Set(ALL_ROUTES.filter((r) => r.roles.includes(user.role)).map((r) => r.path));
+  const currentHashPath = location.hash.replace(/^#/, '') || '/';
+  if (!allowedPaths.has(currentHashPath)) {
+    const fallback = ALL_ROUTES.find((r) => allowedPaths.has(r.path));
+    if (fallback) location.hash = fallback.path;
+  }
 
   startRouter(main);
   console.log('[boot] router started, app ready');
 
-  if (user.role === 'buyer') openBuyerShoppingModal();
+  if (user.role === 'buyer') maybeShowBuyerLowStockAlert(user);
+  if (navigator.onLine) void checkCloudVersionBanner(bannerHost);
 }
 
 function showBootError(error: unknown): void {

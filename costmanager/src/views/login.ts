@@ -1,86 +1,97 @@
 import * as db from '../db';
 import { login as setSession } from '../auth';
-import { el, field } from '../utils/dom';
+import { renderSetupWizard } from './setup';
+import { el } from '../utils/dom';
 import { toPersian } from '../utils/format';
-import type { AppUser } from '../types';
+import type { AppUser, UserRole } from '../types';
 
-const DEFAULT_PIN = '1234';
 const LOCKOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
 
 let failedAttempts = 0;
 let lockoutUntil = 0;
 
-/** Renders the setup wizard or PIN screen into `container` and resolves once a user is authenticated. */
+const ROLE_LABELS: Record<UserRole, string> = {
+  superadmin: 'مدیر اصلی',
+  manager: 'مدیر',
+  warehouse: 'انباردار',
+  buyer: 'خریدار',
+};
+
+/** Renders the setup wizard or the user-grid login screen into `container` and resolves once a user is authenticated. */
 export async function renderAuthGate(container: HTMLElement): Promise<AppUser> {
   const [config, settings] = await Promise.all([db.getAuthConfig(), db.getSettings()]);
   const businessName = settings?.businessName || 'منوبان';
 
   return new Promise((resolve) => {
-    if (!config.isSetup) renderSetupWizard(container, businessName, resolve);
-    else renderLoginScreen(container, businessName, resolve);
+    if (!config.isSetup || !config.users.some((u) => u.role === 'superadmin')) {
+      renderSetupWizard(container, businessName, resolve);
+    } else {
+      renderUserGrid(container, businessName, config.users.filter((u) => u.isActive), resolve);
+    }
   });
 }
 
-function authShell(children: HTMLElement[]): HTMLElement {
-  return el('div', { class: 'auth-screen' }, [el('div', { class: 'auth-card' }, children)]);
+function authShell(children: HTMLElement[], wide = false): HTMLElement {
+  return el('div', { class: 'auth-screen' }, [el('div', { class: `auth-card${wide ? ' auth-card--wide' : ''}` }, children)]);
 }
 
-function renderSetupWizard(container: HTMLElement, businessName: string, onDone: (user: AppUser) => void): void {
+function renderUserGrid(container: HTMLElement, businessName: string, users: AppUser[], onDone: (user: AppUser) => void): void {
   container.innerHTML = '';
 
-  const pinInput = el('input', {
-    type: 'password', inputmode: 'numeric', autocomplete: 'off', maxlength: 8,
-    class: 'input auth-pin-input', value: DEFAULT_PIN,
-  });
-  const confirmInput = el('input', {
-    type: 'password', inputmode: 'numeric', autocomplete: 'off', maxlength: 8, class: 'input auth-pin-input',
-  });
-  const errorEl = el('p', { class: 'auth-error', hidden: true }, []);
+  const grid = el(
+    'div',
+    { class: 'auth-user-grid' },
+    users.map((u) =>
+      el(
+        'button',
+        {
+          type: 'button',
+          class: 'auth-user-card',
+          onclick: () => renderPinEntry(container, businessName, u, onDone, () => renderUserGrid(container, businessName, users, onDone)),
+        },
+        [
+          el('span', { class: 'auth-user-card__avatar' }, [u.name.slice(0, 1)]),
+          el('span', { class: 'auth-user-card__name' }, [u.name]),
+          el('span', { class: `auth-role-badge auth-role-badge--${u.role}` }, [ROLE_LABELS[u.role]]),
+        ],
+      ),
+    ),
+  );
 
-  function showError(msg: string): void {
-    errorEl.textContent = msg;
-    errorEl.hidden = false;
+  if (!users.length) {
+    grid.appendChild(el('p', { class: 'auth-subtitle' }, ['هیچ کاربر فعالی یافت نشد.']));
   }
 
-  async function submit(): Promise<void> {
-    const pin = pinInput.value.trim();
-    const confirmPin = confirmInput.value.trim();
-    errorEl.hidden = true;
-
-    if (pin.length < 4) return showError('پین باید حداقل ۴ رقم باشد');
-    if (pin === DEFAULT_PIN) return showError('لطفاً پین پیش‌فرض (۱۲۳۴) را تغییر دهید');
-    if (pin !== confirmPin) return showError('پین و تکرار آن یکسان نیستند');
-
-    const config = await db.completeAuthSetup(pin);
-    const admin = config.users[0];
-    setSession(admin);
-    onDone(admin);
-  }
-
-  const form = el('form', { class: 'auth-form', onsubmit: (e: Event) => { e.preventDefault(); submit(); } }, [
-    el('div', { class: 'boot-logo auth-logo' }, ['م']),
-    el('span', { class: 'auth-brand' }, [businessName]),
-    el('h2', { class: 'auth-title' }, ['راه‌اندازی اولیه']),
-    el('p', { class: 'auth-subtitle' }, ['برای مدیر یک پین جدید تعیین کنید (پین پیش‌فرض را تغییر دهید)']),
-    field('پین مدیر', pinInput),
-    field('تکرار پین', confirmInput),
-    errorEl,
-    el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['تایید و شروع']),
-  ]);
-
-  container.appendChild(authShell([form]));
-  pinInput.focus();
-  pinInput.select();
+  container.appendChild(
+    authShell(
+      [
+        el('div', { class: 'boot-logo auth-logo' }, ['م']),
+        el('span', { class: 'auth-brand' }, [businessName]),
+        el('h2', { class: 'auth-title' }, ['انتخاب کاربر']),
+        el('p', { class: 'auth-subtitle' }, ['برای ورود، کاربر خود را انتخاب کنید']),
+        grid,
+      ],
+      true,
+    ),
+  );
 }
 
-function renderLoginScreen(container: HTMLElement, businessName: string, onDone: (user: AppUser) => void): void {
+function renderPinEntry(
+  container: HTMLElement,
+  businessName: string,
+  user: AppUser,
+  onDone: (user: AppUser) => void,
+  onBack: () => void,
+): void {
   container.innerHTML = '';
 
-  const pinInput = el('input', {
-    type: 'password', inputmode: 'numeric', autocomplete: 'off', maxlength: 8, class: 'input auth-pin-input',
+  let digits = '';
+  const circles = Array.from({ length: 4 }, () => el('span', { class: 'auth-pin-circle' }));
+  const circleRow = el('div', { class: 'auth-pin-circles' }, circles);
+  const hiddenInput = el('input', {
+    type: 'tel', inputmode: 'numeric', autocomplete: 'off', maxlength: 4, class: 'auth-pin-hidden-input',
   });
-  const submitBtn = el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['ورود']);
   const errorEl = el('p', { class: 'auth-error', hidden: true }, []);
   const lockEl = el('p', { class: 'auth-lockout', hidden: true }, []);
 
@@ -91,19 +102,21 @@ function renderLoginScreen(container: HTMLElement, businessName: string, onDone:
     errorEl.hidden = false;
   }
 
+  function renderCircles(): void {
+    circles.forEach((c, i) => c.classList.toggle('auth-pin-circle--filled', i < digits.length));
+  }
+
   function tickLock(): void {
     const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
     if (remaining <= 0) {
       lockEl.hidden = true;
-      pinInput.disabled = false;
-      submitBtn.disabled = false;
+      hiddenInput.disabled = false;
       if (lockTimer) clearInterval(lockTimer);
       return;
     }
     lockEl.hidden = false;
     lockEl.textContent = `به دلیل ورود پین اشتباه، ${toPersian(remaining)} ثانیه صبر کنید`;
-    pinInput.disabled = true;
-    submitBtn.disabled = true;
+    hiddenInput.disabled = true;
   }
 
   if (Date.now() < lockoutUntil) {
@@ -112,16 +125,14 @@ function renderLoginScreen(container: HTMLElement, businessName: string, onDone:
   }
 
   async function submit(): Promise<void> {
-    if (Date.now() < lockoutUntil) return;
     errorEl.hidden = true;
-    const pin = pinInput.value.trim();
-    if (!pin) return;
-
-    const user = await db.findUserByPin(pin);
-    if (!user) {
+    if (digits !== user.pin) {
       failedAttempts += 1;
-      pinInput.value = '';
-      pinInput.focus();
+      digits = '';
+      hiddenInput.value = '';
+      renderCircles();
+      circleRow.classList.add('auth-pin-circles--shake');
+      setTimeout(() => circleRow.classList.remove('auth-pin-circles--shake'), 300);
       if (failedAttempts >= MAX_ATTEMPTS) {
         failedAttempts = 0;
         lockoutUntil = Date.now() + LOCKOUT_MS;
@@ -130,25 +141,41 @@ function renderLoginScreen(container: HTMLElement, businessName: string, onDone:
       } else {
         showError(`پین نادرست است (${toPersian(MAX_ATTEMPTS - failedAttempts)} تلاش باقی‌مانده)`);
       }
+      if (!hiddenInput.disabled) hiddenInput.focus();
       return;
     }
-
     failedAttempts = 0;
     if (lockTimer) clearInterval(lockTimer);
-    setSession(user);
+    await setSession(user);
     onDone(user);
   }
 
-  const form = el('form', { class: 'auth-form', onsubmit: (e: Event) => { e.preventDefault(); submit(); } }, [
-    el('div', { class: 'boot-logo auth-logo' }, ['م']),
-    el('h2', { class: 'auth-title' }, [businessName]),
-    el('p', { class: 'auth-subtitle' }, ['برای ورود پین خود را وارد کنید']),
-    field('پین', pinInput),
-    errorEl,
-    lockEl,
-    submitBtn,
-  ]);
+  hiddenInput.addEventListener('input', () => {
+    digits = hiddenInput.value.replace(/\D/g, '').slice(0, 4);
+    hiddenInput.value = digits;
+    renderCircles();
+    if (digits.length === 4 && Date.now() >= lockoutUntil) submit();
+  });
 
-  container.appendChild(authShell([form]));
-  if (!pinInput.disabled) pinInput.focus();
+  circleRow.addEventListener('click', () => {
+    if (!hiddenInput.disabled) hiddenInput.focus();
+  });
+
+  container.appendChild(
+    authShell([
+      el('button', { type: 'button', class: 'auth-back-btn', onclick: onBack }, ['→ بازگشت']),
+      el('div', { class: 'boot-logo auth-logo' }, ['م']),
+      el('span', { class: 'auth-brand' }, [businessName]),
+      el('h2', { class: 'auth-title' }, [user.name]),
+      el('p', { class: 'auth-subtitle' }, ['پین ۴ رقمی خود را وارد کنید']),
+      circleRow,
+      hiddenInput,
+      errorEl,
+      lockEl,
+    ]),
+  );
+
+  setTimeout(() => {
+    if (!hiddenInput.disabled) hiddenInput.focus();
+  }, 50);
 }

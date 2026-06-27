@@ -1,5 +1,5 @@
 import * as db from '../db';
-import { hasRole } from '../auth';
+import { hasFullAccess } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
@@ -98,7 +98,29 @@ function openRecipeBuilderModal(existingId?: string): void {
     } else {
       for (const ri of item.recipe) {
         const ingredient = ingById.get(ri.ingredientId);
-        if (!ingredient) continue;
+        if (!ingredient) {
+          listEl.appendChild(
+            el('div', { class: 'recipe-ingredient-row' }, [
+              el('span', { class: 'recipe-ingredient-row__name recipe-ingredient-row__name--deleted' }, ['ماده حذف‌شده']),
+              el('span', { class: 'recipe-ingredient-row__unit' }, [toPersian(ri.quantity)]),
+              el('span', { class: 'recipe-ingredient-row__cost' }, ['—']),
+              el(
+                'button',
+                {
+                  type: 'button',
+                  class: 'icon-btn',
+                  title: 'حذف',
+                  onclick: async () => {
+                    await db.removeRecipeIngredient(itemId, ri.ingredientId);
+                    await refreshMenuItems();
+                  },
+                },
+                ['🗑️'],
+              ),
+            ]),
+          );
+          continue;
+        }
         const rowQtyInput = numberInput(ri.quantity, 'input--sm');
         rowQtyInput.addEventListener('change', async () => {
           const qty = parseNumberInput(rowQtyInput);
@@ -267,7 +289,7 @@ function renderRow(item: MenuItem, ingById: Map<string, Ingredient>): HTMLElemen
       ]),
     ]),
     el('div', { class: `recipe-row__pct recipe-row__pct--${status}` }, [formatPct(pct)]),
-    hasRole('admin')
+    hasFullAccess()
       ? el('div', { class: 'recipe-row__actions' }, [
           el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openRecipeBuilderModal(item.id) }, ['✏️']),
           el(
@@ -301,7 +323,7 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['منو و فودکاست']),
-      hasRole('admin')
+      hasFullAccess()
         ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو'])
         : null,
     ]),
@@ -344,8 +366,8 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
           icon: '🍽️',
           title: items.length ? 'نتیجه‌ای یافت نشد' : 'هنوز آیتمی به منو اضافه نشده است',
           message: items.length ? 'فیلترها را تغییر دهید.' : 'اولین آیتم منو را اضافه کنید.',
-          ctaLabel: items.length || !hasRole('admin') ? undefined : 'افزودن آیتم منو',
-          onCta: items.length || !hasRole('admin') ? undefined : () => openRecipeBuilderModal(),
+          ctaLabel: items.length || !hasFullAccess() ? undefined : 'افزودن آیتم منو',
+          onCta: items.length || !hasFullAccess() ? undefined : () => openRecipeBuilderModal(),
         }),
       );
       return;
