@@ -1,4 +1,5 @@
 import * as db from '../db';
+import { hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
@@ -266,15 +267,17 @@ function renderRow(item: MenuItem, ingById: Map<string, Ingredient>): HTMLElemen
       ]),
     ]),
     el('div', { class: `recipe-row__pct recipe-row__pct--${status}` }, [formatPct(pct)]),
-    el('div', { class: 'recipe-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openRecipeBuilderModal(item.id) }, ['✏️']),
-      el(
-        'button',
-        { class: 'icon-btn', type: 'button', title: item.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', onclick: () => toggleActive(item) },
-        [item.isActive ? '👁️' : '🚫'],
-      ),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(item) }, ['🗑️']),
-    ]),
+    hasRole('admin')
+      ? el('div', { class: 'recipe-row__actions' }, [
+          el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openRecipeBuilderModal(item.id) }, ['✏️']),
+          el(
+            'button',
+            { class: 'icon-btn', type: 'button', title: item.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', onclick: () => toggleActive(item) },
+            [item.isActive ? '👁️' : '🚫'],
+          ),
+          el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(item) }, ['🗑️']),
+        ])
+      : null,
   ]);
 }
 
@@ -298,7 +301,9 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['منو و فودکاست']),
-      el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو']),
+      hasRole('admin')
+        ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو'])
+        : null,
     ]),
     statsContainer,
     el('div', { class: 'toolbar' }, [
@@ -339,8 +344,8 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
           icon: '🍽️',
           title: items.length ? 'نتیجه‌ای یافت نشد' : 'هنوز آیتمی به منو اضافه نشده است',
           message: items.length ? 'فیلترها را تغییر دهید.' : 'اولین آیتم منو را اضافه کنید.',
-          ctaLabel: items.length ? undefined : 'افزودن آیتم منو',
-          onCta: items.length ? undefined : () => openRecipeBuilderModal(),
+          ctaLabel: items.length || !hasRole('admin') ? undefined : 'افزودن آیتم منو',
+          onCta: items.length || !hasRole('admin') ? undefined : () => openRecipeBuilderModal(),
         }),
       );
       return;

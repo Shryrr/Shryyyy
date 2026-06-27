@@ -78,11 +78,68 @@ function renderQuickSaleForm(container: HTMLElement): () => void {
   return () => unsub();
 }
 
+function renderBulkBreakdown(container: HTMLElement, sale: Sale): void {
+  container.innerHTML = '';
+  if (!sale.estimatedBreakdown?.length) return;
+  const rows = sale.estimatedBreakdown.map((b) =>
+    el('div', { class: 'top-items-row' }, [
+      el('span', { class: 'top-items-row__name' }, [b.menuItemName]),
+      el('span', { class: 'top-items-row__qty' }, [`~${toPersian(b.estimatedQuantity.toFixed(1))} عدد`]),
+      el('span', { class: 'top-items-row__revenue' }, [formatMoney(b.estimatedRevenue)]),
+    ]),
+  );
+  container.appendChild(panel('برآورد تفکیک فروش کلی', el('div', { class: 'top-items-list' }, rows)));
+}
+
+function renderBulkSaleForm(container: HTMLElement): () => void {
+  const dateInput = el('input', { type: 'date', class: 'input', value: todayISO().slice(0, 10) });
+  const revenueInput = numberInput(0);
+  const breakdownContainer = el('div');
+
+  async function handleSubmit(e: Event): Promise<void> {
+    e.preventDefault();
+    const totalRevenue = parseNumberInput(revenueInput);
+    if (totalRevenue <= 0) {
+      showToast('مبلغ فروش باید بیشتر از صفر باشد', 'error');
+      return;
+    }
+    try {
+      const sale = await db.recordBulkSale({
+        date: dateInput.value ? new Date(dateInput.value).toISOString() : todayISO(),
+        totalRevenue,
+      });
+      await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+      showToast('فروش کلی پایان روز ثبت شد', 'success');
+      revenueInput.value = toPersian(0);
+      renderBulkBreakdown(breakdownContainer, sale);
+    } catch {
+      showToast('برای برآورد فروش کلی، حداقل یک آیتم منو فعال لازم است', 'error');
+    }
+  }
+
+  const form = el('form', { class: 'form', onsubmit: handleSubmit }, [
+    field('تاریخ', dateInput),
+    field('مجموع فروش روز (تومان)', revenueInput),
+    el('p', { class: 'form-hint' }, ['تفکیک بین آیتم‌های منو بر اساس سهم فروش ۳۰ روز گذشته برآورد می‌شود.']),
+    el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت فروش کلی'])]),
+  ]);
+
+  container.appendChild(
+    el(
+      'div',
+      { class: 'quick-sale-card' },
+      [el('h3', { class: 'chart-card__title' }, ['ثبت فروش پایان روز (کلی)']), form, breakdownContainer],
+    ),
+  );
+
+  return () => {};
+}
+
 function renderSaleRow(s: Sale, onDelete: (s: Sale) => void): HTMLElement {
   return el('div', { class: 'sales-log-row' }, [
     el('span', { class: 'sales-log-row__date' }, [formatDateShort(s.date)]),
-    el('span', { class: 'sales-log-row__name' }, [s.menuItemName]),
-    el('span', { class: 'sales-log-row__qty' }, [`${toPersian(s.quantity)} عدد`]),
+    el('span', { class: 'sales-log-row__name' }, [s.menuItemName, s.type === 'bulk' ? el('span', { class: 'badge' }, [' کلی']) : null]),
+    el('span', { class: 'sales-log-row__qty' }, [s.type === 'bulk' ? '—' : `${toPersian(s.quantity)} عدد`]),
     el('span', { class: 'sales-log-row__total' }, [formatMoney(s.unitSalePrice * s.quantity)]),
     el('button', { type: 'button', class: 'icon-btn', title: 'حذف', onclick: () => onDelete(s) }, ['🗑️']),
   ]);
@@ -93,6 +150,7 @@ export async function renderSales(container: HTMLElement): Promise<RouteCleanup>
   container.appendChild(root);
 
   const formContainer = el('div');
+  const bulkFormContainer = el('div');
   const periodSelect = selectEl(PERIOD_OPTIONS, '30');
   const statsContainer = el('div');
   const chartContainer = el('div');
@@ -102,6 +160,7 @@ export async function renderSales(container: HTMLElement): Promise<RouteCleanup>
   root.append(
     el('div', { class: 'view-header' }, [el('h1', { class: 'view-header__title' }, ['فروش'])]),
     formContainer,
+    bulkFormContainer,
     el('div', { class: 'toolbar' }, [periodSelect]),
     statsContainer,
     chartContainer,
@@ -110,6 +169,7 @@ export async function renderSales(container: HTMLElement): Promise<RouteCleanup>
   );
 
   const formCleanup = renderQuickSaleForm(formContainer);
+  const bulkFormCleanup = renderBulkSaleForm(bulkFormContainer);
 
   let activeCanvas: HTMLCanvasElement | null = null;
 
@@ -213,6 +273,7 @@ export async function renderSales(container: HTMLElement): Promise<RouteCleanup>
   return () => {
     unsub();
     formCleanup();
+    bulkFormCleanup();
     if (activeCanvas) destroyChart(activeCanvas);
   };
 }

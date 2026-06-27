@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  Employee, Expense, FullBackup, Ingredient, MenuItem, PurchaseRecord,
-  Sale, Settings, ShoppingListItem,
+  AppUser, AuthConfig, BulkSaleBreakdownEntry, Employee, Expense, FullBackup, Ingredient, MenuItem, PurchaseRecord,
+  Sale, Settings, ShoppingListItem, SubscriptionPlan, UserRole,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 
@@ -13,38 +13,49 @@ interface Schema extends DBSchema {
   sales: { key: string; value: Sale; indexes: { byDate: string; byMenuItem: string } };
   shopping_list: { key: string; value: ShoppingListItem };
   settings: { key: string; value: Settings };
+  auth: { key: string; value: AuthConfig };
 }
 
-/** keyof Schema widens to `string` because DBSchema carries an index signature — spell out the literal union instead. */
+/**
+ * keyof Schema widens to `string` because DBSchema carries an index signature — spell out the literal union instead.
+ * 'auth' is deliberately excluded from this list: it backs exportAllData/importAllData/resetAllData, and PINs
+ * must never leak into a shared JSON backup, nor get wiped by a "reset all data" action that would lock out admins.
+ */
 type StoreName = 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const MAX_PURCHASE_HISTORY = 50;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 let dbPromise: Promise<IDBPDatabase<Schema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<Schema>> {
   if (!dbPromise) {
     dbPromise = openDB<Schema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        const ingredients = db.createObjectStore('ingredients', { keyPath: 'id' });
-        ingredients.createIndex('byCategory', 'category');
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const ingredients = db.createObjectStore('ingredients', { keyPath: 'id' });
+          ingredients.createIndex('byCategory', 'category');
 
-        const menuItems = db.createObjectStore('menu_items', { keyPath: 'id' });
-        menuItems.createIndex('byCategory', 'category');
+          const menuItems = db.createObjectStore('menu_items', { keyPath: 'id' });
+          menuItems.createIndex('byCategory', 'category');
 
-        const expenses = db.createObjectStore('expenses', { keyPath: 'id' });
-        expenses.createIndex('byCategory', 'category');
+          const expenses = db.createObjectStore('expenses', { keyPath: 'id' });
+          expenses.createIndex('byCategory', 'category');
 
-        db.createObjectStore('employees', { keyPath: 'id' });
+          db.createObjectStore('employees', { keyPath: 'id' });
 
-        const sales = db.createObjectStore('sales', { keyPath: 'id' });
-        sales.createIndex('byDate', 'date');
-        sales.createIndex('byMenuItem', 'menuItemId');
+          const sales = db.createObjectStore('sales', { keyPath: 'id' });
+          sales.createIndex('byDate', 'date');
+          sales.createIndex('byMenuItem', 'menuItemId');
 
-        db.createObjectStore('shopping_list', { keyPath: 'id' });
-        db.createObjectStore('settings', { keyPath: 'id' });
+          db.createObjectStore('shopping_list', { keyPath: 'id' });
+          db.createObjectStore('settings', { keyPath: 'id' });
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore('auth', { keyPath: 'id' });
+        }
       },
     });
   }
@@ -405,14 +416,119 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
   return sale;
 }
 
+export interface RecordBulkSaleInput {
+  date: string;
+  totalRevenue: number;
+}
+
+/**
+ * Estimates a per-item breakdown of an end-of-day total by revenue-share: each active menu item's
+ * share of the last 30 days of itemized sales (or an equal split if there's no history), then
+ * deducts ingredients proportionally to the estimated quantities. The exact deducted amounts are
+ * saved on the sale itself (not recomputed from the live recipe later) so deleteSale can reverse
+ * them precisely even if recipes change afterward.
+ */
+export async function recordBulkSale(input: RecordBulkSaleInput): Promise<Sale> {
+  const db = await getDB();
+  const [menuItems, ingredientsList, allSales] = await Promise.all([
+    db.getAll('menu_items'),
+    db.getAll('ingredients'),
+    db.getAll('sales'),
+  ]);
+  const activeItems = menuItems.filter((m) => m.isActive);
+  if (!activeItems.length) throw new Error('no active menu items to estimate from');
+
+  const ingredientsById = new Map(ingredientsList.map((i) => [i.id, i]));
+  const saleTime = new Date(input.date).getTime();
+  const cutoff = saleTime - 30 * DAY_MS;
+
+  const historicalByItem = new Map<string, number>();
+  let historicalTotal = 0;
+  for (const s of allSales) {
+    if (s.type === 'bulk') continue;
+    const t = new Date(s.date).getTime();
+    if (t < cutoff || t > saleTime) continue;
+    const revenue = s.unitSalePrice * s.quantity;
+    historicalByItem.set(s.menuItemId, (historicalByItem.get(s.menuItemId) ?? 0) + revenue);
+    historicalTotal += revenue;
+  }
+
+  const activeHistoricalTotal = activeItems.reduce((sum, item) => sum + (historicalByItem.get(item.id) ?? 0), 0);
+  const shareByItem = new Map<string, number>();
+  if (activeHistoricalTotal > 0) {
+    for (const item of activeItems) shareByItem.set(item.id, (historicalByItem.get(item.id) ?? 0) / activeHistoricalTotal);
+  } else {
+    for (const item of activeItems) shareByItem.set(item.id, 1 / activeItems.length);
+  }
+
+  const breakdown: BulkSaleBreakdownEntry[] = [];
+  const ingredientDeltas = new Map<string, number>();
+  let totalEstimatedCost = 0;
+
+  for (const item of activeItems) {
+    const share = shareByItem.get(item.id) ?? 0;
+    if (share <= 0) continue;
+    const itemRevenue = input.totalRevenue * share;
+    const estimatedQuantity = item.salePrice > 0 ? itemRevenue / item.salePrice : 0;
+    if (estimatedQuantity <= 0) continue;
+    const unitCost = recipeCost(item.recipe, ingredientsById);
+    const itemCost = unitCost * estimatedQuantity;
+    totalEstimatedCost += itemCost;
+    breakdown.push({
+      menuItemId: item.id,
+      menuItemName: item.name,
+      estimatedQuantity,
+      estimatedRevenue: itemRevenue,
+      estimatedCost: itemCost,
+    });
+    for (const ri of item.recipe) {
+      ingredientDeltas.set(ri.ingredientId, (ingredientDeltas.get(ri.ingredientId) ?? 0) + ri.quantity * estimatedQuantity);
+    }
+  }
+
+  const sale: Sale = {
+    id: uuid(),
+    date: input.date,
+    menuItemId: '',
+    menuItemName: 'فروش کلی پایان روز',
+    quantity: 1,
+    unitSalePrice: input.totalRevenue,
+    unitCost: totalEstimatedCost,
+    type: 'bulk',
+    estimatedBreakdown: breakdown,
+    ingredientDeltas: Array.from(ingredientDeltas.entries()).map(([ingredientId, quantity]) => ({ ingredientId, quantity })),
+  };
+
+  const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
+  await tx.objectStore('sales').put(sale);
+  for (const [ingredientId, qty] of ingredientDeltas) {
+    const ingredient = ingredientsById.get(ingredientId);
+    if (!ingredient) continue;
+    await tx.objectStore('ingredients').put({ ...ingredient, currentStock: ingredient.currentStock - qty, updatedAt: nowISO() });
+  }
+  await tx.done;
+  await regenerateShoppingList();
+  return sale;
+}
+
 export async function deleteSale(id: string): Promise<void> {
   const db = await getDB();
   const sale = await db.get('sales', id);
   if (!sale) return;
-  const menuItem = await db.get('menu_items', sale.menuItemId);
+  const menuItem = sale.type === 'bulk' ? undefined : await db.get('menu_items', sale.menuItemId);
 
   const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
-  if (menuItem) {
+  if (sale.type === 'bulk') {
+    for (const delta of sale.ingredientDeltas ?? []) {
+      const ingredient = await tx.objectStore('ingredients').get(delta.ingredientId);
+      if (!ingredient) continue;
+      await tx.objectStore('ingredients').put({
+        ...ingredient,
+        currentStock: ingredient.currentStock + delta.quantity,
+        updatedAt: nowISO(),
+      });
+    }
+  } else if (menuItem) {
     for (const ri of menuItem.recipe) {
       const ingredient = await tx.objectStore('ingredients').get(ri.ingredientId);
       if (!ingredient) continue;
@@ -514,6 +630,125 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Prom
   const existing = await getSettings();
   const updated: Settings = { ...existing, ...patch };
   await db.put('settings', updated);
+  return updated;
+}
+
+// ---------- Auth ----------
+
+const DEFAULT_ADMIN_PIN = '1234';
+const PLAN_MONTHS: Record<SubscriptionPlan, number> = { '1m': 1, '3m': 3, '6m': 6, '12m': 12 };
+
+function addMonthsISO(iso: string, months: number): string {
+  const d = new Date(iso);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString();
+}
+
+export async function getAuthConfig(): Promise<AuthConfig> {
+  const db = await getDB();
+  const config = await db.get('auth', 'auth');
+  if (config) return config;
+  const fresh: AuthConfig = { id: 'auth', adminPin: DEFAULT_ADMIN_PIN, isSetup: false, users: [] };
+  await db.put('auth', fresh);
+  return fresh;
+}
+
+/** First-launch setup wizard: sets the admin PIN and creates the initial admin user record. */
+export async function completeAuthSetup(adminPin: string): Promise<AuthConfig> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const adminUser: AppUser = {
+    id: uuid(),
+    name: 'مدیر',
+    pin: adminPin,
+    role: 'admin',
+    subscriptionPlan: '12m',
+    subscriptionExpiry: addMonthsISO(nowISO(), 12),
+    isActive: true,
+  };
+  const updated: AuthConfig = { ...config, adminPin, isSetup: true, users: [adminUser] };
+  await db.put('auth', updated);
+  return updated;
+}
+
+export async function findUserByPin(pin: string): Promise<AppUser | undefined> {
+  const config = await getAuthConfig();
+  return config.users.find((u) => u.pin === pin && u.isActive);
+}
+
+export async function getUser(id: string): Promise<AppUser | undefined> {
+  const config = await getAuthConfig();
+  return config.users.find((u) => u.id === id);
+}
+
+export interface NewUserInput {
+  name: string;
+  pin: string;
+  role: UserRole;
+  subscriptionPlan: SubscriptionPlan;
+}
+
+export async function createUser(input: NewUserInput): Promise<AppUser> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const user: AppUser = {
+    id: uuid(),
+    name: input.name,
+    pin: input.pin,
+    role: input.role,
+    subscriptionPlan: input.subscriptionPlan,
+    subscriptionExpiry: addMonthsISO(nowISO(), PLAN_MONTHS[input.subscriptionPlan]),
+    isActive: true,
+  };
+  await db.put('auth', { ...config, users: [...config.users, user] });
+  return user;
+}
+
+export async function updateUser(id: string, patch: Partial<Omit<AppUser, 'id'>>): Promise<AppUser> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.id === id);
+  if (idx === -1) throw new Error('user not found');
+  const updated: AppUser = { ...config.users[idx], ...patch };
+  const users = [...config.users];
+  users[idx] = updated;
+  const nextConfig: AuthConfig = { ...config, users };
+  if (updated.role === 'admin' && patch.pin) nextConfig.adminPin = patch.pin;
+  await db.put('auth', nextConfig);
+  return updated;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  await db.put('auth', { ...config, users: config.users.filter((u) => u.id !== id) });
+}
+
+export async function changeAdminPin(newPin: string): Promise<AuthConfig> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const users = config.users.map((u) => (u.role === 'admin' ? { ...u, pin: newPin } : u));
+  const updated: AuthConfig = { ...config, adminPin: newPin, users };
+  await db.put('auth', updated);
+  return updated;
+}
+
+/** Extends from the current expiry if still active, otherwise from today (so a lapsed user doesn't keep their old date). */
+export async function extendSubscription(id: string, months: number, plan?: SubscriptionPlan): Promise<AppUser> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.id === id);
+  if (idx === -1) throw new Error('user not found');
+  const user = config.users[idx];
+  const base = new Date(user.subscriptionExpiry).getTime() > Date.now() ? user.subscriptionExpiry : nowISO();
+  const updated: AppUser = {
+    ...user,
+    subscriptionExpiry: addMonthsISO(base, months),
+    subscriptionPlan: plan ?? user.subscriptionPlan,
+  };
+  const users = [...config.users];
+  users[idx] = updated;
+  await db.put('auth', { ...config, users });
   return updated;
 }
 

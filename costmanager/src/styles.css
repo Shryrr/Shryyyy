@@ -224,6 +224,81 @@ canvas {
 }
 
 /* ==========================================================================
+   Auth screens
+   ========================================================================== */
+
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: var(--bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.auth-brand {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.auth-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.auth-pin-input {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 6px;
+}
+
+.auth-error {
+  font-size: 13px;
+  color: var(--red);
+  margin: 0;
+}
+
+.auth-lockout {
+  font-size: 13px;
+  color: var(--amber);
+  margin: 0;
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+/* ==========================================================================
    App shell
    ========================================================================== */
 
@@ -292,6 +367,14 @@ canvas {
   flex: 1;
   padding: var(--space-4) clamp(16px, 4vw, 56px);
   padding-bottom: calc(var(--nav-h) + var(--space-6) + env(safe-area-inset-bottom));
+}
+
+.app-banner-host {
+  padding: var(--space-3) clamp(16px, 4vw, 56px) 0;
+}
+
+.app-banner-host:empty {
+  display: none;
 }
 
 .app-nav {
@@ -582,6 +665,16 @@ canvas {
 .badge--muted {
   background: var(--surface-alt);
   color: var(--ink-3);
+}
+
+.badge--warning {
+  background: var(--warning-bg);
+  color: var(--amber);
+}
+
+.badge--danger {
+  background: var(--danger-bg);
+  color: var(--red);
 }
 
 /* ==========================================================================
@@ -1614,6 +1707,11 @@ body.modal-open {
 .shopping-row__stock {
   font-size: 12px;
   color: var(--ink-2);
+}
+
+.shopping-row__last-purchase {
+  font-size: 12px;
+  color: var(--ink-3);
 }
 
 .shopping-row__controls {

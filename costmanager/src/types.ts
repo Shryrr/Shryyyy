@@ -72,6 +72,21 @@ export interface Employee {
   startDate?: string;
 }
 
+export type SaleType = 'itemized' | 'bulk';
+
+export interface BulkSaleBreakdownEntry {
+  menuItemId: string;
+  menuItemName: string;
+  estimatedQuantity: number;
+  estimatedRevenue: number;
+  estimatedCost: number;
+}
+
+export interface IngredientDelta {
+  ingredientId: string;
+  quantity: number;
+}
+
 export interface Sale {
   id: string;
   date: string;
@@ -81,6 +96,12 @@ export interface Sale {
   unitSalePrice: number;
   unitCost: number;
   note?: string;
+  /** Absent on existing records means 'itemized' — no migration needed. */
+  type?: SaleType;
+  /** Only present on bulk sales: per-item revenue-share estimate, for display + reversal. */
+  estimatedBreakdown?: BulkSaleBreakdownEntry[];
+  /** Only present on bulk sales: exact ingredient amounts deducted, for accurate deleteSale reversal. */
+  ingredientDeltas?: IngredientDelta[];
 }
 
 export interface ShoppingListItem {
@@ -101,6 +122,26 @@ export interface ShoppingListItem {
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
+export type UserRole = 'admin' | 'buyer' | 'viewer';
+export type SubscriptionPlan = '1m' | '3m' | '6m' | '12m';
+
+export interface AppUser {
+  id: string;
+  name: string;
+  pin: string;
+  role: UserRole;
+  subscriptionExpiry: string;
+  subscriptionPlan: SubscriptionPlan;
+  isActive: boolean;
+}
+
+export interface AuthConfig {
+  id: 'auth';
+  adminPin: string;
+  isSetup: boolean;
+  users: AppUser[];
+}
+
 export interface Settings {
   id: 'global';
   businessName: string;
@@ -109,6 +150,8 @@ export interface Settings {
   targetFoodCostPercent: number;
   theme: Theme;
   lastBackup?: string;
+  subscriptionPrices?: Record<SubscriptionPlan, number>;
+  notificationsEnabled?: boolean;
 }
 
 export interface FullBackup {

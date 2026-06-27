@@ -31,7 +31,7 @@ async function renderCurrent(): Promise<void> {
     cleanup = undefined;
   }
   const path = getHashPath();
-  const route = routes.find((r) => r.path === path) ?? routes.find((r) => r.path === '/');
+  const route = routes.find((r) => r.path === path) ?? routes[0];
   if (!route) return;
   currentPath.set(route.path);
   document.title = `${route.title} — منوبان`;

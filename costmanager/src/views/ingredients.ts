@@ -1,4 +1,5 @@
 import * as db from '../db';
+import { hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { emptyState, el, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
@@ -236,6 +237,7 @@ async function handleDelete(ingredient: Ingredient): Promise<void> {
 function renderIngredientCard(ingredient: Ingredient): HTMLElement {
   const pct = ingredient.maxStock > 0 ? Math.min(100, Math.max(0, (ingredient.currentStock / ingredient.maxStock) * 100)) : 0;
   const status = ingredient.currentStock <= ingredient.minStock ? 'low' : ingredient.currentStock >= ingredient.maxStock ? 'full' : 'ok';
+  const canEdit = hasRole('admin');
 
   return el('div', { class: 'ingredient-card' }, [
     el('div', { class: 'ingredient-card__main' }, [
@@ -249,10 +251,10 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
       ]),
     ]),
     el('div', { class: 'ingredient-card__actions' }, [
-      el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']),
+      canEdit ? el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']) : null,
       el('button', { class: 'icon-btn', type: 'button', title: 'تاریخچه خرید', onclick: () => openPurchaseHistoryModal(ingredient.id) }, ['🧾']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openIngredientFormModal(ingredient) }, ['✏️']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(ingredient) }, ['🗑️']),
+      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openIngredientFormModal(ingredient) }, ['✏️']) : null,
+      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(ingredient) }, ['🗑️']) : null,
     ]),
   ]);
 }
@@ -280,7 +282,9 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['انبار مواد اولیه']),
-      el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openIngredientFormModal() }, ['+ افزودن ماده اولیه']),
+      hasRole('admin')
+        ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openIngredientFormModal() }, ['+ افزودن ماده اولیه'])
+        : null,
     ]),
     el('div', { class: 'toolbar' }, [
       searchInput,
@@ -317,8 +321,8 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
           icon: '📦',
           title: all.length ? 'نتیجه‌ای یافت نشد' : 'هنوز مواد اولیه‌ای ثبت نشده است',
           message: all.length ? 'فیلترها را تغییر دهید.' : 'اولین ماده اولیه را اضافه کنید.',
-          ctaLabel: all.length ? undefined : 'افزودن ماده اولیه',
-          onCta: all.length ? undefined : () => openIngredientFormModal(),
+          ctaLabel: all.length || !hasRole('admin') ? undefined : 'افزودن ماده اولیه',
+          onCta: all.length || !hasRole('admin') ? undefined : () => openIngredientFormModal(),
         }),
       );
       return;

@@ -3,26 +3,47 @@ import { createAlertBanner } from './components/alert-banner';
 import { createAppNav } from './components/bottom-nav';
 import { el } from './utils/dom';
 import { navigate, registerRoutes, startRouter } from './router';
+import type { Route } from './router';
 import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll } from './store';
 import { seedDatabase } from './seed';
+import { daysUntilExpiry, isExpired, isExpiringSoon, restoreSession } from './auth';
+import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
+import { toPersian } from './utils/format';
+import { renderAuthGate } from './views/login';
 import { renderAccounting } from './views/accounting';
+import { renderAdmin } from './views/admin';
 import { renderDashboard } from './views/dashboard';
 import { renderExpenses } from './views/expenses';
 import { renderIngredients } from './views/ingredients';
 import { renderRecipes } from './views/recipes';
 import { renderSales } from './views/sales';
 import { renderSettings } from './views/settings';
-import { renderShopping } from './views/shopping';
+import { openBuyerShoppingModal, renderShopping } from './views/shopping';
+import type { UserRole } from './types';
 
-const HEADER_LINKS: { path: string; label: string; icon: string }[] = [
-  { path: '/sales', label: 'فروش', icon: '🧾' },
-  { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸' },
-  { path: '/settings', label: 'تنظیمات', icon: '⚙️' },
+const HEADER_LINKS: { path: string; label: string; icon: string; roles?: UserRole[] }[] = [
+  { path: '/sales', label: 'فروش', icon: '🧾', roles: ['admin'] },
+  { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['admin'] },
+  { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['admin'] },
 ];
 
-function createAppHeader(): HTMLElement {
+const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
+  { path: '/', title: 'داشبورد', render: renderDashboard, roles: ['admin', 'viewer'] },
+  { path: '/ingredients', title: 'انبار مواد اولیه', render: renderIngredients, roles: ['admin', 'buyer'] },
+  { path: '/recipes', title: 'منو و فودکاست', render: renderRecipes, roles: ['admin', 'viewer'] },
+  { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses, roles: ['admin'] },
+  { path: '/sales', title: 'فروش', render: renderSales, roles: ['admin'] },
+  { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['admin'] },
+  { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['admin', 'buyer'] },
+  { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['admin'] },
+  { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['admin'] },
+];
+
+function createAppHeader(role: UserRole): HTMLElement {
   const offlineBadge = el('span', { class: 'app-header__offline-badge' }, ['آفلاین']);
   offlineBadge.hidden = true;
+
+  const links = HEADER_LINKS.filter((link) => !link.roles || link.roles.includes(role));
 
   const header = el('header', { class: 'app-header' }, [
     el('span', { class: 'app-header__logo' }, ['منوبان']),
@@ -30,7 +51,7 @@ function createAppHeader(): HTMLElement {
     el(
       'div',
       { class: 'app-header__actions' },
-      HEADER_LINKS.map((link) => {
+      links.map((link) => {
         const btn = el('button', { type: 'button', class: 'app-header__icon-btn', title: link.label, onclick: () => navigate(link.path) }, [
           link.icon,
         ]);
@@ -70,25 +91,53 @@ async function bootstrap(): Promise<void> {
     console.error('[boot] #app element not found, aborting');
     return;
   }
+
+  const user = (await restoreSession()) ?? (await renderAuthGate(app));
+  console.log('[boot] authenticated as', user.role);
+
+  setNotificationBannerHost(app);
+  initLowStockWatcher();
+  await requestNotificationPermission();
+
   app.innerHTML = '';
 
+  if (isExpired(user)) {
+    app.append(
+      el('div', { class: 'boot-splash', role: 'alert' }, [
+        el('div', { class: 'auth-card' }, [
+          el('div', { class: 'boot-logo' }, ['⛔']),
+          el('h2', { class: 'auth-title' }, ['اشتراک شما منقضی شده است']),
+          el('p', { class: 'auth-subtitle' }, ['برای ادامه استفاده از برنامه، لطفاً با مدیر سیستم تماس بگیرید.']),
+        ]),
+      ]),
+    );
+    console.log('[boot] subscription expired, blocking app');
+    return;
+  }
+
   const main = el('main', { class: 'app-main' });
+  const bannerHost = el('div', { class: 'app-banner-host' });
 
-  app.append(createAppHeader(), main, createAppNav());
+  app.append(createAppHeader(user.role), bannerHost, main, createAppNav());
 
-  registerRoutes([
-    { path: '/', title: 'داشبورد', render: renderDashboard },
-    { path: '/ingredients', title: 'انبار مواد اولیه', render: renderIngredients },
-    { path: '/recipes', title: 'منو و فودکاست', render: renderRecipes },
-    { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses },
-    { path: '/sales', title: 'فروش', render: renderSales },
-    { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting },
-    { path: '/shopping', title: 'لیست خرید', render: renderShopping },
-    { path: '/settings', title: 'تنظیمات', render: renderSettings },
-  ]);
+  if (isExpiringSoon(user)) {
+    const days = daysUntilExpiry(user);
+    const banner = createAlertBanner({
+      id: 'subscription-expiring',
+      message: `اشتراک شما تا ${toPersian(days)} روز دیگر منقضی می‌شود.`,
+      tone: 'warning',
+    });
+    if (banner) bannerHost.appendChild(banner);
+  }
+
+  registerRoutes(
+    ALL_ROUTES.filter((r) => r.roles.includes(user.role)).map((r) => ({ path: r.path, title: r.title, render: r.render })),
+  );
 
   startRouter(main);
   console.log('[boot] router started, app ready');
+
+  if (user.role === 'buyer') openBuyerShoppingModal();
 }
 
 function showBootError(error: unknown): void {

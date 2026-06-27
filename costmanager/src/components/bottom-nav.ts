@@ -1,20 +1,24 @@
+import { hasRole } from '../auth';
 import { currentPath, navigate } from '../router';
 import { ingredients, lowStockCount } from '../store';
 import { toPersian } from '../utils/format';
+import type { UserRole } from '../types';
 
 interface NavItem {
   path: string;
   label: string;
   icon: string;
   badge?: boolean;
+  roles?: UserRole[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/', label: 'داشبورد', icon: '🏠' },
-  { path: '/ingredients', label: 'انبار', icon: '📦' },
-  { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️' },
-  { path: '/accounting', label: 'حسابداری', icon: '📊' },
-  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true },
+  { path: '/', label: 'داشبورد', icon: '🏠', roles: ['admin', 'viewer'] },
+  { path: '/ingredients', label: 'انبار', icon: '📦', roles: ['admin', 'buyer'] },
+  { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️', roles: ['admin', 'viewer'] },
+  { path: '/accounting', label: 'حسابداری', icon: '📊', roles: ['admin'] },
+  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['admin', 'buyer'] },
+  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['admin'] },
 ];
 
 export function createAppNav(): HTMLElement {
@@ -22,7 +26,9 @@ export function createAppNav(): HTMLElement {
   nav.className = 'app-nav';
   nav.setAttribute('aria-label', 'پیمایش اصلی');
 
-  for (const item of NAV_ITEMS) {
+  const items = NAV_ITEMS.filter((item) => !item.roles || hasRole(...item.roles));
+
+  for (const item of items) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'app-nav__item';
