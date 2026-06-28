@@ -1,11 +1,12 @@
 import * as db from '../db';
+import { currentUser } from '../auth';
 import { openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
 import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian } from '../utils/format';
 import { shareOrCopyText } from '../utils/export';
 import type { RouteCleanup } from '../router';
-import { ingredientsById, refreshShoppingList, shoppingList } from '../store';
+import { ingredientsById, refreshNotifications, refreshShoppingList, settings, shoppingList } from '../store';
 import type { AppUser, Ingredient, IngredientCategory, ShoppingListItem } from '../types';
 
 function buildShareText(items: ShoppingListItem[]): string {
@@ -102,9 +103,85 @@ function renderShoppingRow(item: ShoppingListItem, ingredient?: Ingredient): HTM
   ]);
 }
 
+function buildPurchaseRequestText(businessName: string, userName: string, items: ShoppingListItem[], total: number): string {
+  const lines = [
+    `📋 درخواست خرید — ${businessName}`,
+    `📅 تاریخ: ${formatDate(new Date().toISOString())}`,
+    `👤 درخواست‌دهنده: ${userName}`,
+    '',
+    'اقلام مورد نیاز:',
+    ...items.map((i) => `• ${i.ingredientName}: ${toPersian(i.suggestedQty)} ${formatUnit(i.unit)} — ~${formatMoney(i.estimatedCost)}`),
+    '',
+    `💰 مجموع تخمینی: ${formatMoney(total)}`,
+    '',
+    'ارسال از منوبان 📱',
+  ];
+  return lines.join('\n');
+}
+
+async function findActiveBuyerPhone(): Promise<string | undefined> {
+  const users = await db.listUsers();
+  return users.find((u) => u.role === 'buyer' && u.isActive && u.phone)?.phone;
+}
+
+function openPurchaseRequestActionSheet(text: string, user: AppUser): void {
+  async function handleSms(): Promise<void> {
+    const phone = await findActiveBuyerPhone();
+    window.location.href = `sms:${phone ?? ''}?body=${encodeURIComponent(text)}`;
+    modal.close();
+  }
+
+  async function handleCopy(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('متن درخواست خرید کپی شد ✓', 'success');
+    } catch {
+      showToast('خطا در کپی متن', 'error');
+    }
+    modal.close();
+  }
+
+  async function handleNotify(): Promise<void> {
+    await db.createNotification({
+      type: 'purchase_request',
+      title: 'درخواست خرید جدید',
+      message: text,
+      targetRole: 'buyer',
+      createdBy: user.id,
+    });
+    await refreshNotifications();
+    showToast('نوتیفیکیشن برای مسئول خرید ارسال شد ✓', 'success');
+    modal.close();
+  }
+
+  const body = el('div', { class: 'action-sheet' }, [
+    el('button', { type: 'button', class: 'btn btn-secondary action-sheet__btn', onclick: handleSms }, ['📱 ارسال پیامک از گوشی']),
+    el('button', { type: 'button', class: 'btn btn-secondary action-sheet__btn', onclick: handleCopy }, ['📋 کپی متن']),
+    el('button', { type: 'button', class: 'btn btn-primary action-sheet__btn', onclick: handleNotify }, ['🔔 ارسال نوتیفیکیشن']),
+  ]);
+
+  const modal = openModal({ title: 'ارسال درخواست خرید', body, maxWidth: '380px' });
+}
+
+async function handlePurchaseRequest(): Promise<void> {
+  const user = currentUser.get();
+  if (!user) return;
+  const items = [...shoppingList.get()].sort((a, b) => a.ingredientName.localeCompare(b.ingredientName, 'fa'));
+  if (!items.length) {
+    showToast('لیست خرید خالی است', 'error');
+    return;
+  }
+  const total = items.reduce((sum, i) => sum + i.estimatedCost, 0);
+  const businessName = settings.get()?.businessName ?? '';
+  openPurchaseRequestActionSheet(buildPurchaseRequestText(businessName, user.name, items, total), user);
+}
+
 export async function renderShopping(container: HTMLElement): Promise<RouteCleanup> {
   const root = el('div', { class: 'view view-shopping' });
   container.appendChild(root);
+
+  await db.regenerateShoppingList();
+  await refreshShoppingList();
 
   const budgetEl = el('div');
   const listEl = el('div', { class: 'shopping-list' });
@@ -135,13 +212,22 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
       el('h1', { class: 'view-header__title' }, ['لیست خرید']),
       el('div', { class: 'view-header__actions' }, [
         el('button', { class: 'btn btn-secondary', type: 'button', onclick: handleShare }, ['اشتراک‌گذاری']),
-        el('button', { class: 'btn btn-primary', type: 'button', onclick: handleRegenerate }, ['↻ بازسازی لیست']),
+        el('button', { class: 'btn btn-primary', type: 'button', onclick: handleRegenerate }, ['🔄 بروزرسانی']),
       ]),
     ]),
-    budgetEl,
-    listEl,
-    footerEl,
   );
+
+  if (currentUser.get()?.role !== 'buyer') {
+    root.appendChild(
+      el(
+        'button',
+        { type: 'button', class: 'btn btn-primary purchase-request-btn', onclick: handlePurchaseRequest },
+        ['📤 ارسال درخواست خرید به مسئول خرید'],
+      ),
+    );
+  }
+
+  root.append(budgetEl, listEl, footerEl);
 
   function render(): void {
     listEl.innerHTML = '';

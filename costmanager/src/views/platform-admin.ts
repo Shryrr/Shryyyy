@@ -8,12 +8,14 @@ import {
   addPlatformInvoice,
   deletePlatformInvoice,
   fetchPlatformBusinesses,
+  getPlatformPaymentCard,
   getPlatformPricing,
   isDefaultPlatformPin,
   listPlatformBroadcasts,
   listPlatformInvoices,
   sendPlatformBroadcast,
   setPlatformOwnerSession,
+  setPlatformPaymentCard,
   setPlatformPin,
   setPlatformPricing,
   verifyPlatformPin,
@@ -363,6 +365,19 @@ function renderPricingTab(container: HTMLElement): void {
   });
 
   container.appendChild(settingsCard('تعرفه‌های اشتراک پلتفرم', form));
+
+  const cardInput = el('input', { type: 'text', class: 'input', dir: 'ltr', value: getPlatformPaymentCard(), placeholder: '۶۰۳۷-××××-××××-××××' });
+  const cardForm = el('form', { class: 'form' }, [
+    el('p', { class: 'form-hint' }, ['این شماره کارت برای واریز کسب‌وکارها هنگام تمدید اشتراک نمایش داده می‌شود.']),
+    field('شماره کارت پلتفرم', cardInput),
+    el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره شماره کارت'])]),
+  ]);
+  cardForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    setPlatformPaymentCard(cardInput.value.trim());
+    showToast('شماره کارت ذخیره شد', 'success');
+  });
+  container.appendChild(settingsCard('شماره کارت دریافت وجه', cardForm));
 }
 
 function renderBroadcastTab(container: HTMLElement): void {

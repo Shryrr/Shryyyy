@@ -4,6 +4,7 @@ import type { PaidSubscriptionPlan } from './types';
 const PIN_KEY = 'platformOwnerPin';
 const SESSION_KEY = 'platformOwnerSession';
 const PRICING_KEY = 'platformPricing';
+const PAYMENT_CARD_KEY = 'platformPaymentCard';
 const INVOICES_KEY = 'platformInvoices';
 const BROADCASTS_KEY = 'platformBroadcasts';
 
@@ -49,6 +50,15 @@ export function getPlatformPricing(): PlatformPricing {
 
 export function setPlatformPricing(pricing: PlatformPricing): void {
   localStorage.setItem(PRICING_KEY, JSON.stringify(pricing));
+}
+
+/** Card number businesses transfer payment to for manual (non-gateway) subscription renewal. */
+export function getPlatformPaymentCard(): string {
+  return localStorage.getItem(PAYMENT_CARD_KEY) || '';
+}
+
+export function setPlatformPaymentCard(cardNumber: string): void {
+  localStorage.setItem(PAYMENT_CARD_KEY, cardNumber);
 }
 
 export interface PlatformInvoice {

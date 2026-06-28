@@ -29,7 +29,10 @@ export async function renderAuthGate(container: HTMLElement): Promise<AppUser> {
 
   return new Promise((resolve) => {
     if (!config.isSetup || !config.users.some((u) => u.role === 'superadmin')) {
-      renderSetupWizard(container, businessName, resolve);
+      renderSetupWizard(container, {
+        onDone: resolve,
+        onJoined: () => { renderAuthGate(container).then(resolve); },
+      });
     } else {
       renderUserGrid(container, businessName, config.users.filter((u) => u.isActive), resolve);
     }

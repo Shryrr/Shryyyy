@@ -1,12 +1,15 @@
 import * as db from './db';
 import { createAlertBanner } from './components/alert-banner';
 import { createAppNav } from './components/bottom-nav';
+import { confirmModal } from './components/modal';
+import { createNotificationBell } from './components/notification-bell';
+import { showToast } from './components/toast';
 import { el, emptyState } from './utils/dom';
 import { currentPath, navigate, registerRoutes, startRouter } from './router';
 import type { Route, RouteCleanup } from './router';
-import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll, syncStatus } from './store';
+import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll, settings, syncStatus } from './store';
 import { seedDatabase } from './seed';
-import { daysUntilExpiry, isExpired, isExpiringSoon, logout, restoreSession } from './auth';
+import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon, logout, restoreSession, takeSessionExpiredReason } from './auth';
 import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
 import { formatDate, toPersian } from './utils/format';
 import { setupAutoSync } from './utils/sync';
@@ -68,14 +71,31 @@ function openPlatformOwnerOverlay(): void {
   openPlatformOwnerPanel(overlay, () => overlay.remove());
 }
 
-function createAppHeader(role: UserRole): HTMLElement {
+const ROLE_LABELS: Record<UserRole, string> = {
+  superadmin: 'مدیر اصلی',
+  manager: 'مدیر',
+  warehouse: 'انباردار',
+  buyer: 'خریدار',
+};
+
+async function handleLogoutClick(): Promise<void> {
+  const confirmed = await confirmModal({
+    title: 'خروج از حساب',
+    message: 'آیا می‌خواهید خارج شوید؟',
+    confirmLabel: 'خروج',
+    danger: true,
+  });
+  if (confirmed) logout();
+}
+
+function createAppHeader(user: AppUser): HTMLElement {
   const offlineBadge = el('span', { class: 'app-header__offline-badge' }, ['آفلاین']);
   offlineBadge.hidden = true;
 
   const syncBadge = el('span', { class: 'app-header__sync-badge' }, ['']);
   syncBadge.hidden = true;
 
-  const links = HEADER_LINKS.filter((link) => !link.roles || link.roles.includes(role));
+  const links = HEADER_LINKS.filter((link) => !link.roles || link.roles.includes(user.role));
 
   const actions = el(
     'div',
@@ -98,6 +118,11 @@ function createAppHeader(role: UserRole): HTMLElement {
     platformBtn.setAttribute('aria-label', 'پنل پلتفرم');
     actions.appendChild(platformBtn);
   }
+
+  const userChip = el('span', { class: 'app-header__user-chip' }, [`${user.name} (${ROLE_LABELS[user.role]})`]);
+  const logoutBtn = el('button', { type: 'button', class: 'app-header__icon-btn', title: 'خروج', onclick: handleLogoutClick }, ['🚪']);
+  logoutBtn.setAttribute('aria-label', 'خروج');
+  actions.append(createNotificationBell(user), userChip, logoutBtn);
 
   const header = el('header', { class: 'app-header' }, [el('span', { class: 'app-header__logo' }, ['منوبان']), offlineBadge, syncBadge, actions]);
 
@@ -133,13 +158,13 @@ function createBreadcrumb(routes: (Route & { roles: UserRole[] })[]): HTMLElemen
   return bar;
 }
 
-function renderExpiredScreen(app: HTMLElement, user: AppUser): void {
+function renderExpiredScreen(app: HTMLElement, expiry: string): void {
   app.append(
     el('div', { class: 'boot-splash', role: 'alert' }, [
       el('div', { class: 'auth-card' }, [
         el('div', { class: 'boot-logo' }, ['⛔']),
         el('h2', { class: 'auth-title' }, ['اشتراک شما منقضی شده است']),
-        el('p', { class: 'auth-subtitle' }, [`اشتراک شما در ${formatDate(user.subscriptionExpiry)} منقضی شده`]),
+        el('p', { class: 'auth-subtitle' }, [`اشتراک کسب‌وکار شما در ${formatDate(expiry)} منقضی شده`]),
         el('p', { class: 'auth-subtitle' }, ['برای تمدید با مدیر اصلی تماس بگیرید']),
         el('button', { type: 'button', class: 'btn btn-secondary', onclick: logout }, ['خروج از حساب']),
       ]),
@@ -172,6 +197,9 @@ async function bootstrap(): Promise<void> {
     return;
   }
 
+  const sessionExpiredReason = takeSessionExpiredReason();
+  if (sessionExpiredReason) showToast(sessionExpiredReason, 'error', 4000);
+
   const user = (await restoreSession()) ?? (await renderAuthGate(app));
   console.log('[boot] authenticated as', user.role);
 
@@ -181,8 +209,10 @@ async function bootstrap(): Promise<void> {
 
   app.innerHTML = '';
 
-  if (isExpired(user)) {
-    renderExpiredScreen(app, user);
+  const businessSettings = settings.get() ?? (await db.getSettings());
+
+  if (isBusinessExpired(businessSettings)) {
+    renderExpiredScreen(app, businessSettings.subscriptionExpiry);
     console.log('[boot] subscription expired, blocking app');
     return;
   }
@@ -190,13 +220,13 @@ async function bootstrap(): Promise<void> {
   const main = el('main', { class: 'app-main' });
   const bannerHost = el('div', { class: 'app-banner-host' });
 
-  app.append(createAppHeader(user.role), createBreadcrumb(ALL_ROUTES), bannerHost, main, createAppNav());
+  app.append(createAppHeader(user), createBreadcrumb(ALL_ROUTES), bannerHost, main, createAppNav());
 
-  if (isExpiringSoon(user)) {
-    const days = daysUntilExpiry(user);
+  if (isBusinessExpiringSoon(businessSettings)) {
+    const days = daysUntilBusinessExpiry(businessSettings);
     const banner = createAlertBanner({
       id: 'subscription-expiring',
-      message: `اشتراک شما تا ${toPersian(days)} روز دیگر منقضی می‌شود.`,
+      message: `اشتراک کسب‌وکار شما تا ${toPersian(days)} روز دیگر منقضی می‌شود.`,
       tone: 'warning',
     });
     if (banner) bannerHost.appendChild(banner);

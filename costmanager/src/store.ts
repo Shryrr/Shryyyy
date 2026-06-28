@@ -1,5 +1,7 @@
 import * as db from './db';
-import type { Customer, Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem, SmsLog } from './types';
+import type {
+  AppNotification, Customer, Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem, SmsLog, UserRole,
+} from './types';
 
 type Listener<T> = (value: T) => void;
 
@@ -41,6 +43,7 @@ export const sales = signal<Sale[]>([]);
 export const shoppingList = signal<ShoppingListItem[]>([]);
 export const customers = signal<Customer[]>([]);
 export const smsLogs = signal<SmsLog[]>([]);
+export const notifications = signal<AppNotification[]>([]);
 export const settings = signal<Settings | null>(null);
 export const resolvedTheme = signal<'light' | 'dark'>('light');
 export const isOnline = signal<boolean>(navigator.onLine);
@@ -79,6 +82,9 @@ export async function refreshCustomers(): Promise<void> {
 export async function refreshSmsLogs(): Promise<void> {
   smsLogs.set(await db.listSmsLogs());
 }
+export async function refreshNotifications(): Promise<void> {
+  notifications.set(await db.listNotifications());
+}
 export async function refreshSettings(): Promise<void> {
   settings.set(await db.getSettings());
 }
@@ -93,6 +99,7 @@ export async function refreshAll(): Promise<void> {
     refreshShoppingList(),
     refreshCustomers(),
     refreshSmsLogs(),
+    refreshNotifications(),
     refreshSettings(),
   ]);
 }
@@ -103,6 +110,10 @@ export function ingredientsById(): Map<string, Ingredient> {
 
 export function lowStockCount(): number {
   return ingredients.get().filter((i) => i.currentStock <= i.minStock).length;
+}
+
+export function unreadNotificationCount(role: UserRole): number {
+  return notifications.get().filter((n) => n.targetRole === role && !n.isRead).length;
 }
 
 function applyTheme(theme: Settings['theme']): void {

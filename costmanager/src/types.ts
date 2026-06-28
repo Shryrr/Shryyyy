@@ -154,12 +154,26 @@ export interface SmsLog {
   sentAt: string;
 }
 
+export type AppNotificationType = 'purchase_request' | 'low_stock' | 'system';
+
+export interface AppNotification {
+  id: string;
+  type: AppNotificationType;
+  title: string;
+  message: string;
+  targetRole: UserRole;
+  createdBy: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
 export type UserRole = 'superadmin' | 'manager' | 'warehouse' | 'buyer';
 export type SubscriptionPlan = '1m' | '3m' | '6m' | '12m' | 'unlimited';
 export type PaidSubscriptionPlan = '1m' | '3m' | '6m' | '12m';
+export type BusinessSubscriptionStatus = 'trial' | 'pending_payment' | 'active' | 'expired';
 
 export interface AppUser {
   id: string;
@@ -167,9 +181,10 @@ export interface AppUser {
   pin: string;
   role: UserRole;
   isActive: boolean;
-  subscriptionPlan: SubscriptionPlan;
-  subscriptionExpiry: string;
-  subscriptionPricesPaid?: number;
+  /** Only superadmin/manager use these — set during business registration or a new-device join, never via the PIN grid. */
+  email?: string;
+  phone?: string;
+  password?: string;
   createdAt: string;
   lastLogin?: string;
 }
@@ -188,7 +203,11 @@ export interface Settings {
   targetFoodCostPercent: number;
   theme: Theme;
   lastBackup?: string;
-  subscriptionPrices: Record<PaidSubscriptionPlan, number>;
+  /** Subscription is per-business, not per-user: every user is blocked the same way once the business's plan expires. */
+  subscriptionStatus: BusinessSubscriptionStatus;
+  subscriptionPlan: SubscriptionPlan;
+  subscriptionExpiry: string;
+  trialStartedAt?: string;
   notificationsEnabled?: boolean;
   businessId: string;
   syncServerUrl: string;
@@ -210,5 +229,6 @@ export interface FullBackup {
     settings: Settings[];
     customers: Customer[];
     sms_logs: SmsLog[];
+    notifications: AppNotification[];
   };
 }

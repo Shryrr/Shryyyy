@@ -1,3 +1,4 @@
+import { checkInactivityTimeout } from './auth';
 import { signal } from './store';
 
 export type RouteCleanup = (() => void) | void;
@@ -26,6 +27,7 @@ let rootEl: HTMLElement | null = null;
 
 async function renderCurrent(): Promise<void> {
   if (!rootEl) return;
+  if (checkInactivityTimeout()) return;
   if (cleanup) {
     cleanup();
     cleanup = undefined;

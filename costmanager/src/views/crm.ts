@@ -6,6 +6,10 @@ import { customers, refreshCustomers, refreshSettings, refreshSmsLogs, settings,
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatDateTime, formatMoney, toPersian } from '../utils/format';
 import { sendBulkSms } from '../utils/sms';
+import {
+  CUSTOMER_FIELD_LABELS, buildCustomerRows, detectCustomerColumns, parseSpreadsheetFile,
+} from '../utils/excel-import';
+import type { CustomerField, CustomerImportRow, ParsedSheet } from '../utils/excel-import';
 import type { RouteCleanup } from '../router';
 import type { Customer, CustomerSegment, SmsLog } from '../types';
 
@@ -134,12 +138,237 @@ function renderCustomerRow(customer: Customer): HTMLElement {
   ]);
 }
 
+// ---------- Customer Excel import ----------
+
+const CUSTOMER_IMPORT_FIELDS: CustomerField[] = ['name', 'phone', 'email', 'address', 'birthdate', 'notes'];
+
+function customerMappingRow(headers: string[], mapping: Record<CustomerField, number>, onChange: () => void): HTMLElement {
+  const row = el('div', { class: 'import-mapping' });
+  for (const fieldKey of CUSTOMER_IMPORT_FIELDS) {
+    const select = el('select', { class: 'input input--sm' });
+    select.appendChild(el('option', { value: '-1' }, ['— تشخیص نشد —']));
+    headers.forEach((h, idx) => {
+      const opt = el('option', { value: String(idx) }, [h || `ستون ${toPersian(idx + 1)}`]);
+      if (idx === mapping[fieldKey]) opt.selected = true;
+      select.appendChild(opt);
+    });
+    if (mapping[fieldKey] === -1) (select as HTMLSelectElement).value = '-1';
+    select.addEventListener('change', () => {
+      mapping[fieldKey] = Number((select as HTMLSelectElement).value);
+      onChange();
+    });
+    row.appendChild(field(CUSTOMER_FIELD_LABELS[fieldKey], select));
+  }
+  return row;
+}
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+/** Folds detected email/address/birthdate columns into the free-text notes field (Customer has no dedicated columns for these). */
+function buildExtraNotes(row: CustomerImportRow): string | undefined {
+  const parts: string[] = [];
+  if (row.email) parts.push(`ایمیل: ${row.email}`);
+  if (row.address) parts.push(`آدرس: ${row.address}`);
+  if (row.birthdate) parts.push(`تاریخ تولد: ${row.birthdate}`);
+  if (row.notes) parts.push(row.notes);
+  return parts.length ? parts.join(' | ') : undefined;
+}
+
+function renderCustomerImportPreview(rows: CustomerImportRow[]): HTMLElement {
+  const table = el('div', { class: 'import-table' });
+  table.appendChild(
+    el('div', { class: 'import-table__row import-table__row--head' }, [
+      el('span', {}, ['#']),
+      el('span', {}, ['نام']),
+      el('span', {}, ['موبایل']),
+      el('span', {}, ['ایمیل']),
+      el('span', {}, ['آدرس']),
+    ]),
+  );
+  rows.slice(0, 5).forEach((row, i) => {
+    table.appendChild(
+      el('div', { class: 'import-table__row' }, [
+        el('span', {}, [toPersian(i + 1)]),
+        el('span', {}, [row.name || '—']),
+        el('span', {}, [row.phone || '—']),
+        el('span', {}, [row.email || '—']),
+        el('span', {}, [row.address || '—']),
+      ]),
+    );
+  });
+  return table;
+}
+
+type DuplicateAction = 'skip' | 'update';
+
+function renderDuplicateSection(
+  duplicates: { row: CustomerImportRow; existing: Customer }[],
+  actions: Map<number, DuplicateAction>,
+): HTMLElement {
+  if (!duplicates.length) return el('div');
+  const rows = duplicates.map(({ row, existing }) => {
+    const select = el('select', { class: 'input input--sm' }, [
+      el('option', { value: 'skip' }, ['رد کردن']),
+      el('option', { value: 'update' }, ['بروزرسانی اطلاعات موجود']),
+    ]);
+    (select as HTMLSelectElement).value = actions.get(row.rowIndex) ?? 'skip';
+    select.addEventListener('change', () => {
+      actions.set(row.rowIndex, (select as HTMLSelectElement).value as DuplicateAction);
+    });
+    return el('div', { class: 'import-table__row' }, [
+      el('span', {}, [`${row.name || '—'} (${row.phone}) ⟷ ${existing.name}`]),
+      select,
+    ]);
+  });
+  return el('div', { class: 'import-table' }, [
+    el('div', { class: 'import-table__row import-table__row--head' }, [el('span', {}, ['مشتریان تکراری شناسایی‌شده'])]),
+    ...rows,
+  ]);
+}
+
+function openCustomerImportModal(): void {
+  let currentSheet: ParsedSheet | null = null;
+  let currentMapping: Record<CustomerField, number> = { name: -1, phone: -1, email: -1, address: -1, birthdate: -1, notes: -1 };
+  let currentRows: CustomerImportRow[] = [];
+  const duplicateActions = new Map<number, DuplicateAction>();
+
+  const fileInput = el('input', { type: 'file', accept: '.xlsx,.xls,.csv', class: 'input' });
+  const statusEl = el('p', { class: 'form-hint' }, ['یک فایل اکسل یا CSV حاوی لیست مشتریان انتخاب کنید.']);
+  const mappingContainer = el('div');
+  const countEl = el('p', { class: 'form-hint' });
+  const previewContainer = el('div');
+  const duplicateContainer = el('div');
+  const summaryContainer = el('div');
+  const confirmBtn = el('button', { type: 'button', class: 'btn btn-primary', disabled: true }, ['تأیید و وارد کردن']);
+
+  function rebuildRows(): void {
+    if (!currentSheet) return;
+    currentRows = buildCustomerRows(currentSheet, currentMapping);
+    duplicateActions.clear();
+
+    const existing = customers.get();
+    const duplicates: { row: CustomerImportRow; existing: Customer }[] = [];
+    for (const row of currentRows) {
+      if (!row.phone) continue;
+      const match = existing.find((c) => normalizePhone(c.phone) === normalizePhone(row.phone));
+      if (match) {
+        duplicates.push({ row, existing: match });
+        duplicateActions.set(row.rowIndex, 'skip');
+      }
+    }
+
+    countEl.textContent = `${toPersian(currentRows.length)} مشتری شناسایی شد`;
+    previewContainer.innerHTML = '';
+    previewContainer.appendChild(renderCustomerImportPreview(currentRows));
+    duplicateContainer.innerHTML = '';
+    duplicateContainer.appendChild(renderDuplicateSection(duplicates, duplicateActions));
+    confirmBtn.disabled = currentRows.length === 0;
+  }
+
+  function rerenderMapping(): void {
+    if (!currentSheet) return;
+    mappingContainer.innerHTML = '';
+    mappingContainer.appendChild(customerMappingRow(currentSheet.headers, currentMapping, rebuildRows));
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      currentSheet = await parseSpreadsheetFile(file);
+      currentMapping = detectCustomerColumns(currentSheet.headers);
+      statusEl.textContent = `${toPersian(currentSheet.rows.length)} ردیف در فایل یافت شد — ستون‌ها را تأیید کنید`;
+      rerenderMapping();
+      rebuildRows();
+      summaryContainer.innerHTML = '';
+    } catch {
+      showToast('خطا در خواندن فایل', 'error');
+    }
+  });
+
+  confirmBtn.addEventListener('click', async () => {
+    if (!currentRows.length) return;
+    confirmBtn.disabled = true;
+
+    let imported = 0;
+    let updated = 0;
+    let skippedDuplicates = 0;
+    let errors = 0;
+
+    for (const row of currentRows) {
+      if (!row.name.trim() || !row.phone.trim()) {
+        errors++;
+        continue;
+      }
+      const existing = customers.get().find((c) => normalizePhone(c.phone) === normalizePhone(row.phone));
+      if (existing) {
+        const action = duplicateActions.get(row.rowIndex) ?? 'skip';
+        if (action === 'update') {
+          await db.updateCustomer(existing.id, {
+            name: row.name.trim(),
+            phone: row.phone.trim(),
+            notes: buildExtraNotes(row) ?? existing.notes,
+          });
+          updated++;
+        } else {
+          skippedDuplicates++;
+        }
+        continue;
+      }
+      await db.createCustomer({ name: row.name.trim(), phone: row.phone.trim(), notes: buildExtraNotes(row) });
+      imported++;
+    }
+
+    await refreshCustomers();
+
+    summaryContainer.innerHTML = '';
+    const lines = [`✓ ${toPersian(imported)} مشتری وارد شد`];
+    if (updated) lines.push(`🔄 ${toPersian(updated)} مشتری بروزرسانی شد`);
+    lines.push(`⚠ ${toPersian(skippedDuplicates)} مورد تکراری رد شد`);
+    lines.push(`✗ ${toPersian(errors)} ردیف خطا داشت`);
+    summaryContainer.appendChild(
+      el(
+        'div',
+        { class: 'import-summary-card' },
+        lines.map((line, i) => el('p', { class: `import-summary-card__line${i === 0 ? ' import-summary-card__line--strong' : ''}` }, [line])),
+      ),
+    );
+
+    showToast('وارد کردن مشتریان انجام شد', 'success');
+    previewContainer.innerHTML = '';
+    duplicateContainer.innerHTML = '';
+    mappingContainer.innerHTML = '';
+    countEl.textContent = '';
+    statusEl.textContent = 'یک فایل اکسل یا CSV حاوی لیست مشتریان انتخاب کنید.';
+    fileInput.value = '';
+    currentSheet = null;
+    currentRows = [];
+    confirmBtn.disabled = true;
+  });
+
+  const body = el('div', { class: 'form' }, [
+    field('فایل اکسل/CSV', fileInput),
+    statusEl,
+    mappingContainer,
+    countEl,
+    previewContainer,
+    duplicateContainer,
+    el('div', { class: 'modal-actions' }, [confirmBtn]),
+    summaryContainer,
+  ]);
+
+  openModal({ title: '📥 وارد کردن مشتریان از فایل Excel', body, maxWidth: '640px' });
+}
+
 function renderCustomersTab(container: HTMLElement): () => void {
   const searchInput = el('input', { type: 'search', class: 'input', placeholder: 'جستجو بر اساس نام یا شماره موبایل' });
   const listEl = el('div', { class: 'expense-list' });
   container.append(
     el('div', { class: 'tab-toolbar' }, [
       searchInput,
+      el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: openCustomerImportModal }, ['📥 وارد کردن مشتریان از فایل Excel']),
       el('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openCustomerFormModal() }, ['+ افزودن مشتری']),
     ]),
     listEl,

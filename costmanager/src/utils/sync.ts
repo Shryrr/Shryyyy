@@ -62,18 +62,27 @@ async function applyPayload(payload: SyncPayload): Promise<void> {
   await refreshAll();
 }
 
-function serverBase(): string {
-  return (settings.get()?.syncServerUrl ?? '').trim();
+function normalizeBase(url: string): string {
+  return url.trim().replace(/\/+$/, '');
 }
 
+function serverBase(): string {
+  return normalizeBase(settings.get()?.syncServerUrl ?? '');
+}
+
+/**
+ * The sync "server" is just a plain WebDAV directory (e.g. Nginx with `dav_methods PUT`) —
+ * each business's data lives at `{base}/{businessId}.json` as a static file, written with PUT
+ * and read with GET. There is no application backend on the other end.
+ */
 export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
   const base = serverBase();
   if (!base || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
   syncStatus.set('syncing');
   try {
     const payload = await buildPayload();
-    const res = await fetchWithTimeout(`${base}/push`, {
-      method: 'POST',
+    const res = await fetchWithTimeout(`${base}/${encodeURIComponent(payload.businessId)}.json`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
@@ -101,7 +110,12 @@ export async function pullFromServer(
   if (!base || !businessId || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
   syncStatus.set('syncing');
   try {
-    const res = await fetchWithTimeout(`${base}/pull?businessId=${encodeURIComponent(businessId)}`);
+    const res = await fetchWithTimeout(`${base}/${encodeURIComponent(businessId)}.json`);
+    if (res.status === 404) {
+      // Nothing has ever been pushed for this business yet — not an error.
+      syncStatus.set('synced');
+      return { ok: true, applied: false };
+    }
     if (!res.ok) {
       syncStatus.set('error');
       return { ok: false, error: ERR_NETWORK };
@@ -134,12 +148,13 @@ export async function pullFromServer(
   }
 }
 
+/** There's no `/ping` route on a static file server — any HTTP response (even 403/404) means the address is reachable. */
 export async function testSyncConnection(serverUrl: string): Promise<{ ok: boolean; error?: string }> {
-  const base = serverUrl.trim();
+  const base = normalizeBase(serverUrl);
   if (!base) return { ok: false, error: 'آدرس سرور را وارد کنید' };
   try {
-    const res = await fetchWithTimeout(`${base}/ping`);
-    return res.ok ? { ok: true } : { ok: false, error: ERR_NETWORK };
+    await fetchWithTimeout(`${base}/`);
+    return { ok: true };
   } catch {
     return { ok: false, error: ERR_NETWORK };
   }
@@ -159,8 +174,8 @@ export async function generateSyncCode(): Promise<string> {
   const base = serverBase();
   if (base && navigator.onLine) {
     try {
-      await fetchWithTimeout(`${base}/code/${code}`, {
-        method: 'POST',
+      await fetchWithTimeout(`${base}/codes/${code}.json`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -189,7 +204,7 @@ export async function importFromSyncCode(code: string, opts: { skipConfirm?: boo
     const base = serverBase();
     if (!base || !navigator.onLine) return { ok: false, error: ERR_NOT_FOUND };
     try {
-      const res = await fetchWithTimeout(`${base}/code/${trimmed}`);
+      const res = await fetchWithTimeout(`${base}/codes/${trimmed}.json`);
       if (!res.ok) return { ok: false, error: ERR_NOT_FOUND };
       payload = (await res.json()) as SyncPayload;
     } catch {

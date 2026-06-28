@@ -1,14 +1,15 @@
 import * as db from '../db';
-import { daysUntilExpiry, isExpired, isExpiringSoon } from '../auth';
+import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, selectEl } from '../utils/dom';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
-import { formatBusinessType, formatDate, formatDateTime, toPersian } from '../utils/format';
+import { formatBusinessType, formatDate, formatDateTime, formatMoney, toPersian } from '../utils/format';
 import { generateSyncCode, importFromSyncCode, pullFromServer, pushToServer, testSyncConnection } from '../utils/sync';
+import { getPlatformPaymentCard, getPlatformPricing } from '../platform-owner';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
-import type { AppUser, BusinessType, FullBackup, PaidSubscriptionPlan, SubscriptionPlan, UserRole } from '../types';
+import type { AppUser, BusinessType, FullBackup, PaidSubscriptionPlan, Settings, SubscriptionPlan, UserRole } from '../types';
 
 type Tab = 'users' | 'subscriptions' | 'system';
 
@@ -71,43 +72,15 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
   });
   const confirmPinInput = el('input', { type: 'text', inputmode: 'numeric', class: 'input', autocomplete: 'off' });
   const roleSelect = selectEl(ROLE_OPTIONS, existing && !isSuperadminUser ? existing.role : 'manager');
-  const planSelect = existing ? null : selectEl(PLAN_OPTIONS, '1m');
   const activeCheckbox = el('input', { type: 'checkbox', checked: existing?.isActive ?? true });
-
-  const extendSection = existing && !isSuperadminUser
-    ? el('div', { class: 'field' }, [
-      el('span', { class: 'field__label' }, [`تمدید اشتراک (انقضای فعلی: ${formatDate(existing.subscriptionExpiry)})`]),
-      el(
-        'div',
-        { class: 'admin-extend-grid' },
-        EXTEND_OPTIONS.map((opt) =>
-          el(
-            'button',
-            {
-              type: 'button',
-              class: 'btn btn-secondary btn-sm',
-              onclick: async () => {
-                await db.extendSubscription(existing.id, opt.months, opt.plan);
-                showToast('اشتراک تمدید شد', 'success');
-                modal.close();
-                onSaved();
-              },
-            },
-            [opt.label],
-          ),
-        ),
-      ),
-    ])
-    : null;
 
   const body = el('form', { class: 'form' }, [
     field('نام کاربر', nameInput),
     field(existing ? 'پین جدید (اختیاری)' : 'پین (۴ رقم)', pinInput),
     field('تکرار پین', confirmPinInput),
     isSuperadminUser ? el('p', { class: 'form-hint' }, ['نقش مدیر اصلی قابل تغییر نیست']) : field('نقش', roleSelect),
-    planSelect ? field('دوره اشتراک اولیه', planSelect) : null,
+    !existing ? el('p', { class: 'form-hint' }, ['کارمندان رایگان اضافه می‌شوند و اشتراک جداگانه ندارند.']) : null,
     existing && !isSuperadminUser ? el('label', { class: 'toolbar__checkbox' }, [activeCheckbox, ' فعال']) : null,
-    extendSection,
     el('div', { class: 'modal-actions' }, [
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
       el('button', { type: 'submit', class: 'btn btn-primary' }, [existing ? 'ذخیره تغییرات' : 'افزودن کاربر']),
@@ -143,7 +116,7 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
         }
         await db.updateUser(existing.id, patch);
       } else {
-        await db.createUser({ name, pin, role: roleSelect.value as UserRole, subscriptionPlan: planSelect!.value as SubscriptionPlan });
+        await db.createUser({ name, pin, role: roleSelect.value as UserRole });
       }
       showToast(existing ? 'تغییرات ذخیره شد' : 'کاربر افزوده شد', 'success');
       modal.close();
@@ -175,20 +148,12 @@ async function handleDeleteUser(user: AppUser, onDone: () => void): Promise<void
 
 function renderUserRow(user: AppUser, onChange: () => void): HTMLElement {
   const isSuperadminUser = user.role === 'superadmin';
-  const expired = isExpired(user);
-  const soon = !expired && isExpiringSoon(user);
-  const days = daysUntilExpiry(user);
   return el('div', { class: `expense-row${user.isActive ? '' : ' expense-row--inactive'}` }, [
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
         el('span', { class: 'expense-row__name' }, [user.name]),
         el('span', { class: `auth-role-badge auth-role-badge--${user.role}` }, [roleLabel(user.role)]),
         !user.isActive ? el('span', { class: 'badge badge--muted' }, ['غیرفعال']) : null,
-        expired ? el('span', { class: 'badge badge--danger' }, ['منقضی‌شده']) : null,
-        soon ? el('span', { class: 'badge badge--warning' }, [`${toPersian(days)} روز تا انقضا`]) : null,
-      ]),
-      el('div', { class: 'expense-row__meta' }, [
-        `${planLabel(user.subscriptionPlan)} · انقضا: ${formatDate(user.subscriptionExpiry)}`,
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
@@ -242,39 +207,107 @@ function renderUsersTab(container: HTMLElement): () => void {
   return () => {};
 }
 
-// ---------- Subscription prices tab ----------
+// ---------- Business subscription tab ----------
 
-function renderPricingSection(container: HTMLElement): () => void {
-  const s = settings.get();
-  const priceInputs = new Map<PaidSubscriptionPlan, HTMLInputElement>();
-  const rows = PLAN_OPTIONS.map((p) => {
-    const input = numberInput(s?.subscriptionPrices?.[p.value] ?? 0);
-    priceInputs.set(p.value, input);
-    return field(`قیمت اشتراک ${p.label} (تومان)`, input);
-  });
+const PLAN_TOTAL_DAYS: Record<PaidSubscriptionPlan, number> = { '1m': 30, '3m': 90, '6m': 180, '12m': 365 };
 
-  const form = el('form', { class: 'form' }, [
-    ...rows,
-    el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره قیمت‌ها'])]),
-  ]);
+function statusLabel(status: Settings['subscriptionStatus']): string {
+  if (status === 'trial') return 'دوره آزمایشی';
+  if (status === 'pending_payment') return 'در انتظار پرداخت';
+  if (status === 'expired') return 'منقضی‌شده';
+  return 'فعال';
+}
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const subscriptionPrices = PLAN_OPTIONS.reduce(
-      (acc, p) => ({ ...acc, [p.value]: parseNumberInput(priceInputs.get(p.value)!) }),
-      {} as Record<PaidSubscriptionPlan, number>,
+function renderRenewalSection(container: HTMLElement): () => void {
+  const cardHost = el('div', { class: 'settings-card' });
+  container.appendChild(cardHost);
+
+  function render(): void {
+    cardHost.innerHTML = '';
+    const s = settings.get();
+    if (!s) return;
+
+    const expired = isBusinessExpired(s);
+    const soon = !expired && isBusinessExpiringSoon(s);
+    const days = daysUntilBusinessExpiry(s);
+    const isUnlimited = s.subscriptionPlan === 'unlimited';
+
+    cardHost.appendChild(el('h3', { class: 'settings-card__title' }, ['وضعیت اشتراک کسب‌وکار']));
+
+    cardHost.append(
+      el('div', { class: 'subscription-status-row' }, [
+        el('span', {}, [`${statusLabel(s.subscriptionStatus)} · ${planLabel(s.subscriptionPlan)}`]),
+        el('span', {}, [isUnlimited ? 'بدون انقضا' : `انقضا: ${formatDate(s.subscriptionExpiry)}`]),
+      ]),
     );
-    await db.updateSettings({ subscriptionPrices });
-    await refreshSettings();
-    showToast('قیمت‌ها ذخیره شد', 'success');
-  });
 
-  container.appendChild(settingsCard('قیمت اشتراک‌ها', form));
+    if (!isUnlimited) {
+      const totalDays = PLAN_TOTAL_DAYS[s.subscriptionPlan as PaidSubscriptionPlan] ?? db.TRIAL_DAYS;
+      const remainingRatio = Math.max(0, Math.min(1, days / totalDays));
+      const fillTone = expired ? 'danger' : soon ? 'warning' : '';
+      cardHost.append(
+        el('div', { class: 'subscription-progress' }, [
+          el('div', {
+            class: `subscription-progress__fill${fillTone ? ` subscription-progress__fill--${fillTone}` : ''}`,
+            style: `width: ${remainingRatio * 100}%`,
+          }),
+        ]),
+      );
+
+      if (expired) {
+        cardHost.appendChild(
+          el('div', { class: 'alert-banner alert-banner--danger' }, [
+            el('span', { class: 'alert-banner__icon' }, ['⛔']),
+            el('span', { class: 'alert-banner__text' }, ['اشتراک کسب‌وکار منقضی شده است. برای ادامه کار، اشتراک را تمدید کنید.']),
+          ]),
+        );
+      } else if (soon) {
+        cardHost.appendChild(
+          el('div', { class: `alert-banner alert-banner--${days <= 3 ? 'danger' : 'warning'}` }, [
+            el('span', { class: 'alert-banner__icon' }, ['⚠️']),
+            el('span', { class: 'alert-banner__text' }, [`اشتراک کسب‌وکار تا ${toPersian(days)} روز دیگر منقضی می‌شود.`]),
+          ]),
+        );
+      }
+    }
+
+    const pricing = getPlatformPricing();
+    const card = getPlatformPaymentCard();
+
+    cardHost.append(
+      el('div', { class: 'admin-extend-grid' }, [
+        ...EXTEND_OPTIONS.map((opt) =>
+          el(
+            'button',
+            {
+              type: 'button',
+              class: 'btn btn-secondary btn-sm',
+              onclick: async () => {
+                await db.extendBusinessSubscription(opt.months, opt.plan);
+                await refreshSettings();
+                showToast('اشتراک کسب‌وکار تمدید شد', 'success');
+                render();
+              },
+            },
+            [`${opt.label} (${formatMoney(pricing[opt.plan] ?? 0)})`],
+          ),
+        ),
+      ]),
+    );
+
+    if (card) {
+      cardHost.appendChild(
+        el('p', { class: 'form-hint' }, [`برای تمدید، مبلغ را به شماره کارت `, el('strong', { dir: 'ltr' }, [card]), ' واریز کنید.']),
+      );
+    }
+  }
+
+  render();
   return () => {};
 }
 
 function renderSubscriptionsTab(container: HTMLElement): () => void {
-  const cleanups = [renderPricingSection(container)];
+  const cleanups = [renderRenewalSection(container)];
   return () => {
     for (const c of cleanups) c();
   };

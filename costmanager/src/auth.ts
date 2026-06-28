@@ -1,8 +1,11 @@
 import * as db from './db';
 import { signal } from './store';
-import type { AppUser, UserRole } from './types';
+import type { AppUser, Settings, UserRole } from './types';
 
 const SESSION_KEY = 'currentUser';
+const LAST_ACTIVITY_KEY = 'lastActivityAt';
+const SESSION_EXPIRED_KEY = 'sessionExpiredReason';
+const INACTIVITY_LIMIT_MS = 8 * 60 * 60 * 1000;
 
 interface SessionUser {
   id: string;
@@ -48,13 +51,43 @@ export async function restoreSession(): Promise<AppUser | null> {
 export async function login(user: AppUser): Promise<void> {
   writeSession(user);
   currentUser.set(user);
+  recordActivity();
   await db.recordLogin(user.id);
 }
 
 /** Full reload, deliberately: router.ts has no route-clear mechanism, so a reload is the simplest way to reset all module state for whichever role logs in next. */
 export function logout(): void {
   writeSession(null);
+  sessionStorage.removeItem(LAST_ACTIVITY_KEY);
   location.reload();
+}
+
+/** Logs out and stashes a reason message the login screen reads once (via takeSessionExpiredReason) and clears. */
+export function logoutWithReason(reason: string): void {
+  sessionStorage.setItem(SESSION_EXPIRED_KEY, reason);
+  logout();
+}
+
+export function takeSessionExpiredReason(): string | null {
+  const reason = sessionStorage.getItem(SESSION_EXPIRED_KEY);
+  sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+  return reason;
+}
+
+function recordActivity(): void {
+  sessionStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+}
+
+/** Called on every navigation; auto-logs-out a session idle for more than 8h. Returns true if it logged out. */
+export function checkInactivityTimeout(): boolean {
+  if (!currentUser.get()) return false;
+  const lastActivity = Number(sessionStorage.getItem(LAST_ACTIVITY_KEY) ?? 0);
+  if (lastActivity && Date.now() - lastActivity > INACTIVITY_LIMIT_MS) {
+    logoutWithReason('جلسه شما به دلیل عدم فعالیت منقضی شد');
+    return true;
+  }
+  recordActivity();
+  return false;
 }
 
 export async function refreshCurrentUser(): Promise<void> {
@@ -85,15 +118,16 @@ export function hasFullAccess(): boolean {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function daysUntilExpiry(user: AppUser): number {
-  const diff = new Date(user.subscriptionExpiry).getTime() - Date.now();
+/** Subscription is per-business: every user, including the superadmin, is gated the same way. */
+export function daysUntilBusinessExpiry(settings: Settings): number {
+  const diff = new Date(settings.subscriptionExpiry).getTime() - Date.now();
   return Math.ceil(diff / DAY_MS);
 }
 
-export function isExpired(user: AppUser): boolean {
-  return user.role !== 'superadmin' && daysUntilExpiry(user) < 0;
+export function isBusinessExpired(settings: Settings): boolean {
+  return settings.subscriptionPlan !== 'unlimited' && daysUntilBusinessExpiry(settings) < 0;
 }
 
-export function isExpiringSoon(user: AppUser): boolean {
-  return user.role !== 'superadmin' && !isExpired(user) && daysUntilExpiry(user) <= 7;
+export function isBusinessExpiringSoon(settings: Settings): boolean {
+  return !isBusinessExpired(settings) && settings.subscriptionPlan !== 'unlimited' && daysUntilBusinessExpiry(settings) <= 7;
 }

@@ -87,6 +87,53 @@ export function detectSnappfoodColumns(headers: string[]): Record<SnappfoodField
   return detectColumns(headers, SNAPPFOOD_KEYWORDS, ['itemName', 'quantity', 'price', 'discount', 'commission', 'netAmount']);
 }
 
+export type CustomerField = 'name' | 'phone' | 'email' | 'address' | 'birthdate' | 'notes';
+
+export const CUSTOMER_FIELD_LABELS: Record<CustomerField, string> = {
+  name: 'نام',
+  phone: 'موبایل',
+  email: 'ایمیل',
+  address: 'آدرس',
+  birthdate: 'تاریخ تولد',
+  notes: 'یادداشت',
+};
+
+const CUSTOMER_KEYWORDS: Record<CustomerField, string[]> = {
+  name: ['نام و نام خانوادگی', 'نام مشتری', 'نام', 'name', 'fullname', 'full name', 'customer'],
+  phone: ['شماره موبایل', 'موبایل', 'تلفن همراه', 'شماره تماس', 'تلفن', 'شماره', 'phone', 'mobile', 'tel', 'cell'],
+  email: ['ایمیل', 'پست الکترونیک', 'email', 'mail'],
+  address: ['آدرس', 'نشانی', 'address'],
+  birthdate: ['تاریخ تولد', 'تولد', 'birthdate', 'birthday', 'dob'],
+  notes: ['یادداشت', 'توضیحات', 'note', 'notes', 'comment'],
+};
+
+export function detectCustomerColumns(headers: string[]): Record<CustomerField, number> {
+  return detectColumns(headers, CUSTOMER_KEYWORDS, ['phone', 'email', 'birthdate', 'address', 'notes', 'name']);
+}
+
+export interface CustomerImportRow {
+  rowIndex: number;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  birthdate: string;
+  notes: string;
+}
+
+export function buildCustomerRows(sheet: ParsedSheet, mapping: Record<CustomerField, number>): CustomerImportRow[] {
+  const get = (row: string[], fieldKey: CustomerField): string => (mapping[fieldKey] >= 0 ? row[mapping[fieldKey]] ?? '' : '');
+  return sheet.rows.map((row, i) => ({
+    rowIndex: i,
+    name: get(row, 'name'),
+    phone: parsePersianDigits(get(row, 'phone')).trim(),
+    email: get(row, 'email'),
+    address: get(row, 'address'),
+    birthdate: get(row, 'birthdate'),
+    notes: get(row, 'notes'),
+  }));
+}
+
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;

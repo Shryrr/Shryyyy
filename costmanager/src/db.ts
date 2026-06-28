@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  AppUser, AuthConfig, BulkSaleBreakdownEntry, Customer, Employee, Expense, FullBackup, Ingredient, MenuItem,
-  PaidSubscriptionPlan, PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SmsLog, SubscriptionPlan, UserRole,
+  AppNotification, AppUser, AuthConfig, BulkSaleBreakdownEntry, BusinessType, Customer, Employee, Expense, FullBackup, Ingredient,
+  MenuItem, PaidSubscriptionPlan, PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SmsLog, SubscriptionPlan, UserRole,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 
@@ -16,6 +16,7 @@ interface Schema extends DBSchema {
   auth: { key: string; value: AuthConfig };
   customers: { key: string; value: Customer; indexes: { byPhone: string } };
   sms_logs: { key: string; value: SmsLog };
+  notifications: { key: string; value: AppNotification; indexes: { byTargetRole: string } };
 }
 
 /**
@@ -25,10 +26,10 @@ interface Schema extends DBSchema {
  */
 type StoreName =
   | 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings'
-  | 'customers' | 'sms_logs';
+  | 'customers' | 'sms_logs' | 'notifications';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const MAX_PURCHASE_HISTORY = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNLIMITED_EXPIRY = '2099-12-31T00:00:00.000Z';
@@ -75,7 +76,7 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
               if (u.role === 'admin') {
                 if (!superadminAssigned) {
                   superadminAssigned = true;
-                  return { ...u, role: 'superadmin', subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY, createdAt };
+                  return { ...u, role: 'superadmin', createdAt };
                 }
                 return { ...u, role: 'manager', createdAt };
               }
@@ -89,6 +90,10 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
           const customers = db.createObjectStore('customers', { keyPath: 'id' });
           customers.createIndex('byPhone', 'phone');
           db.createObjectStore('sms_logs', { keyPath: 'id' });
+        }
+        if (oldVersion < 5) {
+          const notifications = db.createObjectStore('notifications', { keyPath: 'id' });
+          notifications.createIndex('byTargetRole', 'targetRole');
         }
       },
     });
@@ -777,9 +782,29 @@ export async function deleteSmsLog(id: string): Promise<void> {
   await (await getDB()).delete('sms_logs', id);
 }
 
+// ---------- Notifications ----------
+
+export async function listNotifications(): Promise<AppNotification[]> {
+  return (await getDB()).getAll('notifications');
+}
+
+export async function createNotification(input: Omit<AppNotification, 'id' | 'createdAt' | 'isRead'>): Promise<AppNotification> {
+  const notification: AppNotification = { ...input, id: uuid(), createdAt: nowISO(), isRead: false };
+  await (await getDB()).put('notifications', notification);
+  return notification;
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('notifications', id);
+  if (!existing) return;
+  await db.put('notifications', { ...existing, isRead: true });
+}
+
 // ---------- Settings ----------
 
 export const DEFAULT_SYNC_SERVER_URL = 'http://91.107.249.240/sync';
+export const TRIAL_DAYS = 14;
 
 const DEFAULT_SETTINGS: Settings = {
   id: 'global',
@@ -788,7 +813,9 @@ const DEFAULT_SETTINGS: Settings = {
   currency: 'toman',
   targetFoodCostPercent: 30,
   theme: 'auto',
-  subscriptionPrices: { '1m': 0, '3m': 0, '6m': 0, '12m': 0 },
+  subscriptionStatus: 'trial',
+  subscriptionPlan: '1m',
+  subscriptionExpiry: UNLIMITED_EXPIRY,
   businessId: '',
   syncServerUrl: DEFAULT_SYNC_SERVER_URL,
 };
@@ -797,22 +824,29 @@ export async function getSettings(): Promise<Settings> {
   const db = await getDB();
   const settings = await db.get('settings', 'global');
   if (!settings) {
-    const fresh: Settings = { ...DEFAULT_SETTINGS, businessId: uuid() };
+    const trialStartedAt = nowISO();
+    const fresh: Settings = {
+      ...DEFAULT_SETTINGS,
+      businessId: uuid(),
+      trialStartedAt,
+      subscriptionExpiry: new Date(Date.now() + TRIAL_DAYS * DAY_MS).toISOString(),
+    };
     await db.put('settings', fresh);
     return fresh;
   }
   let patched = settings;
   let dirty = false;
-  if (!patched.subscriptionPrices) {
-    patched = { ...patched, subscriptionPrices: DEFAULT_SETTINGS.subscriptionPrices };
-    dirty = true;
-  }
   if (!patched.businessId) {
     patched = { ...patched, businessId: uuid() };
     dirty = true;
   }
   if (!patched.syncServerUrl) {
     patched = { ...patched, syncServerUrl: DEFAULT_SYNC_SERVER_URL };
+    dirty = true;
+  }
+  if (!patched.subscriptionStatus) {
+    // Pre-existing install from before per-business subscriptions existed: grandfather it in, never retroactively block it.
+    patched = { ...patched, subscriptionStatus: 'active', subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY };
     dirty = true;
   }
   if (dirty) {
@@ -831,17 +865,10 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Prom
 
 // ---------- Auth ----------
 
-const PLAN_MONTHS: Record<PaidSubscriptionPlan, number> = { '1m': 1, '3m': 3, '6m': 6, '12m': 12 };
-
 function addMonthsISO(iso: string, months: number): string {
   const d = new Date(iso);
   d.setMonth(d.getMonth() + months);
   return d.toISOString();
-}
-
-function planExpiryISO(plan: SubscriptionPlan, fromISO: string = nowISO()): string {
-  if (plan === 'unlimited') return UNLIMITED_EXPIRY;
-  return addMonthsISO(fromISO, PLAN_MONTHS[plan]);
 }
 
 export async function getAuthConfig(): Promise<AuthConfig> {
@@ -858,25 +885,53 @@ export async function hasSuperadmin(): Promise<boolean> {
   return config.users.some((u) => u.role === 'superadmin');
 }
 
-/** First-launch setup wizard: creates the single superadmin user with an unlimited plan. */
-export async function createSuperadmin(name: string, pin: string): Promise<AppUser> {
+export interface RegisterBusinessInput {
+  businessName: string;
+  businessType: BusinessType;
+  managerName: string;
+  managerPin: string;
+  managerEmail: string;
+  managerPassword: string;
+  managerPhone?: string;
+  plan: SubscriptionPlan;
+}
+
+/**
+ * Registration wizard: creates the business's Settings row + its sole superadmin (the registering manager).
+ * Every business starts with a 14-day trial regardless of the plan picked in the wizard — that plan only takes
+ * effect once extendBusinessSubscription is used to actually pay for/renew it.
+ */
+export async function registerBusiness(input: RegisterBusinessInput): Promise<AppUser> {
   const db = await getDB();
   const config = await getAuthConfig();
   if (config.users.some((u) => u.role === 'superadmin')) {
-    throw new Error('مدیر اصلی سیستم از قبل تعریف شده است');
+    throw new Error('کسب‌وکار از قبل ثبت شده است');
   }
   const user: AppUser = {
     id: uuid(),
-    name,
-    pin,
+    name: input.managerName,
+    pin: input.managerPin,
     role: 'superadmin',
     isActive: true,
-    subscriptionPlan: 'unlimited',
-    subscriptionExpiry: UNLIMITED_EXPIRY,
+    email: input.managerEmail,
+    phone: input.managerPhone,
+    password: input.managerPassword,
     createdAt: nowISO(),
   };
-  const updated: AuthConfig = { ...config, isSetup: true, users: [...config.users, user] };
-  await db.put('auth', updated);
+  await db.put('auth', { id: 'auth', isSetup: true, users: [user] });
+
+  const existing = await getSettings();
+  const trialStartedAt = nowISO();
+  await db.put('settings', {
+    ...existing,
+    businessName: input.businessName,
+    businessType: input.businessType,
+    subscriptionStatus: 'trial',
+    subscriptionPlan: input.plan,
+    subscriptionExpiry: new Date(Date.now() + TRIAL_DAYS * DAY_MS).toISOString(),
+    trialStartedAt,
+  });
+
   return user;
 }
 
@@ -909,10 +964,10 @@ export interface NewUserInput {
   name: string;
   pin: string;
   role: UserRole;
-  subscriptionPlan: SubscriptionPlan;
-  subscriptionPricesPaid?: number;
+  phone?: string;
 }
 
+/** Staff (manager/warehouse/buyer) are free to add and have no individual subscription — only the business itself expires. */
 export async function createUser(input: NewUserInput): Promise<AppUser> {
   if (input.role === 'superadmin') throw new Error('امکان ایجاد مدیر اصلی دوم وجود ندارد');
   const db = await getDB();
@@ -923,9 +978,7 @@ export async function createUser(input: NewUserInput): Promise<AppUser> {
     pin: input.pin,
     role: input.role,
     isActive: true,
-    subscriptionPlan: input.subscriptionPlan,
-    subscriptionExpiry: planExpiryISO(input.subscriptionPlan),
-    subscriptionPricesPaid: input.subscriptionPricesPaid,
+    phone: input.phone,
     createdAt: nowISO(),
   };
   await db.put('auth', { ...config, users: [...config.users, user] });
@@ -979,56 +1032,44 @@ export async function changeSuperadminPin(currentPin: string, newPin: string): P
   return updated;
 }
 
-/** Extends from the current expiry if still active, otherwise from today (so a lapsed user doesn't keep their old date). */
-export async function extendSubscription(id: string, months: number, plan?: SubscriptionPlan): Promise<AppUser> {
-  const db = await getDB();
-  const config = await getAuthConfig();
-  const idx = config.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error('user not found');
-  const user = config.users[idx];
-  if (plan === 'unlimited') {
-    const updated: AppUser = { ...user, subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY };
-    const users = [...config.users];
-    users[idx] = updated;
-    await db.put('auth', { ...config, users });
-    return updated;
-  }
-  const stillActive = user.subscriptionPlan !== 'unlimited' && new Date(user.subscriptionExpiry).getTime() > Date.now();
-  const base = stillActive ? user.subscriptionExpiry : nowISO();
-  const updated: AppUser = {
-    ...user,
+/** Extends the business's own subscription, from its current expiry if still active, otherwise from today. */
+export async function extendBusinessSubscription(months: number, plan?: PaidSubscriptionPlan): Promise<Settings> {
+  const settings = await getSettings();
+  const stillActive = settings.subscriptionPlan !== 'unlimited' && new Date(settings.subscriptionExpiry).getTime() > Date.now();
+  const base = stillActive ? settings.subscriptionExpiry : nowISO();
+  return updateSettings({
+    subscriptionStatus: 'active',
+    subscriptionPlan: plan ?? (settings.subscriptionPlan === 'unlimited' ? '12m' : settings.subscriptionPlan),
     subscriptionExpiry: addMonthsISO(base, months),
-    subscriptionPlan: plan ?? (user.subscriptionPlan === 'unlimited' ? '12m' : user.subscriptionPlan),
-  };
-  const users = [...config.users];
-  users[idx] = updated;
-  await db.put('auth', { ...config, users });
-  return updated;
+  });
 }
 
 // ---------- Backup / restore ----------
 
 const BACKUP_STORE_NAMES: StoreName[] = [
   'ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings', 'customers', 'sms_logs',
+  'notifications',
 ];
 
 export async function exportAllData(): Promise<FullBackup> {
   const db = await getDB();
-  const [ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs] = await Promise.all([
-    db.getAll('ingredients'),
-    db.getAll('menu_items'),
-    db.getAll('expenses'),
-    db.getAll('employees'),
-    db.getAll('sales'),
-    db.getAll('shopping_list'),
-    db.getAll('settings'),
-    db.getAll('customers'),
-    db.getAll('sms_logs'),
-  ]);
+  const [ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications] =
+    await Promise.all([
+      db.getAll('ingredients'),
+      db.getAll('menu_items'),
+      db.getAll('expenses'),
+      db.getAll('employees'),
+      db.getAll('sales'),
+      db.getAll('shopping_list'),
+      db.getAll('settings'),
+      db.getAll('customers'),
+      db.getAll('sms_logs'),
+      db.getAll('notifications'),
+    ]);
   return {
     exportedAt: nowISO(),
     version: 1,
-    data: { ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs },
+    data: { ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications },
   };
 }
 
