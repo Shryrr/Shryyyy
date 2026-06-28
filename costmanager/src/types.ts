@@ -13,6 +13,19 @@ export interface PurchaseRecord {
   note?: string;
 }
 
+export interface PhysicalCount {
+  date: string;
+  quantity: number;
+  countedBy: string;
+}
+
+export interface ConsumptionRecord {
+  date: string;
+  consumed: number;
+  fromSales: number;
+  fromWaste: number;
+}
+
 export interface Ingredient {
   id: string;
   name: string;
@@ -25,6 +38,28 @@ export interface Ingredient {
   purchaseHistory: PurchaseRecord[];
   createdAt: string;
   updatedAt: string;
+  /** Estimated true stock derived from the last physical count plus purchases/sales/waste deltas since then. */
+  theoreticalStock: number;
+  lastPhysicalCount: PhysicalCount | null;
+  /** Average units consumed per day, derived from consumptionHistory. */
+  dailyUsageRate: number;
+  daysOfStockRemaining: number;
+  predictedStockoutDate: string | null;
+  consumptionHistory: ConsumptionRecord[];
+  lastEstimationUpdatedAt: string;
+}
+
+export type WasteReason = 'expired' | 'spoiled' | 'damaged' | 'prep_error' | 'other';
+
+export interface WasteEntry {
+  id: string;
+  ingredientId: string;
+  ingredientName: string;
+  quantity: number;
+  unit: Unit;
+  reason: WasteReason;
+  date: string;
+  estimatedCost: number;
 }
 
 export interface RecipeIngredient {
@@ -41,6 +76,8 @@ export interface MenuItem {
   recipe: RecipeIngredient[];
   createdAt: string;
   updatedAt: string;
+  isVatExempt: boolean;
+  prepTimeMinutes?: number;
 }
 
 export type ExpenseCategory =
@@ -74,6 +111,23 @@ export interface Employee {
 
 export type SaleType = 'itemized' | 'bulk';
 export type SaleSource = 'manual' | 'cashier' | 'snappfood' | 'bulk';
+export type OrderType = 'dine_in' | 'takeout' | 'delivery';
+export type DeliverySource = 'direct' | 'snappfood' | 'digikala';
+export type DeliveryStatus = 'pending' | 'picked_up' | 'delivered' | 'failed';
+
+export interface DeliveryInfo {
+  courierName?: string;
+  courierPhone?: string;
+  address: string;
+  zone?: string;
+  deliveryFee: number;
+  estimatedTime?: number;
+  actualDeliveryTime?: string;
+  deliveryStatus: DeliveryStatus;
+  source: DeliverySource;
+  platformCommission?: number;
+  netRevenue?: number;
+}
 
 export interface BulkSaleBreakdownEntry {
   menuItemId: string;
@@ -112,6 +166,14 @@ export interface Sale {
     commission: number;
     netReceived: number;
   };
+  /** Linked customer for CRM/RFM tracking — absent means a walk-in/anonymous sale. */
+  customerId?: string;
+  /** Absent on legacy records means 0 (no VAT applied at the time). */
+  vatAmount?: number;
+  vatRate?: number;
+  /** Absent on legacy records means 'dine_in'. */
+  orderType?: OrderType;
+  deliveryInfo?: DeliveryInfo;
 }
 
 export interface ShoppingListItem {
@@ -129,17 +191,67 @@ export interface ShoppingListItem {
   generatedAt: string;
 }
 
-export type CustomerSegment = 'vip' | 'regular' | 'new' | 'inactive';
+export type CustomerTag =
+  | 'vip' | 'new' | 'birthday_this_month' | 'allergic' | 'vegetarian' | 'vegan' | 'gluten_free'
+  | 'price_sensitive' | 'big_spender' | 'frequent' | 'referrer' | 'complainer' | 'corporate' | 'employee_family';
+
+export type RFMSegment = 'champions' | 'loyal' | 'potential' | 'new' | 'at_risk' | 'lost' | 'hibernating' | 'regular';
+
+export interface RFMScore {
+  /** 1 (worst) – 5 (best) per-axis scores. */
+  recency: number;
+  frequency: number;
+  monetary: number;
+  recencyDays: number;
+  calculatedAt: string;
+}
+
+export interface SurveyResponse {
+  id: string;
+  saleId?: string;
+  npsScore: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface CampaignRecord {
+  id: string;
+  type: 'automation' | 'manual_campaign';
+  triggerId?: string;
+  triggerName?: string;
+  message: string;
+  sentAt: string;
+  status: SmsStatus;
+}
+
+export type CustomerSource = 'manual' | 'imported' | 'pos_import' | 'snappfood';
 
 export interface Customer {
   id: string;
   name: string;
   phone: string;
-  notes?: string;
-  totalSpent: number;
+  birthday?: string;
+  email?: string;
+  address?: string;
+  firstVisit: string;
+  lastVisit?: string;
   visitCount: number;
-  lastVisitAt?: string;
+  totalSpent: number;
+  avgOrderValue: number;
+  favoriteItems: string[];
+  tags: CustomerTag[];
+  notes?: string;
+  walletBalance: number;
   loyaltyPoints: number;
+  segment: RFMSegment;
+  rfmScore: RFMScore;
+  isActive: boolean;
+  source: CustomerSource;
+  deliveryAddresses?: string[];
+  allergies?: string;
+  preferences?: string;
+  surveyResponses: SurveyResponse[];
+  campaignHistory: CampaignRecord[];
   createdAt: string;
 }
 
@@ -154,7 +266,8 @@ export interface SmsLog {
   sentAt: string;
 }
 
-export type AppNotificationType = 'purchase_request' | 'low_stock' | 'system';
+export type AppNotificationType =
+  | 'purchase_request' | 'low_stock' | 'stockout_predicted' | 'automation_triggered' | 'system' | 'campaign_result';
 
 export interface AppNotification {
   id: string;
@@ -165,6 +278,40 @@ export interface AppNotification {
   createdBy: string;
   createdAt: string;
   isRead: boolean;
+  actionUrl?: string;
+}
+
+export type AutomationTriggerType = 'welcome' | 'birthday' | 'lapsed_14' | 'lapsed_30' | 'post_survey' | 'milestone_5' | 'custom';
+
+export interface AutomationTrigger {
+  id: string;
+  name: string;
+  type: AutomationTriggerType;
+  isActive: boolean;
+  conditions: Record<string, unknown>;
+  action: { channel: 'sms'; messageTemplate: string };
+  lastRun?: string;
+  timesRun: number;
+  successCount: number;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  phone?: string;
+  ingredientIds: string[];
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SupplierPayment {
+  id: string;
+  supplierId: string;
+  amount: number;
+  date: string;
+  isPaid: boolean;
+  dueDate?: string;
+  note?: string;
 }
 
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
@@ -214,6 +361,13 @@ export interface Settings {
   lastSyncAt?: string;
   kavenegarApiKey?: string;
   kavenegarSenderLine?: string;
+  vatEnabled: boolean;
+  vatRate: number;
+  vatIncludedInPrice: boolean;
+  pointsPerToman: number;
+  pointsToTomanRatio: number;
+  /** User-supplied Anthropic API key for opt-in AI menu recommendations — never bundled into the app, only used client-side at call time. */
+  anthropicApiKey?: string;
 }
 
 export interface FullBackup {
@@ -230,5 +384,9 @@ export interface FullBackup {
     customers: Customer[];
     sms_logs: SmsLog[];
     notifications: AppNotification[];
+    waste: WasteEntry[];
+    suppliers: Supplier[];
+    supplier_payments: SupplierPayment[];
+    automation_triggers: AutomationTrigger[];
   };
 }

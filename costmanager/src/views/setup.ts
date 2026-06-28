@@ -20,9 +20,11 @@ export interface SetupWizardCallbacks {
   onDone: (user: AppUser) => void;
   /** An existing business's data was imported onto this device; caller should re-run the auth gate to show the PIN grid. */
   onJoined: () => void;
+  /** User backed out of the first wizard step; caller should return to the landing page. */
+  onBack: () => void;
 }
 
-type Step = 'choice' | 'join' | 'business' | 'manager' | 'plan';
+type Step = 'join' | 'business' | 'manager' | 'plan';
 
 interface WizardState {
   businessName: string;
@@ -35,9 +37,9 @@ interface WizardState {
   plan: PaidSubscriptionPlan;
 }
 
-/** Registration wizard: choose register-new vs join-existing, then (for new) business info → manager info → plan, calling db.registerBusiness. */
-export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizardCallbacks): void {
-  let step: Step = 'choice';
+/** Registration wizard, entered from the landing page at either 'business' (register-new) or 'join' (join-existing); for new businesses: business info → manager info → plan, calling db.registerBusiness. */
+export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizardCallbacks, initialStep: 'business' | 'join'): void {
+  let step: Step = initialStep;
   const state: WizardState = {
     businessName: '',
     businessType: 'cafe',
@@ -52,7 +54,6 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
   function render(): void {
     container.innerHTML = '';
     const steps: Record<Step, () => HTMLElement> = {
-      choice: renderChoiceStep,
       join: renderJoinStep,
       business: renderBusinessStep,
       manager: renderManagerStep,
@@ -63,25 +64,6 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
 
   function shell(children: HTMLElement[]): HTMLElement {
     return el('div', { class: 'auth-screen' }, [el('div', { class: 'auth-card' }, children)]);
-  }
-
-  function renderChoiceStep(): HTMLElement {
-    return shell([
-      el('div', { class: 'boot-logo auth-logo' }, ['م']),
-      el('span', { class: 'auth-brand' }, ['منوبان']),
-      el('h2', { class: 'auth-title' }, ['خوش آمدید به منوبان']),
-      el('p', { class: 'auth-subtitle' }, ['برای شروع، کسب‌وکار خود را ثبت کنید یا به کسب‌وکار موجود بپیوندید']),
-      el(
-        'button',
-        { type: 'button', class: 'btn btn-primary auth-submit', onclick: () => { step = 'business'; render(); } },
-        ['ثبت کسب‌وکار جدید'],
-      ),
-      el(
-        'button',
-        { type: 'button', class: 'btn btn-secondary auth-submit', onclick: () => { step = 'join'; render(); } },
-        ['پیوستن به کسب‌وکار موجود با کد همگام‌سازی'],
-      ),
-    ]);
   }
 
   function renderJoinStep(): HTMLElement {
@@ -105,7 +87,7 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
     }
 
     return shell([
-      el('button', { type: 'button', class: 'auth-back-btn', onclick: () => { step = 'choice'; render(); } }, ['→ بازگشت']),
+      el('button', { type: 'button', class: 'auth-back-btn', onclick: callbacks.onBack }, ['→ بازگشت']),
       el('div', { class: 'boot-logo auth-logo' }, ['م']),
       el('h2', { class: 'auth-title' }, ['پیوستن به کسب‌وکار موجود']),
       el('p', { class: 'auth-subtitle' }, ['کدی که از مدیر اصلی کسب‌وکار دریافت کرده‌اید را وارد کنید']),
@@ -136,6 +118,7 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
     }
 
     return shell([
+      el('button', { type: 'button', class: 'auth-back-btn', onclick: callbacks.onBack }, ['→ بازگشت']),
       el('div', { class: 'boot-logo auth-logo' }, ['م']),
       el('h2', { class: 'auth-title' }, ['اطلاعات کسب‌وکار']),
       el('p', { class: 'auth-subtitle' }, ['گام ۱ از ۳']),

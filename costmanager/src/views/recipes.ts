@@ -4,6 +4,7 @@ import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatMoney, formatPct, formatUnit, toPersian } from '../utils/format';
+import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
 import { ingredients, ingredientsById, menuItems, refreshMenuItems, settings, takeNavigationIntent } from '../store';
 import {
@@ -382,9 +383,12 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['منو و فودکاست']),
-      hasFullAccess()
-        ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو'])
-        : null,
+      el('div', { class: 'view-header__actions' }, [
+        el('button', { class: 'btn btn-secondary', type: 'button', onclick: () => navigate('/menu-engineering') }, ['🧠 مهندسی منو']),
+        hasFullAccess()
+          ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو'])
+          : null,
+      ]),
     ]),
     statsContainer,
     el('div', { class: 'toolbar' }, [

@@ -24,6 +24,8 @@ export function el<K extends keyof HTMLElementTagNameMap>(
       else if (key === 'dataset') Object.assign(node.dataset, value as Record<string, string>);
       else if (key.startsWith('on') && typeof value === 'function') {
         node.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
+      } else if (key.includes('-')) {
+        node.setAttribute(key, String(value));
       } else {
         try {
           (node as unknown as Record<string, unknown>)[key] = value;

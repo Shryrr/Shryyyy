@@ -8,6 +8,9 @@ import { formatDateTime, toPersian } from '../utils/format';
 const NOTIFICATION_ROUTE: Record<AppNotification['type'], string> = {
   purchase_request: '/shopping',
   low_stock: '/shopping',
+  stockout_predicted: '/ingredients',
+  automation_triggered: '/crm',
+  campaign_result: '/crm',
   system: '/',
 };
 

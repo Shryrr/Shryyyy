@@ -1,7 +1,9 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  AppNotification, AppUser, AuthConfig, BulkSaleBreakdownEntry, BusinessType, Customer, Employee, Expense, FullBackup, Ingredient,
-  MenuItem, PaidSubscriptionPlan, PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SmsLog, SubscriptionPlan, UserRole,
+  AppNotification, AppUser, AuthConfig, AutomationTrigger, BulkSaleBreakdownEntry, BusinessType, CampaignRecord, Customer, DeliveryInfo,
+  Employee, Expense, FullBackup, Ingredient, MenuItem, OrderType, PaidSubscriptionPlan, PurchaseRecord, RFMScore, RFMSegment, Sale,
+  SaleSource, Settings, ShoppingListItem, SmsLog, Supplier, SupplierPayment, SubscriptionPlan, SurveyResponse, UserRole, WasteEntry,
+  WasteReason,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 
@@ -17,6 +19,10 @@ interface Schema extends DBSchema {
   customers: { key: string; value: Customer; indexes: { byPhone: string } };
   sms_logs: { key: string; value: SmsLog };
   notifications: { key: string; value: AppNotification; indexes: { byTargetRole: string } };
+  waste: { key: string; value: WasteEntry; indexes: { byIngredient: string; byDate: string } };
+  suppliers: { key: string; value: Supplier };
+  supplier_payments: { key: string; value: SupplierPayment; indexes: { bySupplier: string } };
+  automation_triggers: { key: string; value: AutomationTrigger };
 }
 
 /**
@@ -26,13 +32,17 @@ interface Schema extends DBSchema {
  */
 type StoreName =
   | 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings'
-  | 'customers' | 'sms_logs' | 'notifications';
+  | 'customers' | 'sms_logs' | 'notifications' | 'waste' | 'suppliers' | 'supplier_payments' | 'automation_triggers';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const MAX_PURCHASE_HISTORY = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNLIMITED_EXPIRY = '2099-12-31T00:00:00.000Z';
+const DEFAULT_POINTS_PER_TOMAN = 10_000;
+const DEFAULT_POINTS_TO_TOMAN_RATIO = 1_000;
+/** Finite cap instead of Infinity: JSON.stringify (used by the backup export) silently turns Infinity into null. */
+const MAX_DAYS_OF_STOCK = 999;
 
 let dbPromise: Promise<IDBPDatabase<Schema>> | null = null;
 
@@ -94,6 +104,70 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
         if (oldVersion < 5) {
           const notifications = db.createObjectStore('notifications', { keyPath: 'id' });
           notifications.createIndex('byTargetRole', 'targetRole');
+        }
+        if (oldVersion < 6) {
+          const waste = db.createObjectStore('waste', { keyPath: 'id' });
+          waste.createIndex('byIngredient', 'ingredientId');
+          waste.createIndex('byDate', 'date');
+
+          db.createObjectStore('suppliers', { keyPath: 'id' });
+
+          const supplierPayments = db.createObjectStore('supplier_payments', { keyPath: 'id' });
+          supplierPayments.createIndex('bySupplier', 'supplierId');
+
+          db.createObjectStore('automation_triggers', { keyPath: 'id' });
+
+          // Backfill the new predictive-inventory fields onto existing ingredients so the
+          // inventory engine has a consistent base point to compute from on its very next read.
+          const ingredientsStore = transaction.objectStore('ingredients');
+          ingredientsStore.getAll().then((ingredients) => {
+            for (const ing of ingredients as (Ingredient & { theoreticalStock?: number })[]) {
+              if (ing.theoreticalStock !== undefined) continue;
+              ingredientsStore.put({
+                ...ing,
+                theoreticalStock: ing.currentStock,
+                lastPhysicalCount: null,
+                dailyUsageRate: 0,
+                daysOfStockRemaining: MAX_DAYS_OF_STOCK,
+                predictedStockoutDate: null,
+                consumptionHistory: [],
+                lastEstimationUpdatedAt: nowISO(),
+              });
+            }
+          });
+
+          const menuItemsStore = transaction.objectStore('menu_items');
+          menuItemsStore.getAll().then((items) => {
+            for (const item of items as (MenuItem & { isVatExempt?: boolean })[]) {
+              if (item.isVatExempt !== undefined) continue;
+              menuItemsStore.put({ ...item, isVatExempt: false });
+            }
+          });
+
+          // Migrate legacy Customer rows (totalSpent/visitCount/loyaltyPoints/createdAt only) to the
+          // full CRM/RFM shape, defaulting every new field so older installs don't crash on first read.
+          const customersStore = transaction.objectStore('customers');
+          customersStore.getAll().then((customers) => {
+            for (const c of customers as (Customer & { lastVisitAt?: string })[]) {
+              if (c.segment !== undefined) continue;
+              const ts = c.createdAt ?? nowISO();
+              customersStore.put({
+                ...c,
+                firstVisit: c.firstVisit ?? ts,
+                lastVisit: c.lastVisit ?? c.lastVisitAt,
+                avgOrderValue: c.visitCount > 0 ? c.totalSpent / c.visitCount : 0,
+                favoriteItems: c.favoriteItems ?? [],
+                tags: c.tags ?? [],
+                walletBalance: c.walletBalance ?? 0,
+                segment: 'new',
+                rfmScore: { recency: 0, frequency: 0, monetary: 0, recencyDays: 0, calculatedAt: ts },
+                isActive: true,
+                source: c.source ?? 'manual',
+                surveyResponses: c.surveyResponses ?? [],
+                campaignHistory: c.campaignHistory ?? [],
+              });
+            }
+          });
         }
       },
     });
@@ -166,6 +240,13 @@ export async function createIngredient(input: NewIngredientInput): Promise<Ingre
     purchaseHistory,
     createdAt: ts,
     updatedAt: ts,
+    theoreticalStock: input.currentStock,
+    lastPhysicalCount: null,
+    dailyUsageRate: 0,
+    daysOfStockRemaining: MAX_DAYS_OF_STOCK,
+    predictedStockoutDate: null,
+    consumptionHistory: [],
+    lastEstimationUpdatedAt: ts,
   };
   await (await getDB()).put('ingredients', ingredient);
   await regenerateShoppingList();
@@ -176,7 +257,41 @@ export async function updateIngredient(id: string, patch: Partial<NewIngredientI
   const db = await getDB();
   const existing = await db.get('ingredients', id);
   if (!existing) throw new Error('ingredient not found');
-  const updated: Ingredient = { ...existing, ...patch, updatedAt: nowISO() };
+  const ts = nowISO();
+  // A manual stock edit here (as opposed to a purchase/sale/waste delta) is treated like a fresh
+  // count: re-anchor theoreticalStock to it so the two don't immediately diverge.
+  const reanchor = patch.currentStock !== undefined ? { theoreticalStock: patch.currentStock, lastEstimationUpdatedAt: ts } : {};
+  const updated: Ingredient = { ...existing, ...patch, ...reanchor, updatedAt: ts };
+  await db.put('ingredients', updated);
+  await regenerateShoppingList();
+  return updated;
+}
+
+/** Narrow setter used only by the inventory-prediction engine: plain-writes estimation fields without regenerateShoppingList. */
+export async function updateIngredientEstimation(
+  id: string,
+  patch: Partial<Pick<Ingredient, 'theoreticalStock' | 'dailyUsageRate' | 'daysOfStockRemaining' | 'predictedStockoutDate' | 'consumptionHistory' | 'lastEstimationUpdatedAt'>>,
+): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('ingredients', id);
+  if (!existing) return;
+  await db.put('ingredients', { ...existing, ...patch });
+}
+
+/** Physical stocktake: becomes the new anchor point the inventory engine computes deltas from. */
+export async function recordPhysicalCount(id: string, quantity: number, countedBy: string): Promise<Ingredient> {
+  const db = await getDB();
+  const existing = await db.get('ingredients', id);
+  if (!existing) throw new Error('ingredient not found');
+  const ts = nowISO();
+  const updated: Ingredient = {
+    ...existing,
+    currentStock: quantity,
+    theoreticalStock: quantity,
+    lastPhysicalCount: { date: ts, quantity, countedBy },
+    lastEstimationUpdatedAt: ts,
+    updatedAt: ts,
+  };
   await db.put('ingredients', updated);
   await regenerateShoppingList();
   return updated;
@@ -313,6 +428,7 @@ export async function createMenuItem(input: NewMenuItemInput): Promise<MenuItem>
     recipe: [],
     createdAt: ts,
     updatedAt: ts,
+    isVatExempt: false,
   };
   await (await getDB()).put('menu_items', item);
   return item;
@@ -419,6 +535,11 @@ export interface RecordSaleInput {
   date: string;
   note?: string;
   source?: SaleSource;
+  customerId?: string;
+  vatAmount?: number;
+  vatRate?: number;
+  orderType?: OrderType;
+  deliveryInfo?: DeliveryInfo;
 }
 
 export async function recordSale(input: RecordSaleInput): Promise<Sale> {
@@ -439,6 +560,11 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
     unitCost,
     note: input.note,
     source: input.source ?? 'manual',
+    customerId: input.customerId,
+    vatAmount: input.vatAmount,
+    vatRate: input.vatRate,
+    orderType: input.orderType,
+    deliveryInfo: input.deliveryInfo,
   };
 
   const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
@@ -454,6 +580,7 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
   }
   await tx.done;
   await regenerateShoppingList();
+  if (input.customerId) await recordCustomerVisit(input.customerId, sale.unitSalePrice * sale.quantity);
   return sale;
 }
 
@@ -465,6 +592,9 @@ export interface RecordImportedSaleInput {
   source: 'cashier' | 'snappfood';
   note?: string;
   snappfood?: { grossSales: number; discount: number; commission: number; netReceived: number };
+  customerId?: string;
+  orderType?: OrderType;
+  deliveryInfo?: DeliveryInfo;
 }
 
 /**
@@ -491,6 +621,9 @@ export async function recordImportedSale(input: RecordImportedSaleInput): Promis
     note: input.note,
     source: input.source,
     snappfood: input.snappfood,
+    customerId: input.customerId,
+    orderType: input.orderType,
+    deliveryInfo: input.deliveryInfo,
   };
 
   const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
@@ -505,6 +638,7 @@ export async function recordImportedSale(input: RecordImportedSaleInput): Promis
     });
   }
   await tx.done;
+  if (input.customerId) await recordCustomerVisit(input.customerId, sale.unitSalePrice * sale.quantity);
   return sale;
 }
 
@@ -635,6 +769,7 @@ export async function deleteSale(id: string): Promise<void> {
   await tx.objectStore('sales').delete(id);
   await tx.done;
   await regenerateShoppingList();
+  if (sale.customerId) await reverseCustomerVisit(sale.customerId, sale.unitSalePrice * sale.quantity);
 }
 
 // ---------- Shopping list ----------
@@ -709,18 +844,36 @@ export async function getCustomer(id: string): Promise<Customer | undefined> {
   return (await getDB()).get('customers', id);
 }
 
-export type NewCustomerInput = Pick<Customer, 'name' | 'phone'> & Partial<Pick<Customer, 'notes'>>;
+export type NewCustomerInput = Pick<Customer, 'name' | 'phone'> &
+  Partial<Pick<Customer, 'notes' | 'birthday' | 'email' | 'address' | 'allergies' | 'preferences' | 'source'>>;
 
 export async function createCustomer(input: NewCustomerInput): Promise<Customer> {
+  const ts = nowISO();
   const customer: Customer = {
     id: uuid(),
     name: input.name,
     phone: input.phone,
-    notes: input.notes,
-    totalSpent: 0,
+    birthday: input.birthday,
+    email: input.email,
+    address: input.address,
+    firstVisit: ts,
     visitCount: 0,
+    totalSpent: 0,
+    avgOrderValue: 0,
+    favoriteItems: [],
+    tags: ['new'],
+    notes: input.notes,
+    walletBalance: 0,
     loyaltyPoints: 0,
-    createdAt: nowISO(),
+    segment: 'new',
+    rfmScore: { recency: 0, frequency: 0, monetary: 0, recencyDays: 0, calculatedAt: ts },
+    isActive: true,
+    source: input.source ?? 'manual',
+    allergies: input.allergies,
+    preferences: input.preferences,
+    surveyResponses: [],
+    campaignHistory: [],
+    createdAt: ts,
   };
   await (await getDB()).put('customers', customer);
   return customer;
@@ -739,19 +892,47 @@ export async function deleteCustomer(id: string): Promise<void> {
   await (await getDB()).delete('customers', id);
 }
 
-const TOMAN_PER_LOYALTY_POINT = 10_000;
+async function effectivePointsPerToman(): Promise<number> {
+  const settings = await getSettings();
+  return settings.pointsPerToman > 0 ? settings.pointsPerToman : DEFAULT_POINTS_PER_TOMAN;
+}
 
-/** Records a purchase against a customer: bumps visit/spend totals and accrues loyalty points (1 per 10,000 toman). */
+/** Records a purchase against a customer: bumps visit/spend totals and accrues loyalty points. */
 export async function recordCustomerVisit(id: string, amountSpent: number): Promise<Customer> {
   const db = await getDB();
   const existing = await db.get('customers', id);
   if (!existing) throw new Error('customer not found');
+  const pointsPerToman = await effectivePointsPerToman();
+  const ts = nowISO();
+  const visitCount = existing.visitCount + 1;
+  const totalSpent = existing.totalSpent + amountSpent;
   const updated: Customer = {
     ...existing,
-    totalSpent: existing.totalSpent + amountSpent,
-    visitCount: existing.visitCount + 1,
-    loyaltyPoints: existing.loyaltyPoints + Math.floor(amountSpent / TOMAN_PER_LOYALTY_POINT),
-    lastVisitAt: nowISO(),
+    totalSpent,
+    visitCount,
+    avgOrderValue: totalSpent / visitCount,
+    loyaltyPoints: existing.loyaltyPoints + Math.floor(amountSpent / pointsPerToman),
+    lastVisit: ts,
+    firstVisit: existing.firstVisit ?? ts,
+  };
+  await db.put('customers', updated);
+  return updated;
+}
+
+/** Reverses recordCustomerVisit's effect, used when an itemized sale tied to a customer is deleted. */
+export async function reverseCustomerVisit(id: string, amountSpent: number): Promise<Customer | undefined> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) return undefined;
+  const pointsPerToman = await effectivePointsPerToman();
+  const visitCount = Math.max(0, existing.visitCount - 1);
+  const totalSpent = Math.max(0, existing.totalSpent - amountSpent);
+  const updated: Customer = {
+    ...existing,
+    totalSpent,
+    visitCount,
+    avgOrderValue: visitCount > 0 ? totalSpent / visitCount : 0,
+    loyaltyPoints: Math.max(0, existing.loyaltyPoints - Math.floor(amountSpent / pointsPerToman)),
   };
   await db.put('customers', updated);
   return updated;
@@ -764,6 +945,151 @@ export async function adjustLoyaltyPoints(id: string, delta: number): Promise<Cu
   const updated: Customer = { ...existing, loyaltyPoints: Math.max(0, existing.loyaltyPoints + delta) };
   await db.put('customers', updated);
   return updated;
+}
+
+export async function adjustWalletBalance(id: string, delta: number): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) throw new Error('customer not found');
+  const updated: Customer = { ...existing, walletBalance: Math.max(0, existing.walletBalance + delta) };
+  await db.put('customers', updated);
+  return updated;
+}
+
+/** Narrow setter used only by the RFM engine: plain-writes segment + score without disturbing other fields. */
+export async function updateCustomerSegment(id: string, segment: RFMSegment, rfmScore: RFMScore): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) return;
+  await db.put('customers', { ...existing, segment, rfmScore });
+}
+
+export async function addSurveyResponse(customerId: string, input: Omit<SurveyResponse, 'id' | 'createdAt'>): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', customerId);
+  if (!existing) throw new Error('customer not found');
+  const response: SurveyResponse = { ...input, id: uuid(), createdAt: nowISO() };
+  const updated: Customer = { ...existing, surveyResponses: [...existing.surveyResponses, response] };
+  await db.put('customers', updated);
+  return updated;
+}
+
+/** Appends a sent-campaign record, used by the automation engine and manual CRM campaigns alike. */
+export async function recordCampaign(customerId: string, input: Omit<CampaignRecord, 'id' | 'sentAt'>): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', customerId);
+  if (!existing) throw new Error('customer not found');
+  const record: CampaignRecord = { ...input, id: uuid(), sentAt: nowISO() };
+  const updated: Customer = { ...existing, campaignHistory: [...existing.campaignHistory, record] };
+  await db.put('customers', updated);
+  return updated;
+}
+
+// ---------- Waste ----------
+
+export async function listWaste(): Promise<WasteEntry[]> {
+  return (await getDB()).getAll('waste');
+}
+
+export interface RecordWasteInput {
+  ingredientId: string;
+  quantity: number;
+  reason: WasteReason;
+  date: string;
+}
+
+export async function recordWaste(input: RecordWasteInput): Promise<WasteEntry> {
+  const db = await getDB();
+  const ingredient = await db.get('ingredients', input.ingredientId);
+  if (!ingredient) throw new Error('ingredient not found');
+  const entry: WasteEntry = {
+    id: uuid(),
+    ingredientId: ingredient.id,
+    ingredientName: ingredient.name,
+    quantity: input.quantity,
+    unit: ingredient.unit,
+    reason: input.reason,
+    date: input.date,
+    estimatedCost: input.quantity * ingredient.pricePerUnit,
+  };
+  const tx = db.transaction(['waste', 'ingredients'], 'readwrite');
+  await tx.objectStore('waste').put(entry);
+  await tx.objectStore('ingredients').put({
+    ...ingredient,
+    currentStock: Math.max(0, ingredient.currentStock - input.quantity),
+    updatedAt: nowISO(),
+  });
+  await tx.done;
+  await regenerateShoppingList();
+  return entry;
+}
+
+export async function deleteWaste(id: string): Promise<void> {
+  const db = await getDB();
+  const entry = await db.get('waste', id);
+  if (!entry) return;
+  const ingredient = await db.get('ingredients', entry.ingredientId);
+  const tx = db.transaction(['waste', 'ingredients'], 'readwrite');
+  if (ingredient) {
+    await tx.objectStore('ingredients').put({ ...ingredient, currentStock: ingredient.currentStock + entry.quantity, updatedAt: nowISO() });
+  }
+  await tx.objectStore('waste').delete(id);
+  await tx.done;
+  await regenerateShoppingList();
+}
+
+// ---------- Suppliers ----------
+
+export async function listSuppliers(): Promise<Supplier[]> {
+  return (await getDB()).getAll('suppliers');
+}
+
+export type NewSupplierInput = Omit<Supplier, 'id' | 'createdAt'>;
+
+export async function createSupplier(input: NewSupplierInput): Promise<Supplier> {
+  const supplier: Supplier = { ...input, id: uuid(), createdAt: nowISO() };
+  await (await getDB()).put('suppliers', supplier);
+  return supplier;
+}
+
+export async function updateSupplier(id: string, patch: Partial<NewSupplierInput>): Promise<Supplier> {
+  const db = await getDB();
+  const existing = await db.get('suppliers', id);
+  if (!existing) throw new Error('supplier not found');
+  const updated: Supplier = { ...existing, ...patch };
+  await db.put('suppliers', updated);
+  return updated;
+}
+
+export async function deleteSupplier(id: string): Promise<void> {
+  await (await getDB()).delete('suppliers', id);
+}
+
+// ---------- Supplier payments ----------
+
+export async function listSupplierPayments(): Promise<SupplierPayment[]> {
+  return (await getDB()).getAll('supplier_payments');
+}
+
+export type NewSupplierPaymentInput = Omit<SupplierPayment, 'id'>;
+
+export async function createSupplierPayment(input: NewSupplierPaymentInput): Promise<SupplierPayment> {
+  const payment: SupplierPayment = { ...input, id: uuid() };
+  await (await getDB()).put('supplier_payments', payment);
+  return payment;
+}
+
+export async function updateSupplierPayment(id: string, patch: Partial<NewSupplierPaymentInput>): Promise<SupplierPayment> {
+  const db = await getDB();
+  const existing = await db.get('supplier_payments', id);
+  if (!existing) throw new Error('supplier payment not found');
+  const updated: SupplierPayment = { ...existing, ...patch };
+  await db.put('supplier_payments', updated);
+  return updated;
+}
+
+export async function deleteSupplierPayment(id: string): Promise<void> {
+  await (await getDB()).delete('supplier_payments', id);
 }
 
 // ---------- SMS logs (CRM) ----------
@@ -801,6 +1127,55 @@ export async function markNotificationRead(id: string): Promise<void> {
   await db.put('notifications', { ...existing, isRead: true });
 }
 
+// ---------- Automation triggers (CRM) ----------
+
+export async function listAutomationTriggers(): Promise<AutomationTrigger[]> {
+  return (await getDB()).getAll('automation_triggers');
+}
+
+export type NewAutomationTriggerInput =
+  Pick<AutomationTrigger, 'name' | 'type' | 'conditions' | 'action'> & Partial<Pick<AutomationTrigger, 'isActive'>>;
+
+export async function createAutomationTrigger(input: NewAutomationTriggerInput): Promise<AutomationTrigger> {
+  const trigger: AutomationTrigger = {
+    id: uuid(),
+    name: input.name,
+    type: input.type,
+    isActive: input.isActive ?? true,
+    conditions: input.conditions,
+    action: input.action,
+    timesRun: 0,
+    successCount: 0,
+  };
+  await (await getDB()).put('automation_triggers', trigger);
+  return trigger;
+}
+
+export async function updateAutomationTrigger(id: string, patch: Partial<Omit<AutomationTrigger, 'id'>>): Promise<AutomationTrigger> {
+  const db = await getDB();
+  const existing = await db.get('automation_triggers', id);
+  if (!existing) throw new Error('automation trigger not found');
+  const updated: AutomationTrigger = { ...existing, ...patch };
+  await db.put('automation_triggers', updated);
+  return updated;
+}
+
+export async function deleteAutomationTrigger(id: string): Promise<void> {
+  await (await getDB()).delete('automation_triggers', id);
+}
+
+export async function recordAutomationRun(id: string, success: boolean): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('automation_triggers', id);
+  if (!existing) return;
+  await db.put('automation_triggers', {
+    ...existing,
+    lastRun: nowISO(),
+    timesRun: existing.timesRun + 1,
+    successCount: existing.successCount + (success ? 1 : 0),
+  });
+}
+
 // ---------- Settings ----------
 
 export const DEFAULT_SYNC_SERVER_URL = 'http://91.107.249.240/sync';
@@ -818,6 +1193,11 @@ const DEFAULT_SETTINGS: Settings = {
   subscriptionExpiry: UNLIMITED_EXPIRY,
   businessId: '',
   syncServerUrl: DEFAULT_SYNC_SERVER_URL,
+  vatEnabled: false,
+  vatRate: 9,
+  vatIncludedInPrice: true,
+  pointsPerToman: DEFAULT_POINTS_PER_TOMAN,
+  pointsToTomanRatio: DEFAULT_POINTS_TO_TOMAN_RATIO,
 };
 
 export async function getSettings(): Promise<Settings> {
@@ -847,6 +1227,14 @@ export async function getSettings(): Promise<Settings> {
   if (!patched.subscriptionStatus) {
     // Pre-existing install from before per-business subscriptions existed: grandfather it in, never retroactively block it.
     patched = { ...patched, subscriptionStatus: 'active', subscriptionPlan: 'unlimited', subscriptionExpiry: UNLIMITED_EXPIRY };
+    dirty = true;
+  }
+  if (patched.vatEnabled === undefined) {
+    patched = { ...patched, vatEnabled: false, vatRate: patched.vatRate ?? 9, vatIncludedInPrice: patched.vatIncludedInPrice ?? true };
+    dirty = true;
+  }
+  if (!patched.pointsPerToman) {
+    patched = { ...patched, pointsPerToman: DEFAULT_POINTS_PER_TOMAN, pointsToTomanRatio: DEFAULT_POINTS_TO_TOMAN_RATIO };
     dirty = true;
   }
   if (dirty) {
@@ -1048,28 +1436,37 @@ export async function extendBusinessSubscription(months: number, plan?: PaidSubs
 
 const BACKUP_STORE_NAMES: StoreName[] = [
   'ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings', 'customers', 'sms_logs',
-  'notifications',
+  'notifications', 'waste', 'suppliers', 'supplier_payments', 'automation_triggers',
 ];
 
 export async function exportAllData(): Promise<FullBackup> {
   const db = await getDB();
-  const [ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications] =
-    await Promise.all([
-      db.getAll('ingredients'),
-      db.getAll('menu_items'),
-      db.getAll('expenses'),
-      db.getAll('employees'),
-      db.getAll('sales'),
-      db.getAll('shopping_list'),
-      db.getAll('settings'),
-      db.getAll('customers'),
-      db.getAll('sms_logs'),
-      db.getAll('notifications'),
-    ]);
+  const [
+    ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications,
+    waste, suppliers, supplier_payments, automation_triggers,
+  ] = await Promise.all([
+    db.getAll('ingredients'),
+    db.getAll('menu_items'),
+    db.getAll('expenses'),
+    db.getAll('employees'),
+    db.getAll('sales'),
+    db.getAll('shopping_list'),
+    db.getAll('settings'),
+    db.getAll('customers'),
+    db.getAll('sms_logs'),
+    db.getAll('notifications'),
+    db.getAll('waste'),
+    db.getAll('suppliers'),
+    db.getAll('supplier_payments'),
+    db.getAll('automation_triggers'),
+  ]);
   return {
     exportedAt: nowISO(),
     version: 1,
-    data: { ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications },
+    data: {
+      ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications,
+      waste, suppliers, supplier_payments, automation_triggers,
+    },
   };
 }
 

@@ -1,5 +1,5 @@
 import { createAlertBanner } from '../components/alert-banner';
-import { ingredients } from '../store';
+import { ingredients, settings } from '../store';
 import { formatUnit, toPersian } from './format';
 import type { Ingredient } from '../types';
 
@@ -39,6 +39,7 @@ function notifyInApp(ingredient: Ingredient): void {
 }
 
 export function checkLowStockAndNotify(): void {
+  if (settings.get()?.notificationsEnabled === false) return;
   const lowIds = new Set<string>();
 
   for (const ingredient of ingredients.get()) {

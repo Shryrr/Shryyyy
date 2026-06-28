@@ -12,6 +12,9 @@ import { seedDatabase } from './seed';
 import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon, logout, restoreSession, takeSessionExpiredReason } from './auth';
 import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
 import { formatDate, toPersian } from './utils/format';
+import { recalculateAllTheoreticalStock } from './utils/inventory-engine';
+import { recalculateAllRfm } from './utils/rfm';
+import { runAutomationTriggers } from './utils/automation';
 import { setupAutoSync } from './utils/sync';
 import { isPlatformOwnerSession } from './platform-owner';
 import { renderAuthGate } from './views/login';
@@ -22,6 +25,7 @@ import { renderCrm } from './views/crm';
 import { renderDashboard } from './views/dashboard';
 import { renderExpenses } from './views/expenses';
 import { renderIngredients } from './views/ingredients';
+import { renderMenuEngineering } from './views/menu-engineering';
 import { renderRecipes } from './views/recipes';
 import { renderSales } from './views/sales';
 import { renderSettings } from './views/settings';
@@ -32,6 +36,7 @@ const HEADER_LINKS: { path: string; label: string; icon: string; roles?: UserRol
   { path: '/sales', label: 'فروش', icon: '🧾', roles: ['superadmin', 'manager'] },
   { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['superadmin', 'manager'] },
   { path: '/shopping', label: 'لیست خرید', icon: '🛒', roles: ['superadmin', 'manager'] },
+  { path: '/menu-engineering', label: 'مهندسی منو', icon: '🧠', roles: ['superadmin', 'manager'] },
   { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['superadmin'] },
   { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['superadmin'] },
 ];
@@ -44,6 +49,7 @@ const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
   { path: '/sales', title: 'فروش', render: renderSales, roles: ['superadmin', 'manager'] },
   { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['superadmin', 'manager'] },
   { path: '/crm', title: 'CRM', render: renderCrm, roles: ['superadmin', 'manager'] },
+  { path: '/menu-engineering', title: 'مهندسی منو', render: renderMenuEngineering, roles: ['superadmin', 'manager'] },
   { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
   { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['superadmin'] },
   { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['superadmin'] },
@@ -190,6 +196,13 @@ async function bootstrap(): Promise<void> {
   console.log('[boot] refreshing store...');
   await refreshAll();
   console.log('[boot] store refreshed');
+
+  // Non-blocking: stock predictions can land a moment after first paint without affecting boot time.
+  recalculateAllTheoreticalStock().catch((err) => console.error('[boot] inventory recalculation failed:', err));
+  // Recency decays daily even without new sales, so RFM segments need a refresh on every app open, not just after a sale.
+  recalculateAllRfm().catch((err) => console.error('[boot] RFM recalculation failed:', err));
+  // Birthday/lapsed triggers depend on the current date, so they need a daily re-check even without a new sale.
+  runAutomationTriggers().catch((err) => console.error('[boot] automation run failed:', err));
 
   const app = document.getElementById('app');
   if (!app) {

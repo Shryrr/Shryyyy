@@ -466,6 +466,89 @@ canvas {
   border-color: var(--primary);
 }
 
+/* ==========================================================================
+   Landing page
+   ========================================================================== */
+
+.landing-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-5) var(--space-7);
+  background: var(--bg);
+}
+
+.landing-hero {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.landing-hero__title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--ink);
+}
+
+.landing-hero__subtitle {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.landing-features {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.landing-feature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-align: right;
+}
+
+.landing-feature__icon {
+  font-size: 24px;
+}
+
+.landing-feature__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+.landing-feature__desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.landing-cta {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 .auth-pin-circles--shake {
   animation: auth-pin-shake 0.3s;
 }
@@ -1149,6 +1232,12 @@ canvas {
 .tab-toolbar {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tab-toolbar .input {
+  flex: 1 1 100%;
 }
 
 .modal-actions {
@@ -1187,6 +1276,11 @@ canvas {
 .badge--danger {
   background: var(--danger-bg);
   color: var(--red);
+}
+
+.badge--success {
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 /* ==========================================================================
@@ -1323,6 +1417,86 @@ canvas {
 .chart-card__canvas-wrap {
   position: relative;
   height: 240px;
+}
+
+.onboarding-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboarding-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.onboarding-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: right;
+}
+
+.onboarding-checklist__item--done {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.onboarding-checklist__arrow {
+  margin-inline-start: auto;
+  color: var(--ink-2);
+}
+
+.quadrant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.quadrant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.quadrant-card__title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.quadrant-card__desc {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ai-insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-insight-card__text {
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-line;
 }
 
 /* ==========================================================================
@@ -1651,6 +1825,20 @@ body.modal-open {
 .ingredient-card__meta {
   font-size: 12px;
   color: var(--ink-2);
+}
+
+.ingredient-card__meta--muted {
+  color: var(--ink-3);
+}
+
+.ingredient-card__predict {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ingredient-card__predict--warning {
+  color: var(--amber);
+  font-weight: 600;
 }
 
 .ingredient-card__actions {
@@ -2376,6 +2564,48 @@ body.modal-open {
 .settings-card__title {
   font-size: 14px;
   font-weight: 700;
+}
+
+.automation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+
+.automation-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.automation-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.automation-card__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.automation-card__desc {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+
+.automation-card__switch input {
+  width: 36px;
+  height: 20px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
 .subscription-progress {

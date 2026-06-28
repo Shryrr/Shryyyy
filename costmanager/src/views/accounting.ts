@@ -1,9 +1,14 @@
 import { destroyChart, palette, renderChart } from '../components/chart';
-import { el, emptyState, kpiCard, selectEl } from '../utils/dom';
+import { confirmModal, openModal } from '../components/modal';
+import { showToast } from '../components/toast';
+import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatDateShort, formatIngredientCategory, formatMoney, formatMoneyShort, formatPct, formatUnit, toPersian } from '../utils/format';
 import { downloadCSV, downloadJSON } from '../utils/export';
 import type { RouteCleanup } from '../router';
-import { employees, expenses, ingredients, sales } from '../store';
+import {
+  employees, expenses, ingredients, ingredientsById, refreshSettings, refreshSupplierPayments, refreshSuppliers, sales, settings, suppliers,
+  supplierPayments,
+} from '../store';
 import {
   avgGrossMarginRatio,
   dailyBreakEven,
@@ -16,11 +21,11 @@ import {
 import * as db from '../db';
 import { renderExpensesTab, renderPayrollTab, renderSummaryTab } from './expenses';
 import { renderImportTab, renderSalesLogTab } from './sales';
-import type { Sale, SaleSource } from '../types';
+import type { Sale, SaleSource, Supplier, SupplierPayment } from '../types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-type AccountingTab = 'dashboard' | 'expenses' | 'sales-log' | 'import' | 'reports';
+type AccountingTab = 'dashboard' | 'expenses' | 'sales-log' | 'import' | 'suppliers-vat' | 'reports';
 
 const PERIOD_OPTIONS = [
   { value: '7', label: '۷ روز گذشته' },
@@ -328,6 +333,421 @@ function renderFixedVariableTab(container: HTMLElement): () => void {
   return () => cleanup();
 }
 
+// ---------- Tab: تامین‌کنندگان و مالیات بر ارزش افزوده ----------
+
+type SupplierVatSubTab = 'suppliers' | 'vat';
+
+function openSupplierFormModal(existing?: Supplier): void {
+  const nameInput = el('input', { type: 'text', class: 'input', value: existing?.name ?? '' });
+  const phoneInput = el('input', { type: 'tel', class: 'input', value: existing?.phone ?? '' });
+  const ingredientSelect = el('select', { class: 'input', multiple: true }) as HTMLSelectElement;
+  for (const ing of ingredients.get()) {
+    const opt = el('option', { value: ing.id }, [ing.name]) as HTMLOptionElement;
+    if (existing?.ingredientIds.includes(ing.id)) opt.selected = true;
+    ingredientSelect.appendChild(opt);
+  }
+  const notesInput = el('input', { type: 'text', class: 'input', value: existing?.notes ?? '' });
+
+  const body = el('form', { class: 'form' }, [
+    field('نام تامین‌کننده', nameInput),
+    field('شماره تماس (اختیاری)', phoneInput),
+    field('مواد اولیهٔ مرتبط', ingredientSelect, 'برای انتخاب چند مورد، کلید Ctrl را نگه دارید.'),
+    field('یادداشت (اختیاری)', notesInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, [existing ? 'ذخیره تغییرات' : 'افزودن تامین‌کننده']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    if (!name) {
+      showToast('نام تامین‌کننده الزامی است', 'error');
+      return;
+    }
+    const ingredientIds = Array.from(ingredientSelect.selectedOptions).map((o) => o.value);
+    const payload = { name, phone: phoneInput.value.trim() || undefined, ingredientIds, notes: notesInput.value.trim() || undefined };
+    if (existing) await db.updateSupplier(existing.id, payload);
+    else await db.createSupplier(payload);
+    await refreshSuppliers();
+    showToast(existing ? 'تغییرات ذخیره شد' : 'تامین‌کننده افزوده شد', 'success');
+    modal.close();
+  });
+
+  const modal = openModal({ title: existing ? 'ویرایش تامین‌کننده' : 'افزودن تامین‌کننده', body });
+}
+
+async function handleDeleteSupplier(supplier: Supplier): Promise<void> {
+  const confirmed = await confirmModal({
+    title: 'حذف تامین‌کننده',
+    message: `تامین‌کنندهٔ «${supplier.name}» برای همیشه حذف می‌شود.`,
+    confirmLabel: 'حذف',
+    danger: true,
+  });
+  if (!confirmed) return;
+  await db.deleteSupplier(supplier.id);
+  await refreshSuppliers();
+  showToast('تامین‌کننده حذف شد', 'success');
+}
+
+function renderSupplierRow(supplier: Supplier, ingredientNames: string): HTMLElement {
+  return el('div', { class: 'recipe-row' }, [
+    el('div', { class: 'recipe-row__main' }, [
+      el('div', { class: 'recipe-row__title-row' }, [
+        el('span', { class: 'recipe-row__name' }, [supplier.name]),
+        supplier.phone ? el('span', { class: 'badge' }, [supplier.phone]) : null,
+      ]),
+      el('div', { class: 'recipe-row__meta' }, [
+        ingredientNames || 'بدون مادهٔ اولیهٔ مرتبط',
+        supplier.notes ? ` · ${supplier.notes}` : '',
+      ]),
+    ]),
+    el('div', { class: 'expense-row__actions' }, [
+      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openSupplierFormModal(supplier) }, ['✏️']),
+      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteSupplier(supplier) }, ['🗑️']),
+    ]),
+  ]);
+}
+
+function openSupplierPaymentFormModal(existing?: SupplierPayment): void {
+  const supplierList = suppliers.get();
+  const supplierSelect = selectEl(
+    supplierList.map((s) => ({ value: s.id, label: s.name })),
+    existing?.supplierId ?? supplierList[0]?.id,
+  );
+  const amountInput = numberInput(existing?.amount ?? 0);
+  const dateInput = el('input', { type: 'date', class: 'input', value: (existing?.date ?? new Date().toISOString()).slice(0, 10) });
+  const dueDateInput = el('input', { type: 'date', class: 'input', value: existing?.dueDate?.slice(0, 10) ?? '' });
+  const isPaidCheckbox = el('input', { type: 'checkbox', checked: existing?.isPaid ?? false });
+  const noteInput = el('input', { type: 'text', class: 'input', value: existing?.note ?? '' });
+
+  const body = el('form', { class: 'form' }, [
+    field('تامین‌کننده', supplierSelect),
+    field('مبلغ (تومان)', amountInput),
+    field('تاریخ', dateInput),
+    field('سررسید (اختیاری)', dueDateInput),
+    el('label', { class: 'toolbar__checkbox' }, [isPaidCheckbox, ' پرداخت‌شده']),
+    field('یادداشت (اختیاری)', noteInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, [existing ? 'ذخیره تغییرات' : 'ثبت پرداخت']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!supplierSelect.value) {
+      showToast('ابتدا یک تامین‌کننده اضافه کنید', 'error');
+      return;
+    }
+    const amount = parseNumberInput(amountInput);
+    if (amount <= 0) {
+      showToast('مبلغ باید بیشتر از صفر باشد', 'error');
+      return;
+    }
+    const payload = {
+      supplierId: supplierSelect.value,
+      amount,
+      date: dateInput.value ? new Date(dateInput.value).toISOString() : new Date().toISOString(),
+      isPaid: isPaidCheckbox.checked,
+      dueDate: dueDateInput.value ? new Date(dueDateInput.value).toISOString() : undefined,
+      note: noteInput.value.trim() || undefined,
+    };
+    if (existing) await db.updateSupplierPayment(existing.id, payload);
+    else await db.createSupplierPayment(payload);
+    await refreshSupplierPayments();
+    showToast(existing ? 'تغییرات ذخیره شد' : 'پرداخت ثبت شد', 'success');
+    modal.close();
+  });
+
+  const modal = openModal({ title: existing ? 'ویرایش پرداخت' : 'ثبت پرداخت', body });
+}
+
+async function handleDeleteSupplierPayment(payment: SupplierPayment): Promise<void> {
+  const confirmed = await confirmModal({
+    title: 'حذف پرداخت',
+    message: 'این رکورد پرداخت برای همیشه حذف می‌شود.',
+    confirmLabel: 'حذف',
+    danger: true,
+  });
+  if (!confirmed) return;
+  await db.deleteSupplierPayment(payment.id);
+  await refreshSupplierPayments();
+  showToast('پرداخت حذف شد', 'success');
+}
+
+async function toggleSupplierPaymentPaid(payment: SupplierPayment): Promise<void> {
+  await db.updateSupplierPayment(payment.id, { isPaid: !payment.isPaid });
+  await refreshSupplierPayments();
+}
+
+function renderSupplierPaymentRow(payment: SupplierPayment, supplierName: string): HTMLElement {
+  const overdue = !payment.isPaid && !!payment.dueDate && new Date(payment.dueDate) < new Date();
+  const statusClass = payment.isPaid ? 'badge--success' : overdue ? 'badge--danger' : 'badge--warning';
+  const statusLabel = payment.isPaid ? 'پرداخت‌شده' : overdue ? 'سررسید گذشته' : 'پرداخت‌نشده';
+  return el('div', { class: `expense-row${payment.isPaid ? '' : ' expense-row--inactive'}` }, [
+    el('div', { class: 'expense-row__main' }, [
+      el('div', { class: 'expense-row__title-row' }, [
+        el('span', { class: 'expense-row__name' }, [supplierName]),
+        el('span', { class: `badge ${statusClass}` }, [statusLabel]),
+      ]),
+      el('div', { class: 'expense-row__meta' }, [
+        `${formatMoney(payment.amount)} · ${formatDateShort(payment.date)}`,
+        payment.dueDate ? ` · سررسید: ${formatDateShort(payment.dueDate)}` : '',
+        payment.note ? ` · ${payment.note}` : '',
+      ]),
+    ]),
+    el('div', { class: 'expense-row__actions' }, [
+      el(
+        'button',
+        {
+          class: 'icon-btn',
+          type: 'button',
+          title: payment.isPaid ? 'علامت‌گذاری به‌عنوان پرداخت‌نشده' : 'علامت‌گذاری به‌عنوان پرداخت‌شده',
+          onclick: () => toggleSupplierPaymentPaid(payment),
+        },
+        [payment.isPaid ? '↩️' : '✅'],
+      ),
+      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openSupplierPaymentFormModal(payment) }, ['✏️']),
+      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteSupplierPayment(payment) }, ['🗑️']),
+    ]),
+  ]);
+}
+
+function renderSuppliersSubTab(container: HTMLElement): () => void {
+  const kpiContainer = el('div');
+  const supplierListEl = el('div', { class: 'recipe-list' });
+  const paymentListEl = el('div', { class: 'expense-list' });
+
+  const addSupplierBtn = el(
+    'button',
+    { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openSupplierFormModal() },
+    ['+ افزودن تامین‌کننده'],
+  );
+  const addPaymentBtn = el(
+    'button',
+    {
+      class: 'btn btn-secondary btn-sm',
+      type: 'button',
+      onclick: () => {
+        if (!suppliers.get().length) {
+          showToast('ابتدا یک تامین‌کننده اضافه کنید', 'error');
+          return;
+        }
+        openSupplierPaymentFormModal();
+      },
+    },
+    ['+ ثبت پرداخت'],
+  );
+
+  container.append(
+    kpiContainer,
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['تامین‌کنندگان']),
+      el('div', { class: 'tab-toolbar' }, [addSupplierBtn]),
+      supplierListEl,
+    ]),
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['پرداخت‌ها']),
+      el('div', { class: 'tab-toolbar' }, [addPaymentBtn]),
+      paymentListEl,
+    ]),
+  );
+
+  function render(): void {
+    const supplierList = suppliers.get();
+    const paymentList = supplierPayments.get();
+    const byIngredient = ingredientsById();
+    const now = new Date();
+
+    const outstanding = paymentList.filter((p) => !p.isPaid);
+    const totalOutstanding = outstanding.reduce((sum, p) => sum + p.amount, 0);
+    const overdueCount = outstanding.filter((p) => p.dueDate && new Date(p.dueDate) < now).length;
+
+    kpiContainer.innerHTML = '';
+    kpiContainer.appendChild(
+      el('div', { class: 'kpi-grid' }, [
+        kpiCard('🚚', 'تامین‌کنندگان', toPersian(supplierList.length)),
+        kpiCard('💳', 'مانده پرداخت‌نشده', formatMoneyShort(totalOutstanding), outstanding.length ? 'warning' : undefined),
+        kpiCard('⏰', 'سررسید گذشته', toPersian(overdueCount), overdueCount ? 'negative' : undefined),
+      ]),
+    );
+
+    supplierListEl.innerHTML = '';
+    if (!supplierList.length) {
+      supplierListEl.appendChild(
+        emptyState({
+          icon: '🚚',
+          title: 'هنوز تامین‌کننده‌ای ثبت نشده است',
+          message: 'برای پیگیری حساب‌های پرداختی، تامین‌کنندگان را اضافه کنید.',
+          ctaLabel: 'افزودن تامین‌کننده',
+          onCta: () => openSupplierFormModal(),
+        }),
+      );
+    } else {
+      for (const supplier of [...supplierList].sort((a, b) => a.name.localeCompare(b.name, 'fa'))) {
+        const names = supplier.ingredientIds
+          .map((id) => byIngredient.get(id)?.name)
+          .filter((n): n is string => !!n)
+          .join('، ');
+        supplierListEl.appendChild(renderSupplierRow(supplier, names));
+      }
+    }
+
+    paymentListEl.innerHTML = '';
+    if (!paymentList.length) {
+      paymentListEl.appendChild(emptyState({ icon: '💳', title: 'هنوز پرداختی ثبت نشده است' }));
+    } else {
+      const sorted = [...paymentList].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      for (const payment of sorted) {
+        const supplierName = supplierList.find((s) => s.id === payment.supplierId)?.name ?? 'نامشخص';
+        paymentListEl.appendChild(renderSupplierPaymentRow(payment, supplierName));
+      }
+    }
+  }
+
+  const unsubSuppliers = suppliers.subscribe(render);
+  const unsubPayments = supplierPayments.subscribe(render);
+  const unsubIngredients = ingredients.subscribe(render);
+
+  return () => {
+    unsubSuppliers();
+    unsubPayments();
+    unsubIngredients();
+  };
+}
+
+function renderVatSubTab(container: HTMLElement): () => void {
+  const s = settings.get();
+  const vatEnabledCheckbox = el('input', { type: 'checkbox', checked: s?.vatEnabled ?? false });
+  const vatRateInput = numberInput(s?.vatRate ?? 9);
+  const vatIncludedCheckbox = el('input', { type: 'checkbox', checked: s?.vatIncludedInPrice ?? true });
+  const saveBtn = el('button', { type: 'button', class: 'btn btn-primary btn-sm' }, ['ذخیره تنظیمات مالیات']);
+
+  const configBody = el('div', { class: 'form' }, [
+    el('label', { class: 'toolbar__checkbox' }, [vatEnabledCheckbox, ' محاسبهٔ خودکار مالیات بر ارزش افزوده فعال باشد']),
+    field('نرخ مالیات بر ارزش افزوده (٪)', vatRateInput),
+    el('label', { class: 'toolbar__checkbox' }, [vatIncludedCheckbox, ' قیمت فروش شامل مالیات است']),
+    el('div', { class: 'modal-actions' }, [saveBtn]),
+  ]);
+
+  const noticeEl = el('div');
+  const kpiContainer = el('div');
+  const periodSelect = selectEl(PERIOD_OPTIONS, '30');
+  const exportBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی گزارش مالیات (CSV)']);
+
+  container.append(
+    el('div', { class: 'chart-card' }, [el('h3', { class: 'chart-card__title' }, ['تنظیمات مالیات بر ارزش افزوده']), configBody]),
+    noticeEl,
+    kpiContainer,
+    el('div', { class: 'toolbar' }, [periodSelect, exportBtn]),
+  );
+
+  saveBtn.addEventListener('click', async () => {
+    await db.updateSettings({
+      vatEnabled: vatEnabledCheckbox.checked,
+      vatRate: parseNumberInput(vatRateInput),
+      vatIncludedInPrice: vatIncludedCheckbox.checked,
+    });
+    await refreshSettings();
+    showToast('تنظیمات مالیات ذخیره شد', 'success');
+  });
+
+  function vatSales(): Sale[] {
+    const now = new Date();
+    const periodDays = Number(periodSelect.value);
+    const periodStart = new Date(now.getTime() - periodDays * DAY_MS);
+    return salesInPeriod(sales.get(), periodStart, now).filter((sale) => (sale.vatAmount ?? 0) > 0);
+  }
+
+  function render(): void {
+    noticeEl.innerHTML = '';
+    if (!settings.get()?.vatEnabled) {
+      noticeEl.appendChild(
+        el('p', { class: 'field__hint' }, [
+          'محاسبهٔ مالیات غیرفعال است. آن را در بالا فعال کنید تا فروش‌های بعدی شامل مالیات ثبت شوند.',
+        ]),
+      );
+    }
+
+    const list = vatSales();
+    const totalVat = list.reduce((sum, sale) => sum + (sale.vatAmount ?? 0), 0);
+    const totalTaxable = list.reduce((sum, sale) => sum + sale.unitSalePrice * sale.quantity, 0);
+
+    kpiContainer.innerHTML = '';
+    kpiContainer.appendChild(
+      el('div', { class: 'kpi-grid' }, [
+        kpiCard('🧾', 'مالیات جمع‌آوری‌شده', formatMoneyShort(totalVat)),
+        kpiCard('💰', 'فروش مشمول مالیات', formatMoneyShort(totalTaxable)),
+        kpiCard('📄', 'تعداد فروش مشمول', toPersian(list.length)),
+      ]),
+    );
+  }
+
+  exportBtn.addEventListener('click', () => {
+    const list = vatSales();
+    downloadCSV(
+      `vat-report-${periodSelect.value}d.csv`,
+      ['تاریخ', 'آیتم', 'فروش کل', 'نرخ مالیات (٪)', 'مبلغ مالیات'],
+      list.map((sale) => [
+        formatDateShort(sale.date),
+        sale.menuItemName,
+        Math.round(sale.unitSalePrice * sale.quantity),
+        sale.vatRate ?? 0,
+        Math.round(sale.vatAmount ?? 0),
+      ]),
+    );
+  });
+
+  periodSelect.addEventListener('change', render);
+  const unsubSales = sales.subscribe(render);
+  const unsubSettings = settings.subscribe(render);
+
+  return () => {
+    unsubSales();
+    unsubSettings();
+  };
+}
+
+function renderSuppliersVatTab(container: HTMLElement): () => void {
+  const subTabsEl = el('div', { class: 'tabs tabs--sub' });
+  const subContentEl = el('div', { class: 'tab-content' });
+  container.append(subTabsEl, subContentEl);
+
+  const subTabs: { id: SupplierVatSubTab; label: string; render: (c: HTMLElement) => () => void }[] = [
+    { id: 'suppliers', label: 'تامین‌کنندگان', render: renderSuppliersSubTab },
+    { id: 'vat', label: 'مالیات بر ارزش افزوده', render: renderVatSubTab },
+  ];
+
+  let activeSub: SupplierVatSubTab = 'suppliers';
+  let cleanup: () => void = () => {};
+
+  function renderSubTabs(): void {
+    subTabsEl.innerHTML = '';
+    for (const t of subTabs) {
+      subTabsEl.appendChild(
+        el(
+          'button',
+          { type: 'button', class: `tab-btn${t.id === activeSub ? ' tab-btn--active' : ''}`, onclick: () => switchSub(t.id) },
+          [t.label],
+        ),
+      );
+    }
+  }
+
+  function switchSub(id: SupplierVatSubTab): void {
+    activeSub = id;
+    cleanup();
+    subContentEl.innerHTML = '';
+    renderSubTabs();
+    cleanup = subTabs.find((t) => t.id === id)!.render(subContentEl);
+  }
+
+  switchSub(activeSub);
+  return () => cleanup();
+}
+
 // ---------- Tab 5: گزارش‌های خروجی ----------
 
 function renderReportsTab(container: HTMLElement): () => void {
@@ -444,6 +864,7 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     { id: 'expenses', label: 'هزینه‌های ثابت و متغیر', render: renderFixedVariableTab },
     { id: 'sales-log', label: 'دفتر فروش', render: renderSalesLogTab },
     { id: 'import', label: 'ورودی فایل فروش', render: renderImportTab },
+    { id: 'suppliers-vat', label: 'تامین‌کنندگان و مالیات', render: renderSuppliersVatTab },
     { id: 'reports', label: 'گزارش‌های خروجی', render: renderReportsTab },
   ];
 

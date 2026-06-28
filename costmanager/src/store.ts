@@ -1,6 +1,7 @@
 import * as db from './db';
 import type {
-  AppNotification, Customer, Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem, SmsLog, UserRole,
+  AppNotification, AutomationTrigger, Customer, Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem, SmsLog, Supplier,
+  SupplierPayment, UserRole,
 } from './types';
 
 type Listener<T> = (value: T) => void;
@@ -43,6 +44,9 @@ export const sales = signal<Sale[]>([]);
 export const shoppingList = signal<ShoppingListItem[]>([]);
 export const customers = signal<Customer[]>([]);
 export const smsLogs = signal<SmsLog[]>([]);
+export const automationTriggers = signal<AutomationTrigger[]>([]);
+export const suppliers = signal<Supplier[]>([]);
+export const supplierPayments = signal<SupplierPayment[]>([]);
 export const notifications = signal<AppNotification[]>([]);
 export const settings = signal<Settings | null>(null);
 export const resolvedTheme = signal<'light' | 'dark'>('light');
@@ -82,6 +86,15 @@ export async function refreshCustomers(): Promise<void> {
 export async function refreshSmsLogs(): Promise<void> {
   smsLogs.set(await db.listSmsLogs());
 }
+export async function refreshAutomationTriggers(): Promise<void> {
+  automationTriggers.set(await db.listAutomationTriggers());
+}
+export async function refreshSuppliers(): Promise<void> {
+  suppliers.set(await db.listSuppliers());
+}
+export async function refreshSupplierPayments(): Promise<void> {
+  supplierPayments.set(await db.listSupplierPayments());
+}
 export async function refreshNotifications(): Promise<void> {
   notifications.set(await db.listNotifications());
 }
@@ -99,8 +112,11 @@ export async function refreshAll(): Promise<void> {
     refreshShoppingList(),
     refreshCustomers(),
     refreshSmsLogs(),
+    refreshAutomationTriggers(),
     refreshNotifications(),
     refreshSettings(),
+    refreshSuppliers(),
+    refreshSupplierPayments(),
   ]);
 }
 

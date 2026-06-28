@@ -1,5 +1,5 @@
 import * as db from '../db';
-import { hasFullAccess, hasRole } from '../auth';
+import { currentUser, hasFullAccess, hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { emptyState, el, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
@@ -8,6 +8,8 @@ import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
 import { ingredients, refreshIngredients, refreshMenuItems, takeNavigationIntent } from '../store';
 import { inventoryValue, lowStockIngredients } from '../utils/calc';
+import { scheduleRecalculation } from '../utils/inventory-engine';
+import { STOCKOUT_WARNING_DAYS } from '../utils/stock-alerts';
 import type { Ingredient, IngredientCategory, PurchaseRecord, Unit } from '../types';
 
 const CATEGORY_OPTIONS: IngredientCategory[] = [
@@ -84,6 +86,7 @@ function openIngredientFormModal(existing?: Ingredient): void {
         });
       }
       await refreshIngredients();
+      scheduleRecalculation();
       showToast(existing ? 'تغییرات ذخیره شد' : 'ماده اولیه افزوده شد', 'success');
       modal.close();
     } catch {
@@ -132,11 +135,43 @@ function openPurchaseModal(ingredient: Ingredient): void {
       note: noteInput.value.trim() || undefined,
     });
     await refreshIngredients();
+    scheduleRecalculation();
     showToast('خرید ثبت شد', 'success');
     modal.close();
   });
 
   const modal = openModal({ title: `ثبت خرید — ${ingredient.name}`, body });
+}
+
+function openPhysicalCountModal(ingredient: Ingredient): void {
+  const qtyInput = numberInput(ingredient.currentStock);
+
+  const body = el('form', { class: 'form' }, [
+    el('p', { class: 'form-hint' }, [
+      `موجودی سیستمی فعلی: ${toPersian(ingredient.currentStock)} ${formatUnit(ingredient.unit)} — مقدار شمارش‌شده واقعی را وارد کنید.`,
+    ]),
+    field(`مقدار شمارش‌شده (${formatUnit(ingredient.unit)})`, qtyInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت شمارش']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const quantity = parseNumberInput(qtyInput);
+    if (quantity < 0) {
+      showToast('مقدار نمی‌تواند منفی باشد', 'error');
+      return;
+    }
+    await db.recordPhysicalCount(ingredient.id, quantity, currentUser.get()?.name ?? 'نامشخص');
+    await refreshIngredients();
+    scheduleRecalculation();
+    showToast('شمارش فیزیکی ثبت شد', 'success');
+    modal.close();
+  });
+
+  const modal = openModal({ title: `ثبت شمارش فیزیکی — ${ingredient.name}`, body });
 }
 
 function renderPurchaseRow(ingredient: Ingredient, record: PurchaseRecord): HTMLElement {
@@ -167,6 +202,7 @@ function renderPurchaseRow(ingredient: Ingredient, record: PurchaseRecord): HTML
         supplier: supplierInput.value.trim() || undefined,
       });
       await refreshIngredients();
+      scheduleRecalculation();
       showToast('رکورد خرید به‌روزرسانی شد', 'success');
     }
 
@@ -221,6 +257,7 @@ async function handleDelete(ingredient: Ingredient): Promise<void> {
   try {
     await db.deleteIngredient(ingredient.id);
     await refreshIngredients();
+    scheduleRecalculation();
     showToast('ماده اولیه حذف شد', 'success');
   } catch (err) {
     if (err instanceof db.IngredientInUseError) {
@@ -235,6 +272,7 @@ async function handleDelete(ingredient: Ingredient): Promise<void> {
         await db.deleteIngredient(ingredient.id, true);
         await refreshIngredients();
         await refreshMenuItems();
+        scheduleRecalculation();
         showToast('ماده اولیه حذف شد', 'success');
       }
     } else {
@@ -247,6 +285,7 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
   const pct = ingredient.maxStock > 0 ? Math.min(100, Math.max(0, (ingredient.currentStock / ingredient.maxStock) * 100)) : 0;
   const status = ingredient.currentStock <= ingredient.minStock ? 'low' : ingredient.currentStock >= ingredient.maxStock ? 'full' : 'ok';
   const canEdit = hasFullAccess() || hasRole('warehouse');
+  const isPredictedStockout = ingredient.dailyUsageRate > 0 && ingredient.daysOfStockRemaining <= STOCKOUT_WARNING_DAYS;
 
   return el('div', { class: 'ingredient-card' }, [
     el('div', { class: 'ingredient-card__main' }, [
@@ -258,9 +297,20 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
       el('div', { class: 'ingredient-card__meta' }, [
         `${toPersian(ingredient.currentStock)} / ${toPersian(ingredient.maxStock)} ${formatUnit(ingredient.unit)} · میانگین قیمت: ${formatMoney(ingredient.pricePerUnit)}`,
       ]),
+      ingredient.dailyUsageRate > 0
+        ? el('div', { class: `ingredient-card__predict${isPredictedStockout ? ' ingredient-card__predict--warning' : ''}` }, [
+            `📉 با نرخ مصرف فعلی، تا ${toPersian(Math.round(ingredient.daysOfStockRemaining))} روز دیگر تمام می‌شود`,
+          ])
+        : null,
+      ingredient.lastPhysicalCount
+        ? el('div', { class: 'ingredient-card__meta ingredient-card__meta--muted' }, [
+            `آخرین شمارش فیزیکی: ${formatDateShort(ingredient.lastPhysicalCount.date)} توسط ${ingredient.lastPhysicalCount.countedBy}`,
+          ])
+        : null,
     ]),
     el('div', { class: 'ingredient-card__actions' }, [
       canEdit ? el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']) : null,
+      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'ثبت شمارش فیزیکی', onclick: () => openPhysicalCountModal(ingredient) }, ['📋']) : null,
       el('button', { class: 'icon-btn', type: 'button', title: 'تاریخچه خرید', onclick: () => openPurchaseHistoryModal(ingredient.id) }, ['🧾']),
       canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openIngredientFormModal(ingredient) }, ['✏️']) : null,
       canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(ingredient) }, ['🗑️']) : null,
@@ -270,13 +320,14 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
 
 function renderIngredientsStatsPanel(
   all: Ingredient[],
-  actions: { onSortByValue: () => void; onShowShortage: () => void; onShowLowStock: () => void },
+  actions: { onSortByValue: () => void; onShowShortage: () => void; onSortByStockout: () => void },
 ): HTMLElement {
   const lowStock = lowStockIngredients(all);
+  const predictedStockouts = all.filter((i) => i.dailyUsageRate > 0 && i.daysOfStockRemaining <= STOCKOUT_WARNING_DAYS);
   return el('div', { class: 'kpi-grid' }, [
     kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(all)), undefined, actions.onSortByValue),
     kpiCard('⚠️', 'اقلام رو به اتمام', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowShortage),
-    kpiCard('📉', 'کم‌موجود', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowLowStock),
+    kpiCard('📉', 'پیش‌بینی اتمام موجودی', toPersian(predictedStockouts.length), predictedStockouts.length > 0 ? 'warning' : undefined, actions.onSortByStockout),
   ]);
 }
 
@@ -296,6 +347,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
       { value: 'stock', label: 'مرتب‌سازی: کمترین موجودی' },
       { value: 'category', label: 'مرتب‌سازی: دسته‌بندی' },
       { value: 'value', label: 'مرتب‌سازی: بیشترین ارزش' },
+      { value: 'stockout', label: 'مرتب‌سازی: نزدیک‌ترین اتمام' },
     ],
     'name',
   );
@@ -312,8 +364,8 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
       renderList();
     },
     onShowShortage: () => navigate('/shopping'),
-    onShowLowStock: () => {
-      lowStockOnlyCheckbox.checked = true;
+    onSortByStockout: () => {
+      sortSelect.value = 'stockout';
       renderList();
     },
   };
@@ -355,6 +407,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
       if (sortBy === 'stock') return a.currentStock - b.currentStock;
       if (sortBy === 'category') return a.category.localeCompare(b.category);
       if (sortBy === 'value') return b.currentStock * b.pricePerUnit - a.currentStock * a.pricePerUnit;
+      if (sortBy === 'stockout') return a.daysOfStockRemaining - b.daysOfStockRemaining;
       return a.name.localeCompare(b.name, 'fa');
     });
 

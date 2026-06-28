@@ -1,5 +1,6 @@
 import * as db from '../db';
 import { login as setSession } from '../auth';
+import { renderLandingPage } from './landing';
 import { renderSetupWizard } from './setup';
 import { openPlatformOwnerGate } from './platform-admin';
 import { el } from '../utils/dom';
@@ -29,10 +30,16 @@ export async function renderAuthGate(container: HTMLElement): Promise<AppUser> {
 
   return new Promise((resolve) => {
     if (!config.isSetup || !config.users.some((u) => u.role === 'superadmin')) {
-      renderSetupWizard(container, {
+      const showLanding = () => renderLandingPage(container, {
+        onRegister: () => showWizard('business'),
+        onJoin: () => showWizard('join'),
+      });
+      const showWizard = (initialStep: 'business' | 'join') => renderSetupWizard(container, {
         onDone: resolve,
         onJoined: () => { renderAuthGate(container).then(resolve); },
-      });
+        onBack: showLanding,
+      }, initialStep);
+      showLanding();
     } else {
       renderUserGrid(container, businessName, config.users.filter((u) => u.isActive), resolve);
     }

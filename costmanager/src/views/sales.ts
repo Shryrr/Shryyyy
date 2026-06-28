@@ -5,8 +5,11 @@ import { showToast } from '../components/toast';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatDateShort, formatMoney, formatPct, formatUnit, toPersian, todayISO } from '../utils/format';
 import type { RouteCleanup } from '../router';
-import { ingredientsById, menuItems, refreshIngredients, refreshSales, refreshShoppingList, sales } from '../store';
+import { ingredientsById, menuItems, refreshIngredients, refreshSales, refreshShoppingList, sales, settings } from '../store';
 import { dailySeries, recipeCost, salesInPeriod } from '../utils/calc';
+import { scheduleRecalculation } from '../utils/inventory-engine';
+import { scheduleRfmRecalculation } from '../utils/rfm';
+import { scheduleAutomationRun } from '../utils/automation';
 import {
   buildCashierRows,
   buildSnappfoodRows,
@@ -67,13 +70,27 @@ function renderQuickSaleForm(container: HTMLElement): () => void {
       showToast('تعداد باید بیشتر از صفر باشد', 'error');
       return;
     }
+    const menuItem = menuItems.get().find((m) => m.id === menuItemId);
+    const s = settings.get();
+    let vatAmount: number | undefined;
+    let vatRate: number | undefined;
+    if (menuItem && s?.vatEnabled) {
+      const total = menuItem.salePrice * quantity;
+      vatRate = s.vatRate;
+      vatAmount = s.vatIncludedInPrice ? total - total / (1 + vatRate / 100) : total * (vatRate / 100);
+    }
     await db.recordSale({
       menuItemId,
       quantity,
       date: dateInput.value ? new Date(dateInput.value).toISOString() : todayISO(),
       note: noteInput.value.trim() || undefined,
+      vatAmount,
+      vatRate,
     });
     await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+    scheduleRecalculation();
+    scheduleRfmRecalculation();
+    scheduleAutomationRun();
     showToast('فروش ثبت شد', 'success');
     qtyInput.value = toPersian(1);
     noteInput.value = '';
@@ -124,6 +141,9 @@ function renderBulkSaleForm(container: HTMLElement): () => void {
         totalRevenue,
       });
       await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+      scheduleRecalculation();
+      scheduleRfmRecalculation();
+      scheduleAutomationRun();
       showToast('فروش کلی پایان روز ثبت شد', 'success');
       revenueInput.value = toPersian(0);
       renderBulkBreakdown(breakdownContainer, sale);
@@ -199,6 +219,9 @@ export function renderSalesLogTab(container: HTMLElement): () => void {
     if (!confirmed) return;
     await db.deleteSale(s.id);
     await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+    scheduleRecalculation();
+    scheduleRfmRecalculation();
+    scheduleAutomationRun();
     showToast('فروش حذف شد', 'success');
   }
 
@@ -457,6 +480,9 @@ function renderCashierImport(container: HTMLElement): () => void {
     }
 
     await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+    scheduleRecalculation();
+    scheduleRfmRecalculation();
+    scheduleAutomationRun();
 
     if (importedCount === 0) {
       showToast('هیچ ردیفی برای ورود انتخاب نشده است', 'error');
@@ -667,6 +693,9 @@ function renderSnappfoodImport(container: HTMLElement): () => void {
     }
 
     await Promise.all([refreshSales(), refreshIngredients(), refreshShoppingList()]);
+    scheduleRecalculation();
+    scheduleRfmRecalculation();
+    scheduleAutomationRun();
 
     if (importedCount === 0) {
       showToast('هیچ ردیفی برای ورود انتخاب نشده است', 'error');

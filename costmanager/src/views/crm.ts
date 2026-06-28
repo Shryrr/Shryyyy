@@ -2,47 +2,60 @@ import * as db from '../db';
 import { confirmModal, openModal } from '../components/modal';
 import { destroyChart, palette, renderChart } from '../components/chart';
 import { showToast } from '../components/toast';
-import { customers, refreshCustomers, refreshSettings, refreshSmsLogs, settings, smsLogs } from '../store';
+import {
+  automationTriggers, customers, refreshAutomationTriggers, refreshCustomers, refreshSettings, refreshSmsLogs, settings, smsLogs,
+} from '../store';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
-import { formatDateTime, formatMoney, toPersian } from '../utils/format';
+import {
+  RFM_SEGMENT_ORDER, formatDateTime, formatMoney, formatPct, formatRfmSegment, rfmSegmentIcon, toPersian,
+} from '../utils/format';
 import { sendBulkSms } from '../utils/sms';
 import {
   CUSTOMER_FIELD_LABELS, buildCustomerRows, detectCustomerColumns, parseSpreadsheetFile,
 } from '../utils/excel-import';
 import type { CustomerField, CustomerImportRow, ParsedSheet } from '../utils/excel-import';
 import type { RouteCleanup } from '../router';
-import type { Customer, CustomerSegment, SmsLog } from '../types';
+import type { AutomationTrigger, AutomationTriggerType, Customer, RFMSegment, SmsLog } from '../types';
 
-type Tab = 'customers' | 'segments' | 'sms' | 'loyalty' | 'report';
+type Tab = 'customers' | 'segments' | 'automation' | 'sms' | 'loyalty' | 'report';
+
+/** 'custom' triggers have no built-in eligibility rule and no manual-fire UI exists, so they're excluded from this catalog. */
+const AUTOMATION_TYPES: AutomationTriggerType[] = ['welcome', 'birthday', 'lapsed_14', 'lapsed_30', 'post_survey', 'milestone_5'];
+
+const AUTOMATION_LABELS: Record<AutomationTriggerType, string> = {
+  welcome: 'پیام خوش‌آمدگویی',
+  birthday: 'تبریک تولد',
+  lapsed_14: 'یادآوری غیبت (۱۴ روز)',
+  lapsed_30: 'بازگرداندن مشتری (۳۰ روز)',
+  post_survey: 'نظرسنجی پس از بازدید',
+  milestone_5: 'پاداش هر ۵ بازدید',
+  custom: 'سفارشی',
+};
+
+const AUTOMATION_DESCRIPTIONS: Record<AutomationTriggerType, string> = {
+  welcome: 'بعد از اولین بازدید مشتری، یک پیامک خوش‌آمدگویی ارسال می‌شود.',
+  birthday: 'در روز تولد مشتری، پیامک تبریک ارسال می‌شود.',
+  lapsed_14: 'وقتی ۱۴ تا ۳۰ روز از آخرین بازدید مشتری گذشته باشد، پیامک یادآوری ارسال می‌شود.',
+  lapsed_30: 'وقتی بیش از ۳۰ روز از آخرین بازدید مشتری گذشته باشد، پیامک بازگرداندن ارسال می‌شود.',
+  post_survey: 'همان روز بازدید، پیامک درخواست نظرسنجی ارسال می‌شود.',
+  milestone_5: 'به ازای هر ۵ بازدید، پیامک تشکر و پاداش ارسال می‌شود.',
+  custom: '',
+};
+
+const AUTOMATION_DEFAULT_TEMPLATES: Record<AutomationTriggerType, string> = {
+  welcome: 'سلام {name} عزیز، به خانواده {businessName} خوش آمدید! 🌟',
+  birthday: '{name} عزیز، تولدتون مبارک! 🎉 از طرف {businessName} یک هدیه ویژه منتظرتونه.',
+  lapsed_14: '{name} عزیز، دلمون براتون تنگ شده! منتظر دیدارتون در {businessName} هستیم.',
+  lapsed_30: '{name} عزیز، مدتی است شما را نمی‌بینیم. با {points} امتیاز وفاداری، منتظر بازگشت شما در {businessName} هستیم.',
+  post_survey: '{name} عزیز، از خریدتون متشکریم! نظر شما درباره {businessName} برای ما ارزشمند است.',
+  milestone_5: '{name} عزیز، با {visitCount}مین بازدید از {businessName}، شما عضو ویژه ما شدید! 🏆',
+  custom: '',
+};
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const VIP_SPEND_THRESHOLD = 5_000_000;
-const INACTIVE_DAYS = 60;
-const NEW_CUSTOMER_DAYS = 30;
-const SEGMENTS: CustomerSegment[] = ['vip', 'regular', 'new', 'inactive'];
-
-const SEGMENT_LABELS: Record<CustomerSegment, string> = {
-  vip: 'ویژه (VIP)',
-  regular: 'عادی',
-  new: 'مشتری جدید',
-  inactive: 'غیرفعال',
-};
-const SEGMENT_ICONS: Record<CustomerSegment, string> = { vip: '👑', regular: '🙂', new: '✨', inactive: '😴' };
 
 /** Customers selected in the segmentation tab, carried over as the default recipient set in the bulk-SMS tab. */
 const smsSelection = new Set<string>();
-
-function daysSince(iso?: string): number {
-  if (!iso) return Infinity;
-  return (Date.now() - new Date(iso).getTime()) / DAY_MS;
-}
-
-function customerSegment(c: Customer): CustomerSegment {
-  if (daysSince(c.createdAt) <= NEW_CUSTOMER_DAYS && c.visitCount <= 1) return 'new';
-  if (daysSince(c.lastVisitAt) > INACTIVE_DAYS) return 'inactive';
-  if (c.totalSpent >= VIP_SPEND_THRESHOLD) return 'vip';
-  return 'regular';
-}
 
 function settingsCard(title: string, body: HTMLElement): HTMLElement {
   return el('div', { class: 'settings-card' }, [el('h3', { class: 'settings-card__title' }, [title]), body]);
@@ -119,12 +132,11 @@ function openRecordVisitModal(customer: Customer): void {
 }
 
 function renderCustomerRow(customer: Customer): HTMLElement {
-  const segment = customerSegment(customer);
   return el('div', { class: 'expense-row' }, [
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
         el('span', { class: 'expense-row__name' }, [customer.name]),
-        el('span', { class: 'badge' }, [`${SEGMENT_ICONS[segment]} ${SEGMENT_LABELS[segment]}`]),
+        el('span', { class: 'badge' }, [`${rfmSegmentIcon(customer.segment)} ${formatRfmSegment(customer.segment)}`]),
       ]),
       el('div', { class: 'expense-row__meta' }, [
         `${customer.phone} · ${toPersian(customer.visitCount)} بازدید · ${formatMoney(customer.totalSpent)} · ${toPersian(customer.loyaltyPoints)} امتیاز`,
@@ -401,12 +413,12 @@ function renderCustomersTab(container: HTMLElement): () => void {
   return () => unsub();
 }
 
-// ---------- Segmentation tab ----------
+// ---------- RFM Segmentation tab ----------
 
 function renderSegmentsTab(container: HTMLElement): () => void {
   const summaryEl = el('div', { class: 'kpi-grid' });
   const listEl = el('div', { class: 'expense-list' });
-  let activeSegment: CustomerSegment | 'all' = 'all';
+  let activeSegment: RFMSegment | 'all' = 'all';
 
   container.append(summaryEl, listEl);
 
@@ -423,15 +435,15 @@ function renderSegmentsTab(container: HTMLElement): () => void {
       checkbox,
       el('div', { class: 'expense-row__main' }, [
         el('span', { class: 'expense-row__name' }, [c.name]),
-        el('div', { class: 'expense-row__meta' }, [`${c.phone} · ${formatMoney(c.totalSpent)}`]),
+        el('div', { class: 'expense-row__meta' }, [`${c.phone} · ${formatMoney(c.totalSpent)} · ${toPersian(c.rfmScore.recencyDays)} روز از آخرین بازدید`]),
       ]),
     ]);
   }
 
   function render(): void {
     const list = customers.get();
-    const bySegment = new Map<CustomerSegment, Customer[]>(SEGMENTS.map((s) => [s, []]));
-    for (const c of list) bySegment.get(customerSegment(c))!.push(c);
+    const bySegment = new Map<RFMSegment, Customer[]>(RFM_SEGMENT_ORDER.map((s) => [s, []]));
+    for (const c of list) bySegment.get(c.segment)!.push(c);
 
     summaryEl.innerHTML = '';
     summaryEl.appendChild(
@@ -440,9 +452,9 @@ function renderSegmentsTab(container: HTMLElement): () => void {
         renderList();
       }),
     );
-    for (const seg of SEGMENTS) {
+    for (const seg of RFM_SEGMENT_ORDER) {
       summaryEl.appendChild(
-        kpiCard(SEGMENT_ICONS[seg], SEGMENT_LABELS[seg], toPersian(bySegment.get(seg)!.length), undefined, () => {
+        kpiCard(rfmSegmentIcon(seg), formatRfmSegment(seg), toPersian(bySegment.get(seg)!.length), undefined, () => {
           activeSegment = seg;
           renderList();
         }),
@@ -466,9 +478,109 @@ function renderSegmentsTab(container: HTMLElement): () => void {
   return () => unsub();
 }
 
+// ---------- Automation tab ----------
+
+function findTrigger(type: AutomationTriggerType): AutomationTrigger | undefined {
+  return automationTriggers.get().find((t) => t.type === type);
+}
+
+function renderAutomationCard(type: AutomationTriggerType): HTMLElement {
+  const existing = findTrigger(type);
+  const templateInput = el('textarea', {
+    class: 'input',
+    rows: 2,
+    value: existing?.action.messageTemplate ?? AUTOMATION_DEFAULT_TEMPLATES[type],
+  }) as HTMLTextAreaElement;
+
+  const toggle = el('input', {
+    type: 'checkbox',
+    checked: existing?.isActive ?? false,
+    onchange: async (e: Event) => {
+      const isActive = (e.target as HTMLInputElement).checked;
+      const current = findTrigger(type);
+      if (current) {
+        await db.updateAutomationTrigger(current.id, { isActive });
+      } else {
+        await db.createAutomationTrigger({
+          name: AUTOMATION_LABELS[type],
+          type,
+          conditions: {},
+          action: { channel: 'sms', messageTemplate: templateInput.value.trim() || AUTOMATION_DEFAULT_TEMPLATES[type] },
+          isActive,
+        });
+      }
+      await refreshAutomationTriggers();
+      showToast(isActive ? 'اتوماسیون فعال شد' : 'اتوماسیون غیرفعال شد', 'success');
+    },
+  });
+
+  const saveBtn = el(
+    'button',
+    {
+      type: 'button',
+      class: 'btn btn-secondary btn-sm',
+      onclick: async () => {
+        const messageTemplate = templateInput.value.trim();
+        if (!messageTemplate) {
+          showToast('متن پیامک نمی‌تواند خالی باشد', 'error');
+          return;
+        }
+        const current = findTrigger(type);
+        if (current) {
+          await db.updateAutomationTrigger(current.id, { action: { channel: 'sms', messageTemplate } });
+        } else {
+          await db.createAutomationTrigger({
+            name: AUTOMATION_LABELS[type],
+            type,
+            conditions: {},
+            action: { channel: 'sms', messageTemplate },
+            isActive: false,
+          });
+        }
+        await refreshAutomationTriggers();
+        showToast('متن پیامک ذخیره شد', 'success');
+      },
+    },
+    ['ذخیره متن'],
+  );
+
+  const statsLine = existing
+    ? `${toPersian(existing.timesRun)} بار اجرا · ${toPersian(existing.successCount)} ارسال موفق${existing.lastRun ? ` · آخرین اجرا: ${formatDateTime(existing.lastRun)}` : ''}`
+    : 'هنوز اجرا نشده است';
+
+  return el('div', { class: 'automation-card' }, [
+    el('div', { class: 'automation-card__head' }, [
+      el('div', { class: 'automation-card__title-wrap' }, [
+        el('span', { class: 'automation-card__title' }, [AUTOMATION_LABELS[type]]),
+        el('p', { class: 'automation-card__desc' }, [AUTOMATION_DESCRIPTIONS[type]]),
+      ]),
+      el('label', { class: 'automation-card__switch' }, [toggle]),
+    ]),
+    field('متن پیامک', templateInput),
+    el('div', { class: 'modal-actions' }, [saveBtn]),
+    el('p', { class: 'form-hint' }, [statsLine]),
+  ]);
+}
+
+function renderAutomationTab(container: HTMLElement): () => void {
+  const cardsEl = el('div', { class: 'automation-grid' });
+  container.append(
+    el('p', { class: 'form-hint' }, ['اتوماسیون‌های فعال، بدون نیاز به دخالت دستی، پیامک مناسب را در زمان درست برای هر مشتری ارسال می‌کنند.']),
+    cardsEl,
+  );
+
+  function render(): void {
+    cardsEl.innerHTML = '';
+    for (const type of AUTOMATION_TYPES) cardsEl.appendChild(renderAutomationCard(type));
+  }
+
+  const unsub = automationTriggers.subscribe(render);
+  return () => unsub();
+}
+
 // ---------- Bulk SMS tab ----------
 
-type RecipientMode = 'selected' | 'all' | 'manual';
+type RecipientMode = 'selected' | 'all' | 'manual' | 'segment';
 
 function renderSmsLogRow(log: SmsLog): HTMLElement {
   const preview = log.message.length > 40 ? `${log.message.slice(0, 40)}…` : log.message;
@@ -518,14 +630,19 @@ function renderSmsTab(container: HTMLElement): () => void {
   const modeSelect = selectEl(
     [
       { value: 'selected', label: `مشتریان انتخاب‌شده در بخش‌بندی (${toPersian(smsSelection.size)})` },
+      { value: 'segment', label: 'بر اساس بخش RFM' },
       { value: 'all', label: 'همه مشتریان' },
       { value: 'manual', label: 'وارد کردن دستی شماره‌ها' },
     ],
     'selected',
   );
   const manualInput = el('textarea', { class: 'input', rows: 3, placeholder: '۰۹xxxxxxxxx، ۰۹xxxxxxxxx', hidden: true });
+  const segmentSelect = selectEl(RFM_SEGMENT_ORDER.map((seg) => ({ value: seg, label: `${rfmSegmentIcon(seg)} ${formatRfmSegment(seg)}` })));
+  segmentSelect.hidden = true;
   modeSelect.addEventListener('change', () => {
-    manualInput.hidden = (modeSelect as HTMLSelectElement).value !== 'manual';
+    const mode = (modeSelect as HTMLSelectElement).value as RecipientMode;
+    manualInput.hidden = mode !== 'manual';
+    segmentSelect.hidden = mode !== 'segment';
   });
 
   const messageInput = el('textarea', { class: 'input', rows: 4, placeholder: 'متن پیامک...' });
@@ -533,6 +650,7 @@ function renderSmsTab(container: HTMLElement): () => void {
 
   const composeBody = el('div', { class: 'form' }, [
     field('گیرندگان', modeSelect),
+    segmentSelect,
     manualInput,
     field('متن پیامک', messageInput),
     el('div', { class: 'modal-actions' }, [sendBtn]),
@@ -558,7 +676,10 @@ function renderSmsTab(container: HTMLElement): () => void {
     const mode = (modeSelect as HTMLSelectElement).value as RecipientMode;
     if (mode === 'all') receptors = customers.get().map((c) => c.phone);
     else if (mode === 'selected') receptors = customers.get().filter((c) => smsSelection.has(c.id)).map((c) => c.phone);
-    else receptors = (manualInput as HTMLTextAreaElement).value.split(/[,\n]/).map((p) => p.trim()).filter(Boolean);
+    else if (mode === 'segment') {
+      const seg = (segmentSelect as HTMLSelectElement).value as RFMSegment;
+      receptors = customers.get().filter((c) => c.segment === seg).map((c) => c.phone);
+    } else receptors = (manualInput as HTMLTextAreaElement).value.split(/[,\n]/).map((p) => p.trim()).filter(Boolean);
     receptors = Array.from(new Set(receptors));
 
     if (!receptors.length) {
@@ -678,15 +799,22 @@ function renderLoyaltyTab(container: HTMLElement): () => void {
 
 // ---------- Report tab ----------
 
-const SEGMENT_CHART_COLORS: Record<CustomerSegment, string> = {
-  vip: palette.amber, regular: palette.primary, new: palette.mint, inactive: palette.red,
+const SEGMENT_CHART_COLORS: Record<RFMSegment, string> = {
+  champions: palette.mint,
+  loyal: palette.primary,
+  potential: palette.blue,
+  regular: palette.primaryD,
+  new: palette.amber,
+  at_risk: palette.coral,
+  hibernating: '#9BA0B0',
+  lost: palette.red,
 };
 
 function renderReportTab(container: HTMLElement): () => void {
   const statsEl = el('div', { class: 'kpi-grid' });
   const canvas = el('canvas');
   const chartCard = el('div', { class: 'chart-card' }, [
-    el('h3', { class: 'chart-card__title' }, ['توزیع بخش‌بندی مشتریان']),
+    el('h3', { class: 'chart-card__title' }, ['توزیع بخش‌بندی RFM مشتریان']),
     el('div', { class: 'chart-card__canvas-wrap' }, [canvas]),
   ]);
   const topListEl = el('div', { class: 'expense-list' });
@@ -698,18 +826,23 @@ function renderReportTab(container: HTMLElement): () => void {
     const totalSpent = list.reduce((sum, c) => sum + c.totalSpent, 0);
     const avgSpend = list.length ? totalSpent / list.length : 0;
 
+    const allCampaigns = list.flatMap((c) => c.campaignHistory);
+    const automatedCampaigns = allCampaigns.filter((c) => c.type === 'automation');
+    const successRate = automatedCampaigns.length
+      ? (automatedCampaigns.filter((c) => c.status === 'sent').length / automatedCampaigns.length) * 100
+      : 0;
+
     statsEl.innerHTML = '';
     statsEl.appendChild(kpiCard('👥', 'تعداد مشتریان', toPersian(list.length)));
     statsEl.appendChild(kpiCard('💰', 'مجموع خرید مشتریان', formatMoney(totalSpent)));
     statsEl.appendChild(kpiCard('📊', 'میانگین خرید هر مشتری', formatMoney(avgSpend)));
-    statsEl.appendChild(kpiCard('📨', 'تعداد پیامک‌های ارسالی', toPersian(smsLogs.get().length)));
+    statsEl.appendChild(kpiCard('🤖', 'پیامک‌های اتوماسیون', toPersian(automatedCampaigns.length)));
+    statsEl.appendChild(kpiCard('✅', 'نرخ موفقیت اتوماسیون', formatPct(successRate)));
+    statsEl.appendChild(kpiCard('📨', 'تعداد پیامک‌های گروهی', toPersian(smsLogs.get().length)));
 
-    const bySegment = new Map<CustomerSegment, number>();
-    for (const c of list) {
-      const seg = customerSegment(c);
-      bySegment.set(seg, (bySegment.get(seg) ?? 0) + 1);
-    }
-    const segs = SEGMENTS.filter((s) => (bySegment.get(s) ?? 0) > 0);
+    const bySegment = new Map<RFMSegment, number>();
+    for (const c of list) bySegment.set(c.segment, (bySegment.get(c.segment) ?? 0) + 1);
+    const segs = RFM_SEGMENT_ORDER.filter((s) => (bySegment.get(s) ?? 0) > 0);
 
     if (!segs.length) {
       destroyChart(canvas);
@@ -719,7 +852,7 @@ function renderReportTab(container: HTMLElement): () => void {
       renderChart(canvas, {
         type: 'doughnut',
         data: {
-          labels: segs.map((s) => SEGMENT_LABELS[s]),
+          labels: segs.map((s) => `${rfmSegmentIcon(s)} ${formatRfmSegment(s)}`),
           datasets: [{ data: segs.map((s) => bySegment.get(s) ?? 0), backgroundColor: segs.map((s) => SEGMENT_CHART_COLORS[s]) }],
         },
         options: { responsive: true, maintainAspectRatio: false },
@@ -749,9 +882,11 @@ function renderReportTab(container: HTMLElement): () => void {
 
   const unsubC = customers.subscribe(render);
   const unsubS = smsLogs.subscribe(render);
+  const unsubA = automationTriggers.subscribe(render);
   return () => {
     unsubC();
     unsubS();
+    unsubA();
     destroyChart(canvas);
   };
 }
@@ -773,7 +908,8 @@ export async function renderCrm(container: HTMLElement): Promise<RouteCleanup> {
 
   const tabs: { id: Tab; label: string; render: (c: HTMLElement) => () => void }[] = [
     { id: 'customers', label: 'مشتریان', render: renderCustomersTab },
-    { id: 'segments', label: 'بخش‌بندی', render: renderSegmentsTab },
+    { id: 'segments', label: 'بخش‌بندی RFM', render: renderSegmentsTab },
+    { id: 'automation', label: 'اتوماسیون', render: renderAutomationTab },
     { id: 'sms', label: 'پیامک گروهی', render: renderSmsTab },
     { id: 'loyalty', label: 'باشگاه وفاداری', render: renderLoyaltyTab },
     { id: 'report', label: 'گزارش CRM', render: renderReportTab },

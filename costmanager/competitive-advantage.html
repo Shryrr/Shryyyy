@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>منوبان — مزیت رقابتی</title>
+  <meta name="description" content="منوبان جای صندوق فروش شما را نمی‌گیرد؛ داده‌های پراکندهٔ صندوق، اسنپ‌فود و ثبت دستی را یکپارچه می‌کند و به تصمیم تبدیل می‌کند." />
+  <meta name="theme-color" content="#6C5CE7" />
+  <link rel="icon" href="/assets/icons/icon-192.png" />
+  <link rel="preload" href="/assets/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/Vazirmatn-Bold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <style>
+    .pitch { max-width: 920px; margin: 0 auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-7); }
+
+    .pitch-nav { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0; }
+    .pitch-nav__brand { display: flex; align-items: center; gap: var(--space-2); font-weight: 800; font-size: 18px; }
+    .pitch-nav__logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; }
+
+    .pitch-hero { text-align: center; padding: var(--space-6) 0 var(--space-4); display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+    .pitch-hero__eyebrow { color: var(--primary); font-weight: 700; font-size: 13px; letter-spacing: 0.02em; }
+    .pitch-hero__title { font-size: 30px; font-weight: 800; line-height: 1.5; max-width: 680px; }
+    .pitch-hero__title em { color: var(--primary); font-style: normal; }
+    .pitch-hero__subtitle { color: var(--ink-2); font-size: 15px; line-height: 1.9; max-width: 600px; }
+    .pitch-hero__cta { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; margin-top: var(--space-2); }
+
+    .pitch-section__label { color: var(--primary); font-weight: 700; font-size: 12px; margin-bottom: var(--space-2); display: block; }
+    .pitch-section__title { font-size: 22px; font-weight: 800; margin-bottom: var(--space-2); }
+    .pitch-section__lead { color: var(--ink-2); font-size: 14px; line-height: 1.9; margin-bottom: var(--space-4); max-width: 680px; }
+
+    .pitch-thesis { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+    @media (min-width: 720px) { .pitch-thesis { grid-template-columns: 1fr 1fr; } }
+    .pitch-thesis__card { background: var(--surface); border: 1px solid var(--surface-hover); border-radius: var(--radius-lg); padding: var(--space-5); }
+    .pitch-thesis__card--dim { opacity: 0.6; }
+    .pitch-thesis__icon { font-size: 26px; margin-bottom: var(--space-2); display: block; }
+    .pitch-thesis__card h3 { font-size: 15px; font-weight: 700; margin-bottom: var(--space-2); }
+    .pitch-thesis__card p { color: var(--ink-2); font-size: 13px; line-height: 1.8; }
+
+    .pitch-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--surface-hover); }
+    .pitch-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+    .pitch-table th, .pitch-table td { padding: var(--space-3) var(--space-4); text-align: center; border-bottom: 1px solid var(--surface-hover); }
+    .pitch-table th { background: var(--surface-alt); font-weight: 700; }
+    .pitch-table td:first-child, .pitch-table th:first-child { text-align: right; font-weight: 600; }
+    .pitch-table tbody tr:last-child td { border-bottom: none; }
+    .pitch-table .yes { color: var(--mint); font-weight: 700; }
+    .pitch-table .no { color: var(--ink-3); }
+    .pitch-table th.highlight { color: var(--primary); }
+    .pitch-table td.highlight { background: var(--primary-light); }
+
+    .pitch-pillars { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+    @media (min-width: 720px) { .pitch-pillars { grid-template-columns: 1fr 1fr; } }
+    .pitch-pillar { background: var(--surface); border: 1px solid var(--surface-hover); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+    .pitch-pillar__icon { width: 44px; height: 44px; border-radius: var(--radius); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .pitch-pillar h3 { font-size: 15px; font-weight: 700; }
+    .pitch-pillar p { color: var(--ink-2); font-size: 13px; line-height: 1.8; }
+
+    .pitch-audience { background: var(--surface); border: 1px solid var(--surface-hover); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
+    .pitch-audience ul { display: flex; flex-direction: column; gap: var(--space-2); list-style: none; }
+    .pitch-audience li { display: flex; gap: var(--space-2); align-items: flex-start; font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+    .pitch-audience li::before { content: '✅'; flex-shrink: 0; }
+
+    .pitch-cta-final { text-align: center; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-5); display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+    .pitch-cta-final h2 { color: #fff; font-size: 20px; font-weight: 800; }
+    .pitch-cta-final p { color: rgba(255,255,255,0.85); font-size: 13px; max-width: 480px; }
+    .pitch-cta-final .btn { background: #fff; color: var(--primary-dark); }
+
+    .pitch-footer { text-align: center; color: var(--ink-3); font-size: 12px; padding-bottom: var(--space-5); }
+  </style>
+</head>
+<body>
+  <div class="pitch">
+    <nav class="pitch-nav">
+      <a class="pitch-nav__brand" href="/" style="color: var(--ink); text-decoration: none;">
+        <span class="pitch-nav__logo">م</span>
+        منوبان
+      </a>
+      <a class="btn btn-secondary" href="/">بازگشت به اپ</a>
+    </nav>
+
+    <header class="pitch-hero">
+      <span class="pitch-hero__eyebrow">چرا منوبان فرق دارد</span>
+      <h1 class="pitch-hero__title">صندوق فروش <em>ثبت می‌کند</em>؛ منوبان <em>تصمیم می‌گیرد</em></h1>
+      <p class="pitch-hero__subtitle">
+        منوبان جای صندوق فروش، اسنپ‌فود یا دفترِ حساب شما را نمی‌گیرد. منوبان لایهٔ هوش کسب‌وکار شماست:
+        داده‌های پراکندهٔ همهٔ این منابع را یکجا می‌بیند و به فودکاست واقعی، پیش‌بینی موجودی،
+        بازاریابی خودکار مشتریان و تصمیم‌های سودآور تبدیل می‌کند — کاملاً آفلاین و بدون نیاز به سخت‌افزار جدید.
+      </p>
+      <div class="pitch-hero__cta">
+        <a class="btn btn-primary" href="/">شروع رایگان ۱۴ روزه</a>
+        <a class="btn btn-secondary" href="#compare">مقایسه با روش فعلی شما</a>
+      </div>
+    </header>
+
+    <section>
+      <span class="pitch-section__label">یک‌جا، نه یک جای دیگر</span>
+      <h2 class="pitch-section__title">منوبان جایگزین صندوق فروش شما نیست</h2>
+      <p class="pitch-section__lead">
+        صندوق فروش، اسنپ‌فود و دفترچهٔ خریدِ مواد اولیه، هرکدام فقط بخشی از واقعیت کسب‌وکار شما را نشان می‌دهند.
+        منوبان بین این‌ها نمی‌رقابد؛ همه را به هم وصل می‌کند.
+      </p>
+      <div class="pitch-thesis">
+        <div class="pitch-thesis__card pitch-thesis__card--dim">
+          <span class="pitch-thesis__icon">🧾</span>
+          <h3>قبل از منوبان</h3>
+          <p>فروش در صندوق، سفارش‌های آنلاین در اسنپ‌فود، خرید مواد در دفترچه یا اکسل — سه تصویر جدا که هیچ‌وقت کنار هم دیده نمی‌شوند.</p>
+        </div>
+        <div class="pitch-thesis__card">
+          <span class="pitch-thesis__icon">🧠</span>
+          <h3>با منوبان</h3>
+          <p>همان داده‌ها، یک‌جا وارد می‌شوند و خودکار به فودکاست دقیق هر آیتم، پیش‌بینی اتمام موجودی و سود و زیان واقعی کسب‌وکار تبدیل می‌شوند.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="compare">
+      <span class="pitch-section__label">مقایسه</span>
+      <h2 class="pitch-section__title">منوبان در برابر روش‌های رایج</h2>
+      <p class="pitch-section__lead">اکثر کافه و رستوران‌ها امروز با اکسل، دفترچه یا یک نرم‌افزار صندوق ساده کار می‌کنند. این‌جا تفاوت واقعی را می‌بینید.</p>
+      <div class="pitch-table-wrap">
+        <table class="pitch-table">
+          <thead>
+            <tr>
+              <th>قابلیت</th>
+              <th>دفترچه / اکسل</th>
+              <th>صندوق فروش ساده</th>
+              <th class="highlight">منوبان</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>یکپارچه‌سازی صندوق + اسنپ‌فود + ثبت دستی</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>فودکاست دقیق هر آیتم منو بر اساس دستور پخت</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>پیش‌بینی هوشمند اتمام موجودی</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>بازاریابی خودکار مشتریان (RFM)</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>مهندسی منو با ماتریس BCG و هوش مصنوعی</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>سود و زیان یکپارچه از همهٔ کانال‌های فروش</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>کارکرد ۱۰۰٪ آفلاین، بدون قطعی با اینترنت</td>
+              <td class="yes">✓</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+            <tr>
+              <td>بدون نیاز به سخت‌افزار یا تجهیزات جدید</td>
+              <td class="yes">✓</td>
+              <td class="no">—</td>
+              <td class="highlight yes">✓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <span class="pitch-section__label">پنج ستون اصلی</span>
+      <h2 class="pitch-section__title">چیزی که هیچ صندوق فروشی نمی‌دهد</h2>
+      <div class="pitch-pillars">
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">📦</span>
+          <h3>پیش‌بینی هوشمند موجودی</h3>
+          <p>بر اساس نرخ مصرف واقعی هر ماده اولیه، منوبان روزهای باقی‌مانده تا اتمام موجودی را پیش‌بینی می‌کند و پیش از کسری، هشدار می‌دهد.</p>
+        </div>
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">👥</span>
+          <h3>بازاریابی خودکار مبتنی بر RFM</h3>
+          <p>مشتریان به‌صورت خودکار بخش‌بندی می‌شوند (وفادار، در معرض ریزش، تازه‌وارد و...) و کمپین‌های یادآوری بدون دخالت دستی فعال می‌شوند.</p>
+        </div>
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">🧮</span>
+          <h3>مهندسی منو با ماتریس BCG</h3>
+          <p>هر آیتم منو بر اساس سودآوری و محبوبیت در یکی از چهار دسته قرار می‌گیرد تا بدانید کدام آیتم را تبلیغ، قیمت‌گذاری مجدد یا حذف کنید.</p>
+        </div>
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">💰</span>
+          <h3>سود و زیان یکپارچهٔ چندکاناله</h3>
+          <p>فروش حضوری، اسنپ‌فود و سایر کانال‌ها در یک گزارش سود و زیان واحد دیده می‌شوند — نه در سه فایل جدا.</p>
+        </div>
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">📴</span>
+          <h3>۱۰۰٪ آفلاین</h3>
+          <p>تمام داده‌ها روی دستگاه شما ذخیره می‌شوند؛ قطعی اینترنت یعنی توقف کار نیست. همگام‌سازی بین دستگاه‌ها کاملاً اختیاری و فقط با سرور خودِ شما است.</p>
+        </div>
+        <div class="pitch-pillar">
+          <span class="pitch-pillar__icon">🔒</span>
+          <h3>داده‌های شما فقط برای شما</h3>
+          <p>بدون حساب کاربری شخص ثالث، بدون اشتراک‌گذاری داده با هیچ سرویس خارجی. حتی هوش مصنوعی اختیاری منو، فقط با کلید API خودِ شما فعال می‌شود.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <span class="pitch-section__label">برای چه کسب‌وکارهایی</span>
+      <h2 class="pitch-section__title">منوبان برای شما ساخته شده اگر...</h2>
+      <div class="pitch-audience">
+        <ul>
+          <li>فروش شما هم‌زمان از صندوق حضوری و اسنپ‌فود/پلتفرم‌های آنلاین می‌آید و این دو هیچ‌وقت در یک گزارش دیده نمی‌شوند.</li>
+          <li>فودکاست واقعی هر آیتم منو را با اکسل یا تخمین حدودی حساب می‌کنید، نه بر اساس دستور پخت دقیق.</li>
+          <li>کمبود موجودی را معمولاً وقتی متوجه می‌شوید که دیگر دیر شده است.</li>
+          <li>مشتریان وفادار یا در حال ریزش را با حس شخصی تشخیص می‌دهید، نه با داده.</li>
+          <li>می‌خواهید بدانید کدام آیتم منو واقعاً سودآور است و کدام فقط ظاهراً پرفروش است.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="pitch-cta-final">
+      <h2>کسب‌وکار خودتان را با داده، نه با حدس، مدیریت کنید</h2>
+      <p>۱۴ روز اشتراک رایگان، بدون نیاز به کارت بانکی برای شروع. تمام داده‌ها روی دستگاه شما باقی می‌ماند.</p>
+      <a class="btn btn-primary" href="/">شروع رایگان</a>
+    </section>
+
+    <footer class="pitch-footer">منوبان — مدیریت هزینه، موجودی و فودکاست برای کافه و رستوران</footer>
+  </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import type { BusinessType, ExpenseCategory, ExpenseFrequency, IngredientCategory, PayType, Unit } from '../types';
+import type { BusinessType, ExpenseCategory, ExpenseFrequency, IngredientCategory, PayType, RFMSegment, Unit } from '../types';
 
 const moneyFmt = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 });
 const numberFmt = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 2 });
@@ -143,6 +143,39 @@ const PAY_TYPE_LABELS: Record<PayType, string> = {
 export function formatPayType(type: PayType): string {
   return PAY_TYPE_LABELS[type] ?? type;
 }
+
+const RFM_SEGMENT_LABELS: Record<RFMSegment, string> = {
+  champions: 'مشتریان ویژه',
+  loyal: 'وفادار',
+  potential: 'بااستعداد',
+  new: 'تازه‌وارد',
+  at_risk: 'در معرض ریزش',
+  lost: 'ازدست‌رفته',
+  hibernating: 'غیرفعال',
+  regular: 'عادی',
+};
+
+const RFM_SEGMENT_ICONS: Record<RFMSegment, string> = {
+  champions: '🏆',
+  loyal: '💙',
+  potential: '🌱',
+  new: '✨',
+  at_risk: '⚠️',
+  lost: '👻',
+  hibernating: '😴',
+  regular: '🙂',
+};
+
+export function formatRfmSegment(segment: RFMSegment): string {
+  return RFM_SEGMENT_LABELS[segment] ?? segment;
+}
+
+export function rfmSegmentIcon(segment: RFMSegment): string {
+  return RFM_SEGMENT_ICONS[segment] ?? '🙂';
+}
+
+/** Display order for RFM segments, best to worst — shared by the dashboard and CRM views. */
+export const RFM_SEGMENT_ORDER: RFMSegment[] = ['champions', 'loyal', 'potential', 'regular', 'new', 'at_risk', 'hibernating', 'lost'];
 
 /** ISO date string for "today" at local midnight, used as default form value. */
 export function todayISO(): string {

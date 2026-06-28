@@ -112,6 +112,25 @@ function renderThemeSection(container: HTMLElement): () => void {
   return () => unsub();
 }
 
+// ---------- Notifications ----------
+
+function renderNotificationsSection(container: HTMLElement): () => void {
+  const enabledCheckbox = el('input', { type: 'checkbox', checked: settings.get()?.notificationsEnabled !== false });
+
+  const body = el('div', { class: 'form' }, [
+    el('label', { class: 'toolbar__checkbox' }, [enabledCheckbox, ' اعلان کسری موجودی (در مرورگر و داخل اپ) فعال باشد']),
+  ]);
+
+  enabledCheckbox.addEventListener('change', async () => {
+    await db.updateSettings({ notificationsEnabled: enabledCheckbox.checked });
+    await refreshSettings();
+    showToast('تنظیمات اعلان‌ها ذخیره شد', 'success');
+  });
+
+  container.appendChild(settingsCard('اعلان‌ها', body));
+  return () => {};
+}
+
 // ---------- PWA install ----------
 
 function renderInstallSection(container: HTMLElement): () => void {
@@ -273,6 +292,7 @@ export async function renderSettings(container: HTMLElement): Promise<RouteClean
   const cleanups = [
     renderProfileSection(grid),
     renderThemeSection(grid),
+    renderNotificationsSection(grid),
     renderInstallSection(grid),
     renderStorageSection(grid),
     renderDataSection(grid),
