@@ -2,17 +2,20 @@ import * as db from './db';
 import { createAlertBanner } from './components/alert-banner';
 import { createAppNav } from './components/bottom-nav';
 import { el, emptyState } from './utils/dom';
-import { navigate, registerRoutes, startRouter } from './router';
+import { currentPath, navigate, registerRoutes, startRouter } from './router';
 import type { Route, RouteCleanup } from './router';
-import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll } from './store';
+import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll, syncStatus } from './store';
 import { seedDatabase } from './seed';
 import { daysUntilExpiry, isExpired, isExpiringSoon, logout, restoreSession } from './auth';
 import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
 import { formatDate, toPersian } from './utils/format';
-import { checkForNewerCloudVersion, setupAutoSync, syncFromCloud } from './utils/sync';
+import { setupAutoSync } from './utils/sync';
+import { isPlatformOwnerSession } from './platform-owner';
 import { renderAuthGate } from './views/login';
+import { openPlatformOwnerPanel } from './views/platform-admin';
 import { renderAccounting } from './views/accounting';
 import { renderAdmin } from './views/admin';
+import { renderCrm } from './views/crm';
 import { renderDashboard } from './views/dashboard';
 import { renderExpenses } from './views/expenses';
 import { renderIngredients } from './views/ingredients';
@@ -25,6 +28,8 @@ import type { AppUser, UserRole } from './types';
 const HEADER_LINKS: { path: string; label: string; icon: string; roles?: UserRole[] }[] = [
   { path: '/sales', label: 'فروش', icon: '🧾', roles: ['superadmin', 'manager'] },
   { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['superadmin', 'manager'] },
+  { path: '/shopping', label: 'لیست خرید', icon: '🛒', roles: ['superadmin', 'manager'] },
+  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['superadmin'] },
   { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['superadmin'] },
 ];
 
@@ -35,6 +40,7 @@ const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
   { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses, roles: ['superadmin', 'manager'] },
   { path: '/sales', title: 'فروش', render: renderSales, roles: ['superadmin', 'manager'] },
   { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['superadmin', 'manager'] },
+  { path: '/crm', title: 'CRM', render: renderCrm, roles: ['superadmin', 'manager'] },
   { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
   { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['superadmin'] },
   { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['superadmin'] },
@@ -48,33 +54,83 @@ function renderAccessDenied(container: HTMLElement): RouteCleanup {
   );
 }
 
+const SYNC_STATUS_ICON: Record<string, string> = { idle: '', syncing: '🔄', synced: '✓', error: '⚠' };
+const SYNC_STATUS_LABEL: Record<string, string> = {
+  idle: '',
+  syncing: 'در حال همگام‌سازی…',
+  synced: 'همگام‌سازی شد',
+  error: 'خطا در همگام‌سازی',
+};
+
+function openPlatformOwnerOverlay(): void {
+  const overlay = el('div', { class: 'platform-admin-overlay' });
+  document.body.appendChild(overlay);
+  openPlatformOwnerPanel(overlay, () => overlay.remove());
+}
+
 function createAppHeader(role: UserRole): HTMLElement {
   const offlineBadge = el('span', { class: 'app-header__offline-badge' }, ['آفلاین']);
   offlineBadge.hidden = true;
 
+  const syncBadge = el('span', { class: 'app-header__sync-badge' }, ['']);
+  syncBadge.hidden = true;
+
   const links = HEADER_LINKS.filter((link) => !link.roles || link.roles.includes(role));
 
-  const header = el('header', { class: 'app-header' }, [
-    el('span', { class: 'app-header__logo' }, ['منوبان']),
-    offlineBadge,
-    el(
-      'div',
-      { class: 'app-header__actions' },
-      links.map((link) => {
-        const btn = el('button', { type: 'button', class: 'app-header__icon-btn', title: link.label, onclick: () => navigate(link.path) }, [
-          link.icon,
-        ]);
-        btn.setAttribute('aria-label', link.label);
-        return btn;
-      }),
-    ),
-  ]);
+  const actions = el(
+    'div',
+    { class: 'app-header__actions' },
+    links.map((link) => {
+      const btn = el('button', { type: 'button', class: 'app-header__icon-btn', title: link.label, onclick: () => navigate(link.path) }, [
+        link.icon,
+      ]);
+      btn.setAttribute('aria-label', link.label);
+      return btn;
+    }),
+  );
+
+  if (isPlatformOwnerSession()) {
+    const platformBtn = el(
+      'button',
+      { type: 'button', class: 'app-header__icon-btn', title: 'پنل پلتفرم', onclick: openPlatformOwnerOverlay },
+      ['🔧'],
+    );
+    platformBtn.setAttribute('aria-label', 'پنل پلتفرم');
+    actions.appendChild(platformBtn);
+  }
+
+  const header = el('header', { class: 'app-header' }, [el('span', { class: 'app-header__logo' }, ['منوبان']), offlineBadge, syncBadge, actions]);
 
   isOnline.subscribe((online) => {
     offlineBadge.hidden = online;
   });
 
+  syncStatus.subscribe((status) => {
+    syncBadge.hidden = status === 'idle';
+    syncBadge.textContent = SYNC_STATUS_ICON[status];
+    syncBadge.title = SYNC_STATUS_LABEL[status];
+    syncBadge.className = `app-header__sync-badge app-header__sync-badge--${status}`;
+  });
+
   return header;
+}
+
+function createBreadcrumb(routes: (Route & { roles: UserRole[] })[]): HTMLElement {
+  const bar = el('nav', { class: 'breadcrumb', 'aria-label': 'مسیر دسترسی' });
+
+  currentPath.subscribe((path) => {
+    const route = routes.find((r) => r.path === path);
+    bar.innerHTML = '';
+    const home = el('button', { type: 'button', class: 'breadcrumb__item', onclick: () => navigate('/') }, ['🏠 داشبورد']);
+    if (path === '/' || !route) {
+      home.classList.add('breadcrumb__item--current');
+      bar.appendChild(home);
+      return;
+    }
+    bar.append(home, el('span', { class: 'breadcrumb__sep' }, ['/']), el('span', { class: 'breadcrumb__item--current' }, [route.title]));
+  });
+
+  return bar;
 }
 
 function renderExpiredScreen(app: HTMLElement, user: AppUser): void {
@@ -89,21 +145,6 @@ function renderExpiredScreen(app: HTMLElement, user: AppUser): void {
       ]),
     ]),
   );
-}
-
-async function checkCloudVersionBanner(bannerHost: HTMLElement): Promise<void> {
-  const newer = await checkForNewerCloudVersion();
-  if (!newer) return;
-  const banner = createAlertBanner({
-    id: 'cloud-sync-newer',
-    message: 'نسخهٔ جدیدتری در ابر موجود است',
-    tone: 'info',
-    actionLabel: 'دریافت',
-    onAction: () => {
-      void syncFromCloud();
-    },
-  });
-  if (banner) bannerHost.appendChild(banner);
 }
 
 async function bootstrap(): Promise<void> {
@@ -149,7 +190,7 @@ async function bootstrap(): Promise<void> {
   const main = el('main', { class: 'app-main' });
   const bannerHost = el('div', { class: 'app-banner-host' });
 
-  app.append(createAppHeader(user.role), bannerHost, main, createAppNav());
+  app.append(createAppHeader(user.role), createBreadcrumb(ALL_ROUTES), bannerHost, main, createAppNav());
 
   if (isExpiringSoon(user)) {
     const days = daysUntilExpiry(user);
@@ -176,7 +217,6 @@ async function bootstrap(): Promise<void> {
   console.log('[boot] router started, app ready');
 
   if (user.role === 'buyer') maybeShowBuyerLowStockAlert(user);
-  if (navigator.onLine) void checkCloudVersionBanner(bannerHost);
 }
 
 function showBootError(error: unknown): void {

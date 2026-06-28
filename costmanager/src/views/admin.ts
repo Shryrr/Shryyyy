@@ -5,7 +5,7 @@ import { showToast } from '../components/toast';
 import { el, emptyState, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
 import { formatBusinessType, formatDate, formatDateTime, toPersian } from '../utils/format';
-import { checkForNewerCloudVersion, syncFromCloud, syncToCloud, testConnection } from '../utils/sync';
+import { generateSyncCode, importFromSyncCode, pullFromServer, pushToServer, testSyncConnection } from '../utils/sync';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
 import type { AppUser, BusinessType, FullBackup, PaidSubscriptionPlan, SubscriptionPlan, UserRole } from '../types';
@@ -351,29 +351,23 @@ function renderBusinessSection(container: HTMLElement): () => void {
 
 function renderSyncSection(container: HTMLElement): () => void {
   const s = settings.get();
-  const tokenInput = el('input', {
-    type: 'password', class: 'input', autocomplete: 'off', value: s?.githubToken ?? '', placeholder: 'ghp_xxxxxxxxxxxxxxxx',
+  const serverInput = el('input', {
+    type: 'text', class: 'input', autocomplete: 'off', value: s?.syncServerUrl ?? '', placeholder: 'http://91.107.249.240/sync', dir: 'ltr',
   });
-  const gistIdInput = el('input', { type: 'text', class: 'input', value: s?.gistId ?? '', disabled: true });
+  const businessIdInput = el('input', { type: 'text', class: 'input', value: s?.businessId ?? '', disabled: true, dir: 'ltr' });
   const statusEl = el('p', { class: 'form-hint' }, []);
-  const bannerEl = el('p', { class: 'auth-lockout', hidden: true }, []);
 
   function refreshStatus(): void {
     const cur = settings.get();
     statusEl.textContent = cur?.lastSyncAt ? `آخرین همگام‌سازی: ${formatDateTime(cur.lastSyncAt)}` : 'هنوز همگام‌سازی انجام نشده است';
-    gistIdInput.value = cur?.gistId ?? '';
   }
   refreshStatus();
 
   const form = el('form', { class: 'form' }, [
-    el('p', { class: 'form-hint' }, [
-      'برای همگام‌سازی چند دستگاهی، یک توکن GitHub با دسترسی gist بسازید: ',
-      el('a', { href: 'https://github.com/settings/tokens', target: '_blank', rel: 'noopener' }, ['github.com/settings/tokens']),
-    ]),
-    field('توکن GitHub', tokenInput),
-    field('شناسه Gist (خودکار)', gistIdInput),
+    el('p', { class: 'form-hint' }, ['داده‌ها بین دستگاه‌های این کسب‌وکار از طریق سرور خود برنامه همگام می‌شوند، نه سرویس‌های خارجی.']),
+    field('آدرس سرور همگام‌سازی', serverInput),
+    field('شناسه کسب‌وکار (خودکار)', businessIdInput),
     statusEl,
-    bannerEl,
     el('div', { class: 'settings-actions' }, [
       el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره و تست اتصال']),
       el(
@@ -382,11 +376,11 @@ function renderSyncSection(container: HTMLElement): () => void {
           type: 'button',
           class: 'btn btn-secondary',
           onclick: async () => {
-            await syncToCloud();
-            refreshStatus();
+            const result = await pushToServer();
+            if (result.ok) refreshStatus();
           },
         },
-        ['🔄 همگام‌سازی الان'],
+        ['🔄 ارسال به سرور'],
       ),
       el(
         'button',
@@ -394,58 +388,89 @@ function renderSyncSection(container: HTMLElement): () => void {
           type: 'button',
           class: 'btn btn-secondary',
           onclick: async () => {
-            await syncFromCloud();
-            refreshStatus();
+            const result = await pullFromServer();
+            if (result.ok) refreshStatus();
           },
         },
-        ['☁️ دریافت از ابر'],
+        ['☁️ دریافت از سرور'],
       ),
     ]),
   ]);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const token = tokenInput.value.trim();
-    if (!token) {
-      showToast('توکن را وارد کنید', 'error');
+    const url = serverInput.value.trim();
+    if (!url) {
+      showToast('آدرس سرور را وارد کنید', 'error');
       return;
     }
-    const result = await testConnection(token);
-    if (!result.ok) {
-      showToast(result.error, 'error');
-      return;
-    }
-    await db.updateSettings({ githubToken: token });
+    await db.updateSettings({ syncServerUrl: url });
     await refreshSettings();
-    showToast(`اتصال موفق — متصل به حساب ${result.login}`, 'success');
+    const result = await testSyncConnection(url);
+    if (result.ok) {
+      showToast('اتصال به سرور موفق بود', 'success');
+    } else {
+      showToast('آدرس ذخیره شد، اما اتصال به سرور برقرار نشد (همگام‌سازی به‌صورت آفلاین ادامه می‌یابد)', 'info');
+    }
     refreshStatus();
   });
 
-  container.appendChild(settingsCard('همگام‌سازی ابری (GitHub Gist)', form));
+  container.appendChild(settingsCard('همگام‌سازی با سرور', form));
 
-  checkForNewerCloudVersion().then((newer) => {
-    if (!newer) return;
-    bannerEl.hidden = false;
-    bannerEl.textContent = 'نسخهٔ جدیدتری در ابر موجود است.';
-    bannerEl.appendChild(
-      el(
-        'button',
-        {
-          type: 'button',
-          class: 'btn btn-secondary btn-sm',
-          onclick: async () => {
-            await syncFromCloud({ skipConfirm: true });
-            bannerEl.hidden = true;
-            refreshStatus();
-          },
-        },
-        [' دریافت '],
-      ),
-    );
-    bannerEl.appendChild(
-      el('button', { type: 'button', class: 'btn btn-secondary btn-sm', onclick: () => { bannerEl.hidden = true; } }, [' نادیده گرفتن ']),
-    );
+  // ---- Sync code: quick one-time transfer between two devices ----
+  const codeDisplay = el('div', { class: 'sync-code-display', hidden: true });
+  const generateBtn = el(
+    'button',
+    {
+      type: 'button',
+      class: 'btn btn-secondary',
+      onclick: async () => {
+        const code = await generateSyncCode();
+        codeDisplay.hidden = false;
+        codeDisplay.textContent = toPersian(code);
+      },
+    },
+    ['🔢 ساخت کد همگام‌سازی'],
+  );
+
+  const importInput = el('input', {
+    type: 'text', inputmode: 'numeric', class: 'input', placeholder: '۶ رقمی', dir: 'ltr', maxlength: 6,
   });
+  const importBtn = el(
+    'button',
+    {
+      type: 'button',
+      class: 'btn btn-primary',
+      onclick: async () => {
+        const code = importInput.value.trim();
+        if (!code) {
+          showToast('کد را وارد کنید', 'error');
+          return;
+        }
+        const result = await importFromSyncCode(code);
+        if (!result.ok && result.error) showToast(result.error, 'error');
+        if (result.ok) {
+          await refreshAll();
+          refreshStatus();
+        }
+      },
+    },
+    ['دریافت با کد'],
+  );
+
+  container.appendChild(
+    settingsCard(
+      'انتقال سریع با کد همگام‌سازی',
+      el('div', { class: 'form' }, [
+        el('p', { class: 'form-hint' }, [
+          'برای انتقال داده به دستگاه دیگر، یک کد بساز و در دستگاه مقصد وارد کن. این روش حتی بدون اتصال دائمی به سرور هم روی همان دستگاه کار می‌کند.',
+        ]),
+        el('div', { class: 'settings-actions' }, [generateBtn]),
+        codeDisplay,
+        el('div', { class: 'settings-actions' }, [importInput, importBtn]),
+      ]),
+    ),
+  );
 
   return () => {};
 }

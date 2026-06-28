@@ -129,6 +129,31 @@ export interface ShoppingListItem {
   generatedAt: string;
 }
 
+export type CustomerSegment = 'vip' | 'regular' | 'new' | 'inactive';
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  notes?: string;
+  totalSpent: number;
+  visitCount: number;
+  lastVisitAt?: string;
+  loyaltyPoints: number;
+  createdAt: string;
+}
+
+export type SmsStatus = 'sent' | 'failed';
+
+export interface SmsLog {
+  id: string;
+  recipients: string[];
+  message: string;
+  status: SmsStatus;
+  error?: string;
+  sentAt: string;
+}
+
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -165,9 +190,11 @@ export interface Settings {
   lastBackup?: string;
   subscriptionPrices: Record<PaidSubscriptionPlan, number>;
   notificationsEnabled?: boolean;
-  githubToken?: string;
-  gistId?: string;
+  businessId: string;
+  syncServerUrl: string;
   lastSyncAt?: string;
+  kavenegarApiKey?: string;
+  kavenegarSenderLine?: string;
 }
 
 export interface FullBackup {
@@ -181,5 +208,7 @@ export interface FullBackup {
     sales: Sale[];
     shopping_list: ShoppingListItem[];
     settings: Settings[];
+    customers: Customer[];
+    sms_logs: SmsLog[];
   };
 }

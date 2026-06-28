@@ -5,7 +5,7 @@ import { showToast } from '../components/toast';
 import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatMoney, formatPct, formatUnit, toPersian } from '../utils/format';
 import type { RouteCleanup } from '../router';
-import { ingredients, ingredientsById, menuItems, refreshMenuItems, settings } from '../store';
+import { ingredients, ingredientsById, menuItems, refreshMenuItems, settings, takeNavigationIntent } from '../store';
 import {
   avgFoodCostPct,
   foodCostPct,
@@ -101,9 +101,9 @@ function openRecipeBuilderModal(existingId?: string): void {
         if (!ingredient) {
           listEl.appendChild(
             el('div', { class: 'recipe-ingredient-row' }, [
-              el('span', { class: 'recipe-ingredient-row__name recipe-ingredient-row__name--deleted' }, ['ماده حذف‌شده']),
+              el('span', { class: 'recipe-ingredient-row__name recipe-ingredient-row__name--deleted' }, ['ماده حذف‌شده ⚠']),
               el('span', { class: 'recipe-ingredient-row__unit' }, [toPersian(ri.quantity)]),
-              el('span', { class: 'recipe-ingredient-row__cost' }, ['—']),
+              el('span', { class: 'recipe-ingredient-row__cost' }, ['هزینه: —']),
               el(
                 'button',
                 {
@@ -133,7 +133,7 @@ function openRecipeBuilderModal(existingId?: string): void {
             el('span', { class: 'recipe-ingredient-row__name' }, [ingredient.name]),
             rowQtyInput,
             el('span', { class: 'recipe-ingredient-row__unit' }, [formatUnit(ingredient.unit)]),
-            el('span', { class: 'recipe-ingredient-row__cost' }, [formatMoney(ri.quantity * ingredient.pricePerUnit)]),
+            el('span', { class: 'recipe-ingredient-row__cost' }, [`هزینه: ${formatMoney(ri.quantity * ingredient.pricePerUnit)}`]),
             el(
               'button',
               {
@@ -255,7 +255,14 @@ async function toggleActive(item: MenuItem): Promise<void> {
   await refreshMenuItems();
 }
 
-function renderStatsPanel(items: MenuItem[], ingById: Map<string, Ingredient>): HTMLElement {
+interface StatsPanelActions {
+  onShowActive: () => void;
+  onSortByFoodCost: () => void;
+  onShowRiskyOnly: () => void;
+  onJumpToWorst: (id: string) => void;
+}
+
+function renderStatsPanel(items: MenuItem[], ingById: Map<string, Ingredient>, actions: StatsPanelActions): HTMLElement {
   const active = items.filter((m) => m.isActive);
   const avgPct = avgFoodCostPct(items, ingById);
   const risky = active.filter((m) => foodCostStatus(foodCostPct(recipeCost(m.recipe, ingById), m.salePrice)) === 'red');
@@ -264,20 +271,35 @@ function renderStatsPanel(items: MenuItem[], ingById: Map<string, Ingredient>): 
     .sort((a, b) => b.pct - a.pct)[0];
 
   return el('div', { class: 'kpi-grid' }, [
-    kpiCard('🍽️', 'آیتم‌های فعال', toPersian(active.length)),
-    kpiCard('📊', 'میانگین فودکاست', formatPct(avgPct), foodCostStatus(avgPct) === 'red' ? 'negative' : undefined),
-    kpiCard('⚠️', 'آیتم‌های پرخطر (فودکاست بالا)', toPersian(risky.length), risky.length > 0 ? 'warning' : undefined),
-    kpiCard('🔺', 'بالاترین فودکاست', worst ? `${worst.item.name} — ${formatPct(worst.pct)}` : '—'),
+    kpiCard('🍽️', 'آیتم‌های فعال', toPersian(active.length), undefined, actions.onShowActive),
+    kpiCard('📊', 'میانگین فودکاست', formatPct(avgPct), foodCostStatus(avgPct) === 'red' ? 'negative' : undefined, actions.onSortByFoodCost),
+    kpiCard(
+      '⚠️',
+      'آیتم‌های پرخطر (فودکاست بالا)',
+      toPersian(risky.length),
+      risky.length > 0 ? 'warning' : undefined,
+      actions.onShowRiskyOnly,
+    ),
+    kpiCard(
+      '🔺',
+      'بالاترین فودکاست',
+      worst ? `${worst.item.name} — ${formatPct(worst.pct)}` : '—',
+      undefined,
+      worst ? () => actions.onJumpToWorst(worst.item.id) : undefined,
+    ),
   ]);
 }
 
-function renderRow(item: MenuItem, ingById: Map<string, Ingredient>): HTMLElement {
+function renderRow(item: MenuItem, ingById: Map<string, Ingredient>, isHighlighted: boolean): HTMLElement {
   const cost = recipeCost(item.recipe, ingById);
   const pct = foodCostPct(cost, item.salePrice);
   const status = foodCostStatus(pct);
   const profit = grossProfit(item.salePrice, cost);
 
-  return el('div', { class: `recipe-row${item.isActive ? '' : ' recipe-row--inactive'}` }, [
+  return el('div', {
+    class: `recipe-row${item.isActive ? '' : ' recipe-row--inactive'}${isHighlighted ? ' recipe-row--highlight' : ''}`,
+    dataset: { menuItemId: item.id },
+  }, [
     el('div', { class: 'recipe-row__main' }, [
       el('div', { class: 'recipe-row__title-row' }, [
         el('span', { class: 'recipe-row__name' }, [item.name]),
@@ -320,6 +342,43 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
   const showInactiveCheckbox = el('input', { type: 'checkbox' });
   const listEl = el('div', { class: 'recipe-list' });
 
+  let riskOnly = false;
+  let highlightId: string | null = null;
+
+  const intent = takeNavigationIntent();
+  if (intent.sortBy === 'pct_desc') sortSelect.value = 'pct_desc';
+
+  const actions: StatsPanelActions = {
+    onShowActive: () => {
+      riskOnly = false;
+      showInactiveCheckbox.checked = false;
+      searchInput.value = '';
+      sortSelect.value = 'name';
+      renderAll();
+    },
+    onSortByFoodCost: () => {
+      riskOnly = false;
+      sortSelect.value = 'pct_desc';
+      renderAll();
+    },
+    onShowRiskyOnly: () => {
+      riskOnly = true;
+      sortSelect.value = 'pct_desc';
+      renderAll();
+    },
+    onJumpToWorst: (id) => {
+      riskOnly = false;
+      highlightId = id;
+      renderAll();
+      const row = listEl.querySelector(`[data-menu-item-id="${id}"]`);
+      row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(() => {
+        highlightId = null;
+        row?.classList.remove('recipe-row--highlight');
+      }, 2000);
+    },
+  };
+
   root.append(
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['منو و فودکاست']),
@@ -341,10 +400,14 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
     const ingById = ingredientsById();
 
     statsContainer.innerHTML = '';
-    statsContainer.appendChild(renderStatsPanel(items, ingById));
+    statsContainer.appendChild(renderStatsPanel(items, ingById, actions));
 
     listEl.innerHTML = '';
     let list = showInactiveCheckbox.checked ? items : items.filter((m) => m.isActive);
+
+    if (riskOnly) {
+      list = list.filter((m) => foodCostStatus(foodCostPct(recipeCost(m.recipe, ingById), m.salePrice)) === 'red');
+    }
 
     const term = searchInput.value.trim();
     if (term) list = list.filter((m) => m.name.includes(term));
@@ -373,7 +436,7 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
       return;
     }
 
-    for (const item of list) listEl.appendChild(renderRow(item, ingById));
+    for (const item of list) listEl.appendChild(renderRow(item, ingById, item.id === highlightId));
   }
 
   searchInput.addEventListener('input', renderAll);

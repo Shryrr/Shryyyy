@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  AppUser, AuthConfig, BulkSaleBreakdownEntry, Employee, Expense, FullBackup, Ingredient, MenuItem, PaidSubscriptionPlan,
-  PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SubscriptionPlan, UserRole,
+  AppUser, AuthConfig, BulkSaleBreakdownEntry, Customer, Employee, Expense, FullBackup, Ingredient, MenuItem,
+  PaidSubscriptionPlan, PurchaseRecord, Sale, SaleSource, Settings, ShoppingListItem, SmsLog, SubscriptionPlan, UserRole,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 
@@ -14,6 +14,8 @@ interface Schema extends DBSchema {
   shopping_list: { key: string; value: ShoppingListItem };
   settings: { key: string; value: Settings };
   auth: { key: string; value: AuthConfig };
+  customers: { key: string; value: Customer; indexes: { byPhone: string } };
+  sms_logs: { key: string; value: SmsLog };
 }
 
 /**
@@ -21,10 +23,12 @@ interface Schema extends DBSchema {
  * 'auth' is deliberately excluded from this list: it backs exportAllData/importAllData/resetAllData, and PINs
  * must never leak into a shared JSON backup, nor get wiped by a "reset all data" action that would lock out admins.
  */
-type StoreName = 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings';
+type StoreName =
+  | 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings'
+  | 'customers' | 'sms_logs';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const MAX_PURCHASE_HISTORY = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNLIMITED_EXPIRY = '2099-12-31T00:00:00.000Z';
@@ -80,6 +84,11 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
             });
             authStore.put({ id: 'auth', isSetup: config.isSetup, users });
           });
+        }
+        if (oldVersion < 4) {
+          const customers = db.createObjectStore('customers', { keyPath: 'id' });
+          customers.createIndex('byPhone', 'phone');
+          db.createObjectStore('sms_logs', { keyPath: 'id' });
         }
       },
     });
@@ -685,7 +694,92 @@ export async function updateShoppingItem(id: string, patch: Partial<Pick<Shoppin
   });
 }
 
+// ---------- Customers (CRM) ----------
+
+export async function listCustomers(): Promise<Customer[]> {
+  return (await getDB()).getAll('customers');
+}
+
+export async function getCustomer(id: string): Promise<Customer | undefined> {
+  return (await getDB()).get('customers', id);
+}
+
+export type NewCustomerInput = Pick<Customer, 'name' | 'phone'> & Partial<Pick<Customer, 'notes'>>;
+
+export async function createCustomer(input: NewCustomerInput): Promise<Customer> {
+  const customer: Customer = {
+    id: uuid(),
+    name: input.name,
+    phone: input.phone,
+    notes: input.notes,
+    totalSpent: 0,
+    visitCount: 0,
+    loyaltyPoints: 0,
+    createdAt: nowISO(),
+  };
+  await (await getDB()).put('customers', customer);
+  return customer;
+}
+
+export async function updateCustomer(id: string, patch: Partial<Omit<Customer, 'id' | 'createdAt'>>): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) throw new Error('customer not found');
+  const updated: Customer = { ...existing, ...patch };
+  await db.put('customers', updated);
+  return updated;
+}
+
+export async function deleteCustomer(id: string): Promise<void> {
+  await (await getDB()).delete('customers', id);
+}
+
+const TOMAN_PER_LOYALTY_POINT = 10_000;
+
+/** Records a purchase against a customer: bumps visit/spend totals and accrues loyalty points (1 per 10,000 toman). */
+export async function recordCustomerVisit(id: string, amountSpent: number): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) throw new Error('customer not found');
+  const updated: Customer = {
+    ...existing,
+    totalSpent: existing.totalSpent + amountSpent,
+    visitCount: existing.visitCount + 1,
+    loyaltyPoints: existing.loyaltyPoints + Math.floor(amountSpent / TOMAN_PER_LOYALTY_POINT),
+    lastVisitAt: nowISO(),
+  };
+  await db.put('customers', updated);
+  return updated;
+}
+
+export async function adjustLoyaltyPoints(id: string, delta: number): Promise<Customer> {
+  const db = await getDB();
+  const existing = await db.get('customers', id);
+  if (!existing) throw new Error('customer not found');
+  const updated: Customer = { ...existing, loyaltyPoints: Math.max(0, existing.loyaltyPoints + delta) };
+  await db.put('customers', updated);
+  return updated;
+}
+
+// ---------- SMS logs (CRM) ----------
+
+export async function listSmsLogs(): Promise<SmsLog[]> {
+  return (await getDB()).getAll('sms_logs');
+}
+
+export async function recordSmsLog(input: Omit<SmsLog, 'id'>): Promise<SmsLog> {
+  const log: SmsLog = { ...input, id: uuid() };
+  await (await getDB()).put('sms_logs', log);
+  return log;
+}
+
+export async function deleteSmsLog(id: string): Promise<void> {
+  await (await getDB()).delete('sms_logs', id);
+}
+
 // ---------- Settings ----------
+
+export const DEFAULT_SYNC_SERVER_URL = 'http://91.107.249.240/sync';
 
 const DEFAULT_SETTINGS: Settings = {
   id: 'global',
@@ -695,21 +789,36 @@ const DEFAULT_SETTINGS: Settings = {
   targetFoodCostPercent: 30,
   theme: 'auto',
   subscriptionPrices: { '1m': 0, '3m': 0, '6m': 0, '12m': 0 },
+  businessId: '',
+  syncServerUrl: DEFAULT_SYNC_SERVER_URL,
 };
 
 export async function getSettings(): Promise<Settings> {
   const db = await getDB();
   const settings = await db.get('settings', 'global');
   if (!settings) {
-    await db.put('settings', DEFAULT_SETTINGS);
-    return DEFAULT_SETTINGS;
+    const fresh: Settings = { ...DEFAULT_SETTINGS, businessId: uuid() };
+    await db.put('settings', fresh);
+    return fresh;
   }
-  if (!settings.subscriptionPrices) {
-    const patched: Settings = { ...settings, subscriptionPrices: DEFAULT_SETTINGS.subscriptionPrices };
+  let patched = settings;
+  let dirty = false;
+  if (!patched.subscriptionPrices) {
+    patched = { ...patched, subscriptionPrices: DEFAULT_SETTINGS.subscriptionPrices };
+    dirty = true;
+  }
+  if (!patched.businessId) {
+    patched = { ...patched, businessId: uuid() };
+    dirty = true;
+  }
+  if (!patched.syncServerUrl) {
+    patched = { ...patched, syncServerUrl: DEFAULT_SYNC_SERVER_URL };
+    dirty = true;
+  }
+  if (dirty) {
     await db.put('settings', patched);
-    return patched;
   }
-  return settings;
+  return patched;
 }
 
 export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Promise<Settings> {
@@ -899,9 +1008,13 @@ export async function extendSubscription(id: string, months: number, plan?: Subs
 
 // ---------- Backup / restore ----------
 
+const BACKUP_STORE_NAMES: StoreName[] = [
+  'ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings', 'customers', 'sms_logs',
+];
+
 export async function exportAllData(): Promise<FullBackup> {
   const db = await getDB();
-  const [ingredients, menu_items, expenses, employees, sales, shopping_list, settings] = await Promise.all([
+  const [ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs] = await Promise.all([
     db.getAll('ingredients'),
     db.getAll('menu_items'),
     db.getAll('expenses'),
@@ -909,19 +1022,20 @@ export async function exportAllData(): Promise<FullBackup> {
     db.getAll('sales'),
     db.getAll('shopping_list'),
     db.getAll('settings'),
+    db.getAll('customers'),
+    db.getAll('sms_logs'),
   ]);
   return {
     exportedAt: nowISO(),
     version: 1,
-    data: { ingredients, menu_items, expenses, employees, sales, shopping_list, settings },
+    data: { ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs },
   };
 }
 
 export async function importAllData(backup: FullBackup, mode: 'merge' | 'replace'): Promise<void> {
   const db = await getDB();
-  const storeNames: StoreName[] = ['ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings'];
-  const tx = db.transaction(storeNames, 'readwrite');
-  for (const name of storeNames) {
+  const tx = db.transaction(BACKUP_STORE_NAMES, 'readwrite');
+  for (const name of BACKUP_STORE_NAMES) {
     if (mode === 'replace') await tx.objectStore(name).clear();
     const rows = (backup.data as Record<string, { id: string }[]>)[name] ?? [];
     for (const row of rows) await tx.objectStore(name).put(row as never);
@@ -932,9 +1046,8 @@ export async function importAllData(backup: FullBackup, mode: 'merge' | 'replace
 
 export async function resetAllData(): Promise<void> {
   const db = await getDB();
-  const storeNames: StoreName[] = ['ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings'];
-  const tx = db.transaction(storeNames, 'readwrite');
-  for (const name of storeNames) await tx.objectStore(name).clear();
+  const tx = db.transaction(BACKUP_STORE_NAMES, 'readwrite');
+  for (const name of BACKUP_STORE_NAMES) await tx.objectStore(name).clear();
   await tx.done;
 }
 

@@ -198,9 +198,45 @@ canvas {
   position: fixed;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-4);
   background: var(--bg);
+}
+
+.skeleton-bars {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 180px;
+}
+
+.skeleton-bar {
+  height: 10px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--line) 25%, var(--line-strong) 50%, var(--line) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-bar--md {
+  width: 80%;
+}
+
+.skeleton-bar--sm {
+  width: 55%;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .boot-logo {
@@ -617,17 +653,57 @@ canvas {
   font-weight: 600;
 }
 
+.app-header__sync-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  background: var(--surface-hover);
+}
+
+.app-header__sync-badge--syncing {
+  color: var(--primary);
+  animation: app-header-sync-spin 1s linear infinite;
+}
+
+.app-header__sync-badge--synced {
+  color: var(--mint);
+}
+
+.app-header__sync-badge--error {
+  color: var(--red);
+}
+
+@keyframes app-header-sync-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .app-header__actions {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   margin-inline-start: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app-header__actions::-webkit-scrollbar {
+  display: none;
 }
 
 .app-header__icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 38px;
   height: 38px;
   border: none;
@@ -639,6 +715,47 @@ canvas {
 
 .app-header__icon-btn:hover {
   background: var(--surface-hover);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) clamp(16px, 4vw, 56px);
+  font-size: 13px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.breadcrumb::-webkit-scrollbar {
+  display: none;
+}
+
+.breadcrumb__item {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.breadcrumb__item:hover {
+  color: var(--primary);
+}
+
+.breadcrumb__sep {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.breadcrumb__item--current {
+  flex-shrink: 0;
+  color: var(--ink);
+  font-weight: 600;
+  cursor: default;
 }
 
 .app-main {
@@ -994,6 +1111,7 @@ canvas {
 }
 
 .kpi-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -1003,6 +1121,27 @@ canvas {
   border-inline-start: 3px solid var(--line-strong);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
+}
+
+.kpi-card--clickable {
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+.kpi-card--clickable:hover,
+.kpi-card--clickable:focus-visible {
+  background: var(--surface-hover);
+}
+.kpi-card--clickable:active {
+  transform: scale(0.98);
+}
+
+.kpi-card__arrow {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+  opacity: 0.7;
 }
 
 .kpi-card__icon {
@@ -1503,6 +1642,16 @@ body.modal-open {
   opacity: 0.55;
 }
 
+.recipe-row--highlight {
+  animation: recipe-row-pulse 2s ease;
+  border-color: var(--primary);
+}
+
+@keyframes recipe-row-pulse {
+  0%, 100% { box-shadow: var(--shadow-sm); }
+  20%, 60% { box-shadow: 0 0 0 3px var(--primary); }
+}
+
 .recipe-row__main {
   flex: 1;
   min-width: 200px;
@@ -1596,11 +1745,15 @@ body.modal-open {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--primary);
 }
 
 .recipe-ingredient-row__name--deleted {
   color: var(--red);
   font-weight: 700;
+  font-size: 15px;
 }
 
 .recipe-ingredient-row__unit {
@@ -2096,6 +2249,98 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+.sync-code-display {
+  direction: ltr;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   Platform owner panel
+   ========================================================================== */
+
+.platform-admin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.platform-admin-screen {
+  min-height: 100%;
+  padding-bottom: var(--space-6);
+}
+
+.platform-admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) clamp(16px, 4vw, 56px);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.platform-admin-header__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.platform-admin-header__badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.platform-admin-screen .view {
+  padding: var(--space-4) clamp(16px, 4vw, 56px) 0;
+}
+
+.platform-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.platform-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.platform-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.platform-row__name {
+  font-weight: 700;
+}
+
+.platform-row__meta {
+  font-size: 12px;
+  color: var(--ink-2);
 }
 
 .theme-picker {

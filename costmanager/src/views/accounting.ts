@@ -1,9 +1,9 @@
 import { destroyChart, palette, renderChart } from '../components/chart';
-import { el, emptyState, selectEl } from '../utils/dom';
-import { formatDateShort, formatMoney, formatPct, toPersian } from '../utils/format';
+import { el, emptyState, kpiCard, selectEl } from '../utils/dom';
+import { formatDateShort, formatIngredientCategory, formatMoney, formatMoneyShort, formatPct, formatUnit, toPersian } from '../utils/format';
 import { downloadCSV, downloadJSON } from '../utils/export';
 import type { RouteCleanup } from '../router';
-import { employees, expenses, sales } from '../store';
+import { employees, expenses, ingredients, sales } from '../store';
 import {
   avgGrossMarginRatio,
   dailyBreakEven,
@@ -13,9 +13,14 @@ import {
   salesInPeriod,
   type PeriodPL,
 } from '../utils/calc';
+import * as db from '../db';
+import { renderExpensesTab, renderPayrollTab, renderSummaryTab } from './expenses';
+import { renderImportTab, renderSalesLogTab } from './sales';
 import type { Sale, SaleSource } from '../types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+type AccountingTab = 'dashboard' | 'expenses' | 'sales-log' | 'import' | 'reports';
 
 const PERIOD_OPTIONS = [
   { value: '7', label: '۷ روز گذشته' },
@@ -36,7 +41,7 @@ function plStatement(pl: PeriodPL, periodLabel: string): HTMLElement {
   return el('div', { class: 'pl-statement' }, [
     el('h3', { class: 'pl-statement__title' }, [`صورت سود و زیان — ${periodLabel}`]),
     plRow('درآمد فروش', formatMoney(pl.revenue)),
-    plRow('بهای تمام‌شده فروش (COGS)', `(${formatMoney(pl.cogs)})`),
+    plRow('هزینه‌های متغیر (بهای تمام‌شده مواد اولیه)', `(${formatMoney(pl.cogs)})`),
     el('hr'),
     plRow('سود ناخالص', formatMoney(pl.grossProfit), { strong: true }),
     plRow('حاشیه سود ناخالص', formatPct(pl.grossMarginPct)),
@@ -153,20 +158,16 @@ function breakEvenPanel(monthlyFixed: number, marginRatio: number): HTMLElement 
   ]);
 }
 
-export async function renderAccounting(container: HTMLElement): Promise<RouteCleanup> {
-  const root = el('div', { class: 'view view-accounting' });
-  container.appendChild(root);
+// ---------- Tab 1: داشبورد مالی ----------
 
+function renderFinancialDashboardTab(container: HTMLElement, onNavigateTab: (tab: AccountingTab) => void): () => void {
+  const kpiContainer = el('div');
   const periodSelect = selectEl(PERIOD_OPTIONS, '30');
   const exportCsvBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی CSV']);
   const exportJsonBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی JSON']);
   const contentEl = el('div');
 
-  root.append(
-    el('div', { class: 'view-header' }, [el('h1', { class: 'view-header__title' }, ['حسابداری و سود و زیان'])]),
-    el('div', { class: 'toolbar' }, [periodSelect, exportCsvBtn, exportJsonBtn]),
-    contentEl,
-  );
+  container.append(kpiContainer, el('div', { class: 'toolbar' }, [periodSelect, exportCsvBtn, exportJsonBtn]), contentEl);
 
   let activeCanvas: HTMLCanvasElement | null = null;
   let sourceCanvas: HTMLCanvasElement | null = null;
@@ -184,6 +185,16 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     const pl = periodProfitLoss(periodSales, monthlyFixed, periodDays);
     currentPL = pl;
     const marginRatio = avgGrossMarginRatio(sales.get(), now);
+
+    kpiContainer.innerHTML = '';
+    kpiContainer.appendChild(
+      el('div', { class: 'kpi-grid' }, [
+        kpiCard('💰', 'درآمد فروش دوره', formatMoneyShort(pl.revenue), undefined, () => onNavigateTab('sales-log')),
+        kpiCard('📉', 'هزینه‌های متغیر دوره', formatMoneyShort(pl.cogs), undefined, () => onNavigateTab('sales-log')),
+        kpiCard('🏢', 'هزینه‌های ثابت (نسبت به دوره)', formatMoneyShort(pl.fixedProrated), undefined, () => onNavigateTab('expenses')),
+        kpiCard('📈', 'سود خالص دوره', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => onNavigateTab('reports')),
+      ]),
+    );
 
     if (activeCanvas) destroyChart(activeCanvas);
     if (sourceCanvas) destroyChart(sourceCanvas);
@@ -213,7 +224,7 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
         labels: series.map((d) => formatDateShort(d.date)),
         datasets: [
           { label: 'درآمد', data: series.map((d) => d.revenue), borderColor: palette.primary, backgroundColor: palette.primary, tension: 0.3 },
-          { label: 'بهای تمام‌شده', data: series.map((d) => d.cogs), borderColor: palette.coral, backgroundColor: palette.coral, tension: 0.3 },
+          { label: 'هزینهٔ متغیر', data: series.map((d) => d.cogs), borderColor: palette.coral, backgroundColor: palette.coral, tension: 0.3 },
           {
             label: 'سود ناخالص',
             data: series.map((d) => d.revenue - d.cogs),
@@ -242,7 +253,7 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     downloadCSV(`profit-loss-${periodSelect.value}d.csv`, ['شرح', 'مقدار'], [
       ['دوره', currentLabel],
       ['درآمد فروش (تومان)', Math.round(currentPL.revenue)],
-      ['بهای تمام‌شده فروش (تومان)', Math.round(currentPL.cogs)],
+      ['هزینه‌های متغیر (تومان)', Math.round(currentPL.cogs)],
       ['سود ناخالص (تومان)', Math.round(currentPL.grossProfit)],
       ['حاشیه سود ناخالص (٪)', Number(currentPL.grossMarginPct.toFixed(1))],
       ['هزینه‌های ثابت نسبت به دوره (تومان)', Math.round(currentPL.fixedProrated)],
@@ -272,4 +283,195 @@ export async function renderAccounting(container: HTMLElement): Promise<RouteCle
     if (activeCanvas) destroyChart(activeCanvas);
     if (sourceCanvas) destroyChart(sourceCanvas);
   };
+}
+
+// ---------- Tab 2: هزینه‌های ثابت و متغیر (سه بخش: هزینه‌ها / حقوق / خلاصه) ----------
+
+type ExpenseSubTab = 'expenses' | 'payroll' | 'summary';
+
+function renderFixedVariableTab(container: HTMLElement): () => void {
+  const subTabsEl = el('div', { class: 'tabs tabs--sub' });
+  const subContentEl = el('div', { class: 'tab-content' });
+  container.append(subTabsEl, subContentEl);
+
+  const subTabs: { id: ExpenseSubTab; label: string; render: (c: HTMLElement) => () => void }[] = [
+    { id: 'expenses', label: 'هزینه‌های ثابت', render: renderExpensesTab },
+    { id: 'payroll', label: 'حقوق و دستمزد', render: renderPayrollTab },
+    { id: 'summary', label: 'خلاصه ماهانه', render: renderSummaryTab },
+  ];
+
+  let activeSub: ExpenseSubTab = 'expenses';
+  let cleanup: () => void = () => {};
+
+  function renderSubTabs(): void {
+    subTabsEl.innerHTML = '';
+    for (const t of subTabs) {
+      subTabsEl.appendChild(
+        el(
+          'button',
+          { type: 'button', class: `tab-btn${t.id === activeSub ? ' tab-btn--active' : ''}`, onclick: () => switchSub(t.id) },
+          [t.label],
+        ),
+      );
+    }
+  }
+
+  function switchSub(id: ExpenseSubTab): void {
+    activeSub = id;
+    cleanup();
+    subContentEl.innerHTML = '';
+    renderSubTabs();
+    cleanup = subTabs.find((t) => t.id === id)!.render(subContentEl);
+  }
+
+  switchSub(activeSub);
+  return () => cleanup();
+}
+
+// ---------- Tab 5: گزارش‌های خروجی ----------
+
+function renderReportsTab(container: HTMLElement): () => void {
+  const periodSelect = selectEl(PERIOD_OPTIONS, '30');
+  const salesReportBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی گزارش فروش دوره (CSV)']);
+  const plCsvBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی صورت سود و زیان (CSV)']);
+  const plJsonBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی صورت سود و زیان (JSON)']);
+  const inventoryBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی وضعیت انبار (CSV)']);
+  const backupBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی نسخهٔ پشتیبان کامل (JSON)']);
+
+  container.append(
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['گزارش‌های دوره‌ای']),
+      el('div', { class: 'toolbar' }, [periodSelect]),
+      el('div', { class: 'modal-actions' }, [salesReportBtn, plCsvBtn, plJsonBtn]),
+    ]),
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['گزارش‌های کلی']),
+      el('div', { class: 'modal-actions' }, [inventoryBtn, backupBtn]),
+    ]),
+  );
+
+  function periodSales(): Sale[] {
+    const now = new Date();
+    const periodDays = Number(periodSelect.value);
+    const periodStart = new Date(now.getTime() - periodDays * DAY_MS);
+    return salesInPeriod(sales.get(), periodStart, now);
+  }
+
+  function currentPL(): { pl: PeriodPL; label: string; periodDays: number } {
+    const periodDays = Number(periodSelect.value);
+    const label = PERIOD_OPTIONS.find((o) => o.value === periodSelect.value)?.label ?? '';
+    const monthlyFixed = monthlyFixedCost(expenses.get(), employees.get());
+    const pl = periodProfitLoss(periodSales(), monthlyFixed, periodDays);
+    return { pl, label, periodDays };
+  }
+
+  salesReportBtn.addEventListener('click', () => {
+    const list = periodSales();
+    downloadCSV(
+      `sales-report-${periodSelect.value}d.csv`,
+      ['تاریخ', 'آیتم', 'تعداد', 'قیمت واحد', 'بهای واحد', 'فروش کل', 'بهای تمام‌شده کل', 'منبع'],
+      list.map((s) => [
+        formatDateShort(s.date),
+        s.menuItemName,
+        s.quantity,
+        Math.round(s.unitSalePrice),
+        Math.round(s.unitCost),
+        Math.round(s.unitSalePrice * s.quantity),
+        Math.round(s.unitCost * s.quantity),
+        SOURCE_LABELS[effectiveSource(s)],
+      ]),
+    );
+  });
+
+  plCsvBtn.addEventListener('click', () => {
+    const { pl, label, periodDays } = currentPL();
+    downloadCSV(`profit-loss-${periodDays}d.csv`, ['شرح', 'مقدار'], [
+      ['دوره', label],
+      ['درآمد فروش (تومان)', Math.round(pl.revenue)],
+      ['هزینه‌های متغیر (تومان)', Math.round(pl.cogs)],
+      ['سود ناخالص (تومان)', Math.round(pl.grossProfit)],
+      ['حاشیه سود ناخالص (٪)', Number(pl.grossMarginPct.toFixed(1))],
+      ['هزینه‌های ثابت نسبت به دوره (تومان)', Math.round(pl.fixedProrated)],
+      ['سود خالص (تومان)', Math.round(pl.netProfit)],
+      ['حاشیه سود خالص (٪)', Number(pl.netMarginPct.toFixed(1))],
+    ]);
+  });
+
+  plJsonBtn.addEventListener('click', () => {
+    const { pl, label, periodDays } = currentPL();
+    downloadJSON(`profit-loss-${periodDays}d.json`, { period: label, periodDays, ...pl });
+  });
+
+  inventoryBtn.addEventListener('click', () => {
+    const list = ingredients.get();
+    downloadCSV(
+      'inventory-status.csv',
+      ['نام', 'دسته‌بندی', 'واحد', 'موجودی فعلی', 'حداقل موجودی', 'حداکثر موجودی', 'قیمت واحد', 'ارزش انبار'],
+      list.map((i) => [
+        i.name,
+        formatIngredientCategory(i.category),
+        formatUnit(i.unit),
+        i.currentStock,
+        i.minStock,
+        i.maxStock,
+        Math.round(i.pricePerUnit),
+        Math.round(i.currentStock * i.pricePerUnit),
+      ]),
+    );
+  });
+
+  backupBtn.addEventListener('click', async () => {
+    const backup = await db.exportAllData();
+    downloadJSON(`accounting-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
+  });
+
+  return () => {};
+}
+
+// ---------- View shell with 5 tabs ----------
+
+export async function renderAccounting(container: HTMLElement): Promise<RouteCleanup> {
+  const root = el('div', { class: 'view view-accounting' });
+  container.appendChild(root);
+
+  const tabsEl = el('div', { class: 'tabs' });
+  const contentEl = el('div', { class: 'tab-content' });
+
+  root.append(el('div', { class: 'view-header' }, [el('h1', { class: 'view-header__title' }, ['حسابداری'])]), tabsEl, contentEl);
+
+  const tabs: { id: AccountingTab; label: string; render: (c: HTMLElement) => () => void }[] = [
+    { id: 'dashboard', label: 'داشبورد مالی', render: (c) => renderFinancialDashboardTab(c, switchTab) },
+    { id: 'expenses', label: 'هزینه‌های ثابت و متغیر', render: renderFixedVariableTab },
+    { id: 'sales-log', label: 'دفتر فروش', render: renderSalesLogTab },
+    { id: 'import', label: 'ورودی فایل فروش', render: renderImportTab },
+    { id: 'reports', label: 'گزارش‌های خروجی', render: renderReportsTab },
+  ];
+
+  let activeTab: AccountingTab = 'dashboard';
+  let activeCleanup: () => void = () => {};
+
+  function renderTabs(): void {
+    tabsEl.innerHTML = '';
+    for (const tab of tabs) {
+      tabsEl.appendChild(
+        el(
+          'button',
+          { type: 'button', class: `tab-btn${tab.id === activeTab ? ' tab-btn--active' : ''}`, onclick: () => switchTab(tab.id) },
+          [tab.label],
+        ),
+      );
+    }
+  }
+
+  function switchTab(tab: AccountingTab): void {
+    activeTab = tab;
+    activeCleanup();
+    contentEl.innerHTML = '';
+    renderTabs();
+    activeCleanup = tabs.find((t) => t.id === tab)!.render(contentEl);
+  }
+
+  switchTab(activeTab);
+
+  return () => activeCleanup();
 }

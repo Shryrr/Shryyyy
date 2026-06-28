@@ -1,12 +1,16 @@
 import * as db from '../db';
 import { login as setSession } from '../auth';
 import { renderSetupWizard } from './setup';
+import { openPlatformOwnerGate } from './platform-admin';
 import { el } from '../utils/dom';
 import { toPersian } from '../utils/format';
 import type { AppUser, UserRole } from '../types';
 
 const LOCKOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
+
+const PLATFORM_GATE_TAPS = 7;
+const PLATFORM_GATE_WINDOW_MS = 2500;
 
 let failedAttempts = 0;
 let lockoutUntil = 0;
@@ -36,6 +40,20 @@ function authShell(children: HTMLElement[], wide = false): HTMLElement {
   return el('div', { class: 'auth-screen' }, [el('div', { class: `auth-card${wide ? ' auth-card--wide' : ''}` }, children)]);
 }
 
+/** Hidden platform-owner entry point: tapping the login logo this many times in a row opens the PIN gate. */
+function wirePlatformOwnerGate(logo: HTMLElement, container: HTMLElement): void {
+  let taps: number[] = [];
+  logo.addEventListener('click', () => {
+    const now = Date.now();
+    taps = taps.filter((t) => now - t < PLATFORM_GATE_WINDOW_MS);
+    taps.push(now);
+    if (taps.length >= PLATFORM_GATE_TAPS) {
+      taps = [];
+      openPlatformOwnerGate(container);
+    }
+  });
+}
+
 function renderUserGrid(container: HTMLElement, businessName: string, users: AppUser[], onDone: (user: AppUser) => void): void {
   container.innerHTML = '';
 
@@ -63,10 +81,13 @@ function renderUserGrid(container: HTMLElement, businessName: string, users: App
     grid.appendChild(el('p', { class: 'auth-subtitle' }, ['هیچ کاربر فعالی یافت نشد.']));
   }
 
+  const logo = el('div', { class: 'boot-logo auth-logo' }, ['م']);
+  wirePlatformOwnerGate(logo, container);
+
   container.appendChild(
     authShell(
       [
-        el('div', { class: 'boot-logo auth-logo' }, ['م']),
+        logo,
         el('span', { class: 'auth-brand' }, [businessName]),
         el('h2', { class: 'auth-title' }, ['انتخاب کاربر']),
         el('p', { class: 'auth-subtitle' }, ['برای ورود، کاربر خود را انتخاب کنید']),

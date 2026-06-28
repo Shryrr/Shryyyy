@@ -12,6 +12,17 @@ import type { Employee, Expense, ExpenseCategory, ExpenseFrequency, PayType } fr
 const EXPENSE_CATEGORY_OPTIONS: ExpenseCategory[] = [
   'rent', 'utilities', 'insurance', 'marketing', 'maintenance', 'packaging', 'transport', 'tax', 'other',
 ];
+const EXPENSE_CATEGORY_ICONS: Record<ExpenseCategory, string> = {
+  rent: '🏠',
+  utilities: '⚡',
+  insurance: '🛡️',
+  marketing: '📣',
+  maintenance: '🔧',
+  packaging: '📦',
+  transport: '🚚',
+  tax: '📋',
+  other: '🗂️',
+};
 const FREQUENCY_OPTIONS: ExpenseFrequency[] = ['monthly', 'yearly', 'one_time'];
 const PAY_TYPE_OPTIONS: PayType[] = ['monthly', 'daily', 'hourly'];
 const CHART_COLORS = [palette.primary, palette.coral, palette.mint, palette.amber, palette.blue, palette.red, palette.primaryD];
@@ -100,7 +111,7 @@ function renderExpenseRow(expense: Expense): HTMLElement {
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
         el('span', { class: 'expense-row__name' }, [expense.name]),
-        el('span', { class: 'badge' }, [formatExpenseCategory(expense.category)]),
+        el('span', { class: 'badge' }, [`${EXPENSE_CATEGORY_ICONS[expense.category]} ${formatExpenseCategory(expense.category)}`]),
         !expense.isActive ? el('span', { class: 'badge badge--muted' }, ['غیرفعال']) : null,
       ]),
       el('div', { class: 'expense-row__meta' }, [
@@ -124,7 +135,7 @@ function renderExpenseRow(expense: Expense): HTMLElement {
   ]);
 }
 
-function renderExpensesTab(container: HTMLElement): () => void {
+export function renderExpensesTab(container: HTMLElement): () => void {
   const listEl = el('div', { class: 'expense-list' });
   container.append(
     el('div', { class: 'tab-toolbar' }, [
@@ -260,7 +271,7 @@ function renderEmployeeRow(employee: Employee): HTMLElement {
   ]);
 }
 
-function renderPayrollTab(container: HTMLElement): () => void {
+export function renderPayrollTab(container: HTMLElement): () => void {
   const listEl = el('div', { class: 'expense-list' });
   container.append(
     el('div', { class: 'tab-toolbar' }, [
@@ -293,7 +304,7 @@ function renderPayrollTab(container: HTMLElement): () => void {
 
 // ---------- Summary tab ----------
 
-function renderSummaryTab(container: HTMLElement): () => void {
+export function renderSummaryTab(container: HTMLElement): () => void {
   const statsEl = el('div', { class: 'kpi-grid' });
   const canvas = el('canvas');
   const chartCard = el('div', { class: 'chart-card' }, [

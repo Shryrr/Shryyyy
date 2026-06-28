@@ -1,203 +1,246 @@
 import * as db from '../db';
 import { confirmModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { refreshAll, refreshSettings } from '../store';
-import type { AppUser, Employee, Expense, Ingredient, MenuItem, Sale, Settings } from '../types';
+import {
+  customers, employees, expenses, ingredients, menuItems, refreshAll, sales, settings, shoppingList, smsLogs, syncStatus,
+} from '../store';
+import type { AppUser, FullBackup } from '../types';
 
-const GIST_FILENAME = 'costmanager-data.json';
-const GIST_DESCRIPTION = 'پشتیبان داده‌های منوبان (مدیریت‌شده توسط برنامه — ویرایش دستی نکنید)';
-const GITHUB_API = 'https://api.github.com';
+const FETCH_TIMEOUT_MS = 6000;
+const SYNC_CODE_PREFIX = 'synccode:';
 
-const ERR_NO_TOKEN = 'برای همگام‌سازی ابتدا توکن GitHub را در تنظیمات وارد کنید';
-const ERR_NETWORK = 'خطا در اتصال — داده‌ها به‌صورت محلی ذخیره شدند';
-const ERR_INVALID_TOKEN = 'توکن GitHub نامعتبر است — لطفاً توکن را بررسی کنید';
+export const ERR_NETWORK = 'اتصال به سرور همگام‌سازی برقرار نشد';
+export const ERR_NOT_FOUND = 'کد یافت نشد یا منقضی شده است';
 
-interface CloudPayload {
+interface SyncPayload {
   exportedAt: string;
   version: '1.0';
-  ingredients: Ingredient[];
-  menu_items: MenuItem[];
-  expenses: Expense[];
-  employees: Employee[];
-  sales: Sale[];
-  settings: Omit<Settings, 'githubToken' | 'gistId'>;
+  businessId: string;
+  businessName: string;
+  backup: FullBackup;
   users: AppUser[];
 }
 
-function authHeaders(token: string): HeadersInit {
-  return {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-  };
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
-async function buildPayload(): Promise<CloudPayload> {
-  const [ingredients, menu_items, expenses, employees, sales, users, settings] = await Promise.all([
-    db.listIngredients(),
-    db.listMenuItems(),
-    db.listExpenses(),
-    db.listEmployees(),
-    db.listSales(),
-    db.listUsers(),
-    db.getSettings(),
-  ]);
-  const { githubToken, gistId, ...rest } = settings;
-  void githubToken;
-  void gistId;
+async function buildPayload(): Promise<SyncPayload> {
+  const s = await db.getSettings();
+  const backup = await db.exportAllData();
+  const users = await db.listUsers();
   return {
-    exportedAt: new Date().toISOString(),
+    exportedAt: backup.exportedAt,
     version: '1.0',
-    ingredients,
-    menu_items,
-    expenses,
-    employees,
-    sales,
-    settings: rest,
+    businessId: s.businessId,
+    businessName: s.businessName,
+    backup,
     users,
   };
 }
 
-export async function testConnection(token: string): Promise<{ ok: true; login: string } | { ok: false; error: string }> {
+/** Applies a remote payload locally, preserving this device's own connection setting (server URL). */
+async function applyPayload(payload: SyncPayload): Promise<void> {
+  const local = await db.getSettings();
+  const backup: FullBackup = {
+    ...payload.backup,
+    data: {
+      ...payload.backup.data,
+      settings: payload.backup.data.settings.map((s) => ({ ...s, syncServerUrl: local.syncServerUrl })),
+    },
+  };
+  await db.importAllData(backup, 'replace');
+  await db.replaceAuthUsers(payload.users);
+  await db.regenerateShoppingList();
+  await db.updateSettings({ businessId: payload.businessId, lastSyncAt: new Date().toISOString() });
+  await refreshAll();
+}
+
+function serverBase(): string {
+  return (settings.get()?.syncServerUrl ?? '').trim();
+}
+
+export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
+  const base = serverBase();
+  if (!base || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
+  syncStatus.set('syncing');
   try {
-    const res = await fetch(`${GITHUB_API}/user`, { headers: authHeaders(token) });
-    if (res.status === 401) return { ok: false, error: ERR_INVALID_TOKEN };
-    if (!res.ok) return { ok: false, error: ERR_NETWORK };
-    const data = await res.json();
-    return { ok: true, login: data.login };
+    const payload = await buildPayload();
+    const res = await fetchWithTimeout(`${base}/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      syncStatus.set('error');
+      if (!opts.silent) showToast('ارسال داده به سرور ناموفق بود', 'error');
+      return { ok: false, error: ERR_NETWORK };
+    }
+    await db.updateSettings({ lastSyncAt: new Date().toISOString() });
+    syncStatus.set('synced');
+    if (!opts.silent) showToast('داده‌ها با سرور همگام شد', 'success');
+    return { ok: true };
+  } catch {
+    syncStatus.set('error');
+    if (!opts.silent) showToast(ERR_NETWORK, 'error');
+    return { ok: false, error: ERR_NETWORK };
+  }
+}
+
+export async function pullFromServer(
+  opts: { silent?: boolean; skipConfirm?: boolean } = {},
+): Promise<{ ok: boolean; applied?: boolean; error?: string }> {
+  const base = serverBase();
+  const businessId = settings.get()?.businessId;
+  if (!base || !businessId || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
+  syncStatus.set('syncing');
+  try {
+    const res = await fetchWithTimeout(`${base}/pull?businessId=${encodeURIComponent(businessId)}`);
+    if (!res.ok) {
+      syncStatus.set('error');
+      return { ok: false, error: ERR_NETWORK };
+    }
+    const payload = (await res.json()) as SyncPayload;
+    const cur = settings.get();
+    if (cur?.lastSyncAt && payload.exportedAt <= cur.lastSyncAt) {
+      syncStatus.set('synced');
+      return { ok: true, applied: false };
+    }
+    if (!opts.skipConfirm) {
+      const confirmed = await confirmModal({
+        title: 'دریافت داده از سرور',
+        message: 'نسخهٔ جدیدتری از داده‌های این کسب‌وکار روی سرور موجود است. داده‌های فعلی این دستگاه با آن جایگزین شود؟',
+        confirmLabel: 'دریافت و جایگزینی',
+      });
+      if (!confirmed) {
+        syncStatus.set('idle');
+        return { ok: true, applied: false };
+      }
+    }
+    await applyPayload(payload);
+    syncStatus.set('synced');
+    if (!opts.silent) showToast('داده‌ها از سرور دریافت شد', 'success');
+    return { ok: true, applied: true };
+  } catch {
+    syncStatus.set('error');
+    if (!opts.silent) showToast(ERR_NETWORK, 'error');
+    return { ok: false, error: ERR_NETWORK };
+  }
+}
+
+export async function testSyncConnection(serverUrl: string): Promise<{ ok: boolean; error?: string }> {
+  const base = serverUrl.trim();
+  if (!base) return { ok: false, error: 'آدرس سرور را وارد کنید' };
+  try {
+    const res = await fetchWithTimeout(`${base}/ping`);
+    return res.ok ? { ok: true } : { ok: false, error: ERR_NETWORK };
   } catch {
     return { ok: false, error: ERR_NETWORK };
   }
 }
 
-async function fetchCloudPayload(token: string, gistId: string): Promise<CloudPayload | null> {
-  const res = await fetch(`${GITHUB_API}/gists/${gistId}`, { headers: authHeaders(token) });
-  if (!res.ok) return null;
-  const gist = await res.json();
-  const file = gist.files?.[GIST_FILENAME];
-  if (!file?.content) return null;
-  return JSON.parse(file.content) as CloudPayload;
+function randomSixDigitCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-export async function syncToCloud(): Promise<boolean> {
-  const settings = await db.getSettings();
-  const token = settings.githubToken?.trim();
-  if (!token) {
-    showToast(ERR_NO_TOKEN, 'error');
-    return false;
-  }
-  try {
-    const payload = await buildPayload();
-    const body = {
-      description: GIST_DESCRIPTION,
-      public: false,
-      files: { [GIST_FILENAME]: { content: JSON.stringify(payload, null, 2) } },
-    };
-    const res = settings.gistId
-      ? await fetch(`${GITHUB_API}/gists/${settings.gistId}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) })
-      : await fetch(`${GITHUB_API}/gists`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) });
+/** Exports current data to a short shareable code: stored locally and best-effort pushed to the server. */
+export async function generateSyncCode(): Promise<string> {
+  const payload = await buildPayload();
+  const code = randomSixDigitCode();
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  localStorage.setItem(`${SYNC_CODE_PREFIX}${code}`, encoded);
 
-    if (res.status === 401) {
-      showToast(ERR_INVALID_TOKEN, 'error');
-      return false;
+  const base = serverBase();
+  if (base && navigator.onLine) {
+    try {
+      await fetchWithTimeout(`${base}/code/${code}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // Silent fallback: the code still works locally; cross-device pickup just needs the server reachable.
     }
-    if (!res.ok) {
-      showToast(ERR_NETWORK, 'error');
-      return false;
-    }
-    const gist = await res.json();
-    await db.updateSettings({ gistId: gist.id, lastSyncAt: new Date().toISOString() });
-    await refreshSettings();
-    showToast('همگام‌سازی انجام شد ✓', 'success');
-    return true;
-  } catch {
-    showToast(ERR_NETWORK, 'error');
-    return false;
   }
+  return code;
 }
 
-export async function syncFromCloud(opts: { skipConfirm?: boolean } = {}): Promise<boolean> {
-  const settings = await db.getSettings();
-  const token = settings.githubToken?.trim();
-  if (!token) {
-    showToast(ERR_NO_TOKEN, 'error');
-    return false;
+/** Imports data from a 6-digit sync code: checks local storage first, then falls back to the server. */
+export async function importFromSyncCode(code: string, opts: { skipConfirm?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = code.trim();
+  let payload: SyncPayload | null = null;
+
+  const local = localStorage.getItem(`${SYNC_CODE_PREFIX}${trimmed}`);
+  if (local) {
+    try {
+      payload = JSON.parse(decodeURIComponent(escape(atob(local)))) as SyncPayload;
+    } catch {
+      payload = null;
+    }
   }
-  if (!settings.gistId) {
-    showToast('هنوز هیچ نسخهٔ ابری ثبت نشده است', 'error');
-    return false;
+
+  if (!payload) {
+    const base = serverBase();
+    if (!base || !navigator.onLine) return { ok: false, error: ERR_NOT_FOUND };
+    try {
+      const res = await fetchWithTimeout(`${base}/code/${trimmed}`);
+      if (!res.ok) return { ok: false, error: ERR_NOT_FOUND };
+      payload = (await res.json()) as SyncPayload;
+    } catch {
+      return { ok: false, error: ERR_NETWORK };
+    }
   }
+
   if (!opts.skipConfirm) {
     const confirmed = await confirmModal({
-      title: 'دریافت از ابر',
-      message: 'داده‌های محلی با نسخهٔ ابری جایگزین می‌شوند. ادامه می‌دهید؟',
-      confirmLabel: 'دریافت و جایگزینی',
+      title: 'دریافت داده با کد همگام‌سازی',
+      message: `داده‌های کسب‌وکار «${payload.businessName}» جایگزین داده‌های فعلی این دستگاه می‌شود. ادامه می‌دهید؟`,
+      confirmLabel: 'جایگزینی',
       danger: true,
     });
-    if (!confirmed) return false;
+    if (!confirmed) return { ok: false };
   }
-  try {
-    const cloud = await fetchCloudPayload(token, settings.gistId);
-    if (!cloud) {
-      showToast(ERR_NETWORK, 'error');
-      return false;
-    }
-    await db.importAllData(
-      {
-        exportedAt: cloud.exportedAt,
-        version: 1,
-        data: {
-          ingredients: cloud.ingredients,
-          menu_items: cloud.menu_items,
-          expenses: cloud.expenses,
-          employees: cloud.employees,
-          sales: cloud.sales,
-          shopping_list: [],
-          settings: [{ ...cloud.settings, githubToken: settings.githubToken, gistId: settings.gistId } as Settings],
-        },
-      },
-      'replace',
-    );
-    await db.replaceAuthUsers(cloud.users);
-    await db.regenerateShoppingList();
-    await db.updateSettings({ lastSyncAt: new Date().toISOString() });
-    await refreshAll();
-    showToast('داده‌ها از ابر دریافت شدند ✓', 'success');
-    return true;
-  } catch {
-    showToast(ERR_NETWORK, 'error');
-    return false;
-  }
-}
 
-/** Checks for a newer cloud snapshot without applying it; caller decides how to prompt the user. */
-export async function checkForNewerCloudVersion(): Promise<{ exportedAt: string } | null> {
-  if (!navigator.onLine) return null;
-  const settings = await db.getSettings();
-  const token = settings.githubToken?.trim();
-  if (!token || !settings.gistId) return null;
-  try {
-    const cloud = await fetchCloudPayload(token, settings.gistId);
-    if (!cloud) return null;
-    if (!settings.lastSyncAt || new Date(cloud.exportedAt) > new Date(settings.lastSyncAt)) {
-      return { exportedAt: cloud.exportedAt };
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  await applyPayload(payload);
+  showToast('داده‌ها با موفقیت دریافت شد', 'success');
+  return { ok: true };
 }
 
 let autoSyncWired = false;
 
-/** Wires the offline->online auto-push trigger; safe to call multiple times (no-op after the first). */
+/** Pulls the latest data on load, then silently pushes whenever local data changes (debounced). Safe to call multiple times. */
 export function setupAutoSync(): void {
   if (autoSyncWired) return;
   autoSyncWired = true;
-  window.addEventListener('online', async () => {
-    const settings = await db.getSettings();
-    if (!settings.githubToken) return;
-    showToast('اتصال برقرار شد — داده‌ها همگام‌سازی شدند', 'info');
-    await syncToCloud();
+
+  if (navigator.onLine) {
+    void pullFromServer({ silent: true, skipConfirm: true });
+  }
+
+  let pushTimer: ReturnType<typeof setTimeout> | null = null;
+  function schedulePush(): void {
+    if (pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => void pushToServer({ silent: true }), 1500);
+  }
+
+  for (const sig of [ingredients, menuItems, expenses, employees, sales, shoppingList, customers, smsLogs]) {
+    let first = true;
+    sig.subscribe(() => {
+      if (first) {
+        first = false;
+        return;
+      }
+      schedulePush();
+    });
+  }
+
+  window.addEventListener('online', () => {
+    void pullFromServer({ silent: true, skipConfirm: true });
   });
 }

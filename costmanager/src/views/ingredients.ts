@@ -2,10 +2,12 @@ import * as db from '../db';
 import { hasFullAccess, hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { emptyState, el, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
-import { formatDateShort, formatIngredientCategory, formatMoney, formatUnit, toPersian, todayISO } from '../utils/format';
+import { emptyState, el, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { formatDateShort, formatIngredientCategory, formatMoney, formatMoneyShort, formatUnit, toPersian, todayISO } from '../utils/format';
+import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
-import { ingredients, refreshIngredients, refreshMenuItems } from '../store';
+import { ingredients, refreshIngredients, refreshMenuItems, takeNavigationIntent } from '../store';
+import { inventoryValue, lowStockIngredients } from '../utils/calc';
 import type { Ingredient, IngredientCategory, PurchaseRecord, Unit } from '../types';
 
 const CATEGORY_OPTIONS: IngredientCategory[] = [
@@ -209,6 +211,13 @@ function openPurchaseHistoryModal(ingredientId: string): void {
 }
 
 async function handleDelete(ingredient: Ingredient): Promise<void> {
+  const confirmed = await confirmModal({
+    title: 'حذف ماده اولیه',
+    message: `ماده اولیه «${ingredient.name}» برای همیشه حذف می‌شود.`,
+    confirmLabel: 'حذف',
+    danger: true,
+  });
+  if (!confirmed) return;
   try {
     await db.deleteIngredient(ingredient.id);
     await refreshIngredients();
@@ -259,10 +268,23 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
   ]);
 }
 
+function renderIngredientsStatsPanel(
+  all: Ingredient[],
+  actions: { onSortByValue: () => void; onShowShortage: () => void; onShowLowStock: () => void },
+): HTMLElement {
+  const lowStock = lowStockIngredients(all);
+  return el('div', { class: 'kpi-grid' }, [
+    kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(all)), undefined, actions.onSortByValue),
+    kpiCard('⚠️', 'اقلام رو به اتمام', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowShortage),
+    kpiCard('📉', 'کم‌موجود', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowLowStock),
+  ]);
+}
+
 export async function renderIngredients(container: HTMLElement): Promise<RouteCleanup> {
   const root = el('div', { class: 'view view-ingredients' });
   container.appendChild(root);
 
+  const statsContainer = el('div');
   const searchInput = el('input', { type: 'text', class: 'input', placeholder: 'جستجوی ماده اولیه...' });
   const categorySelect = selectEl(
     [{ value: '', label: 'همه دسته‌ها' }, ...CATEGORY_OPTIONS.map((c) => ({ value: c, label: formatIngredientCategory(c) }))],
@@ -273,11 +295,28 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
       { value: 'name', label: 'مرتب‌سازی: نام' },
       { value: 'stock', label: 'مرتب‌سازی: کمترین موجودی' },
       { value: 'category', label: 'مرتب‌سازی: دسته‌بندی' },
+      { value: 'value', label: 'مرتب‌سازی: بیشترین ارزش' },
     ],
     'name',
   );
   const lowStockOnlyCheckbox = el('input', { type: 'checkbox' });
   const listEl = el('div', { class: 'ingredient-list' });
+
+  const intent = takeNavigationIntent();
+  if (intent.sortByValue) sortSelect.value = 'value';
+  if (intent.lowStockOnly) lowStockOnlyCheckbox.checked = true;
+
+  const statsActions = {
+    onSortByValue: () => {
+      sortSelect.value = 'value';
+      renderList();
+    },
+    onShowShortage: () => navigate('/shopping'),
+    onShowLowStock: () => {
+      lowStockOnlyCheckbox.checked = true;
+      renderList();
+    },
+  };
 
   root.append(
     el('div', { class: 'view-header' }, [
@@ -286,6 +325,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
         ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openIngredientFormModal() }, ['+ افزودن ماده اولیه'])
         : null,
     ]),
+    statsContainer,
     el('div', { class: 'toolbar' }, [
       searchInput,
       categorySelect,
@@ -298,6 +338,8 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
   function renderList(): void {
     listEl.innerHTML = '';
     const all = ingredients.get();
+    statsContainer.innerHTML = '';
+    statsContainer.appendChild(renderIngredientsStatsPanel(all, statsActions));
     let list = all;
 
     const term = searchInput.value.trim();
@@ -312,6 +354,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
     list = [...list].sort((a, b) => {
       if (sortBy === 'stock') return a.currentStock - b.currentStock;
       if (sortBy === 'category') return a.category.localeCompare(b.category);
+      if (sortBy === 'value') return b.currentStock * b.pricePerUnit - a.currentStock * a.pricePerUnit;
       return a.name.localeCompare(b.name, 'fa');
     });
 

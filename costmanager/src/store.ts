@@ -1,5 +1,5 @@
 import * as db from './db';
-import type { Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem } from './types';
+import type { Customer, Employee, Expense, Ingredient, MenuItem, Sale, Settings, ShoppingListItem, SmsLog } from './types';
 
 type Listener<T> = (value: T) => void;
 
@@ -39,9 +39,21 @@ export const expenses = signal<Expense[]>([]);
 export const employees = signal<Employee[]>([]);
 export const sales = signal<Sale[]>([]);
 export const shoppingList = signal<ShoppingListItem[]>([]);
+export const customers = signal<Customer[]>([]);
+export const smsLogs = signal<SmsLog[]>([]);
 export const settings = signal<Settings | null>(null);
 export const resolvedTheme = signal<'light' | 'dark'>('light');
 export const isOnline = signal<boolean>(navigator.onLine);
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
+export const syncStatus = signal<SyncStatus>('idle');
+
+/** Transient cross-view filter intent set by a KPI card before navigate(); the target view reads + clears it on mount. */
+export const navigationIntent = signal<Record<string, unknown> | null>(null);
+export function takeNavigationIntent(): Record<string, unknown> {
+  const intent = navigationIntent.get() ?? {};
+  navigationIntent.set(null);
+  return intent;
+}
 
 export async function refreshIngredients(): Promise<void> {
   ingredients.set(await db.listIngredients());
@@ -61,6 +73,12 @@ export async function refreshSales(): Promise<void> {
 export async function refreshShoppingList(): Promise<void> {
   shoppingList.set(await db.listShoppingList());
 }
+export async function refreshCustomers(): Promise<void> {
+  customers.set(await db.listCustomers());
+}
+export async function refreshSmsLogs(): Promise<void> {
+  smsLogs.set(await db.listSmsLogs());
+}
 export async function refreshSettings(): Promise<void> {
   settings.set(await db.getSettings());
 }
@@ -73,6 +91,8 @@ export async function refreshAll(): Promise<void> {
     refreshEmployees(),
     refreshSales(),
     refreshShoppingList(),
+    refreshCustomers(),
+    refreshSmsLogs(),
     refreshSettings(),
   ]);
 }

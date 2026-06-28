@@ -162,7 +162,7 @@ function renderSaleRow(s: Sale, onDelete: (s: Sale) => void): HTMLElement {
   ]);
 }
 
-function renderSalesLogTab(container: HTMLElement): () => void {
+export function renderSalesLogTab(container: HTMLElement): () => void {
   const root = el('div', { class: 'tab-content' });
   container.appendChild(root);
 
@@ -711,7 +711,7 @@ function renderSnappfoodImport(container: HTMLElement): () => void {
 
 type ImportSubTab = 'cashier' | 'snappfood';
 
-function renderImportTab(container: HTMLElement): () => void {
+export function renderImportTab(container: HTMLElement): () => void {
   const subTabsEl = el('div', { class: 'tabs tabs--sub' });
   const subContentEl = el('div', { class: 'tab-content' });
   container.append(subTabsEl, subContentEl);

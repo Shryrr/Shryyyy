@@ -3,7 +3,7 @@ import { palette, renderChart, destroyChart } from '../components/chart';
 import { el, kpiCard } from '../utils/dom';
 import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
-import { employees, expenses, ingredients, ingredientsById, menuItems, sales } from '../store';
+import { employees, expenses, ingredients, ingredientsById, menuItems, navigationIntent, sales } from '../store';
 import {
   avgFoodCostPct,
   avgGrossMarginRatio,
@@ -102,12 +102,18 @@ export async function renderDashboard(container: HTMLElement): Promise<RouteClea
 
     root.append(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('📦', 'تعداد مواد اولیه', toPersian(ing.length)),
-        kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(ing))),
-        kpiCard('🍽️', 'فودکاست (۳۰ روز)', formatPct(foodCostPctValue), foodCostStatus(foodCostPctValue) === 'red' ? 'negative' : undefined),
-        kpiCard('🏢', 'هزینهٔ ثابت ماهانه', formatMoneyShort(monthlyFixed)),
-        kpiCard('📈', 'سود خالص (۳۰ روز)', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative'),
-        kpiCard('⚠️', 'کسری موجودی', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined),
+        kpiCard('📦', 'تعداد مواد اولیه', toPersian(ing.length), undefined, () => navigate('/ingredients')),
+        kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(ing)), undefined, () => {
+          navigationIntent.set({ sortByValue: true });
+          navigate('/ingredients');
+        }),
+        kpiCard('🍽️', 'فودکاست (۳۰ روز)', formatPct(foodCostPctValue), foodCostStatus(foodCostPctValue) === 'red' ? 'negative' : undefined, () => {
+          navigationIntent.set({ sortBy: 'pct_desc' });
+          navigate('/recipes');
+        }),
+        kpiCard('🏢', 'هزینهٔ ثابت ماهانه', formatMoneyShort(monthlyFixed), undefined, () => navigate('/expenses')),
+        kpiCard('📈', 'سود خالص (۳۰ روز)', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => navigate('/accounting')),
+        kpiCard('⚠️', 'کسری موجودی', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, () => navigate('/shopping')),
       ]),
     );
 

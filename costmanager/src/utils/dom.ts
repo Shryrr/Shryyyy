@@ -98,14 +98,33 @@ export function parseNumberInput(input: HTMLInputElement): number {
 
 export type KpiTone = 'positive' | 'negative' | 'warning';
 
-export function kpiCard(icon: string, label: string, value: string, tone?: KpiTone): HTMLElement {
-  return el('div', { class: `kpi-card${tone ? ` kpi-card--${tone}` : ''}` }, [
-    el('span', { class: 'kpi-card__icon' }, [icon]),
-    el('div', { class: 'kpi-card__body' }, [
-      el('span', { class: 'kpi-card__label' }, [label]),
-      el('span', { class: 'kpi-card__value' }, [value]),
-    ]),
-  ]);
+export function kpiCard(icon: string, label: string, value: string, tone?: KpiTone, onClick?: () => void): HTMLElement {
+  return el(
+    'div',
+    {
+      class: `kpi-card${tone ? ` kpi-card--${tone}` : ''}${onClick ? ' kpi-card--clickable' : ''}`,
+      onclick: onClick,
+      role: onClick ? 'button' : undefined,
+      tabindex: onClick ? 0 : undefined,
+      onkeydown: onClick
+        ? (e: Event) => {
+            const ke = e as KeyboardEvent;
+            if (ke.key === 'Enter' || ke.key === ' ') {
+              e.preventDefault();
+              onClick();
+            }
+          }
+        : undefined,
+    },
+    [
+      el('span', { class: 'kpi-card__icon' }, [icon]),
+      el('div', { class: 'kpi-card__body' }, [
+        el('span', { class: 'kpi-card__label' }, [label]),
+        el('span', { class: 'kpi-card__value' }, [value]),
+      ]),
+      onClick ? el('span', { class: 'kpi-card__arrow' }, ['←']) : null,
+    ],
+  );
 }
 
 export function selectEl(options: { value: string; label: string }[], selected?: string): HTMLSelectElement {

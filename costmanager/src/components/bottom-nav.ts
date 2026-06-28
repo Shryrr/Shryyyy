@@ -17,8 +17,8 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/ingredients', label: 'انبار', icon: '📦', roles: ['superadmin', 'manager', 'warehouse'] },
   { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️', roles: ['superadmin', 'manager'] },
   { path: '/accounting', label: 'حسابداری', icon: '📊', roles: ['superadmin', 'manager'] },
-  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
-  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['superadmin'] },
+  { path: '/crm', label: 'CRM', icon: '👥', roles: ['superadmin', 'manager'] },
+  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['warehouse', 'buyer'] },
 ];
 
 export function createAppNav(): HTMLElement {
