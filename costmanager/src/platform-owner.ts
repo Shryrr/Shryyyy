@@ -129,15 +129,19 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
-/** Best-effort fetch of all businesses known to the sync server; returns [] on any failure (offline server, etc.). */
+/**
+ * Best-effort fetch of all businesses known to the sync server; returns [] on any failure (offline server, etc.).
+ * There's no listing endpoint on the static WebDAV directory, so this reads the shared `_registry.json`
+ * file that every business upserts itself into on push (see `updateRegistry` in `utils/sync.ts`).
+ */
 export async function fetchPlatformBusinesses(serverUrl: string): Promise<PlatformBusinessSummary[]> {
-  const base = serverUrl.trim();
+  const base = serverUrl.trim().replace(/\/+$/, '');
   if (!base || !navigator.onLine) return [];
   try {
-    const res = await fetchWithTimeout(`${base}/admin/businesses`);
+    const res = await fetchWithTimeout(`${base}/_registry.json`);
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? (data as PlatformBusinessSummary[]) : [];
+    return Array.isArray(data?.businesses) ? (data.businesses as PlatformBusinessSummary[]) : [];
   } catch {
     return [];
   }

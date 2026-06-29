@@ -70,6 +70,57 @@ function serverBase(): string {
   return normalizeBase(settings.get()?.syncServerUrl ?? '');
 }
 
+interface RegistryEntry {
+  businessId: string;
+  businessName: string;
+  lastSyncAt: string;
+  userCount: number;
+}
+
+interface Registry {
+  businesses: RegistryEntry[];
+}
+
+/**
+ * There is no listing endpoint on a static WebDAV directory, so the platform admin panel can't
+ * just ask the server "what businesses exist". Instead every successful push upserts this
+ * business's summary into a shared `_registry.json` file via a best-effort GET-merge-PUT.
+ * Failures here must never affect the result of the business-data push itself.
+ */
+async function updateRegistry(payload: SyncPayload, base: string): Promise<void> {
+  const registryUrl = `${base}/_registry.json`;
+  let registry: Registry = { businesses: [] };
+  try {
+    const res = await fetchWithTimeout(registryUrl);
+    if (res.ok) {
+      const data = (await res.json()) as Registry;
+      if (Array.isArray(data?.businesses)) registry = data;
+    }
+  } catch {
+    // Registry missing or unreachable — start fresh.
+  }
+
+  const entry: RegistryEntry = {
+    businessId: payload.businessId,
+    businessName: payload.businessName,
+    lastSyncAt: payload.exportedAt,
+    userCount: payload.users.length,
+  };
+  const idx = registry.businesses.findIndex((b) => b.businessId === entry.businessId);
+  if (idx >= 0) registry.businesses[idx] = entry;
+  else registry.businesses.push(entry);
+
+  try {
+    await fetchWithTimeout(registryUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registry),
+    });
+  } catch {
+    // Best-effort: the business data push itself already succeeded.
+  }
+}
+
 /**
  * The sync "server" is just a plain WebDAV directory (e.g. Nginx with `dav_methods PUT`) —
  * each business's data lives at `{base}/{businessId}.json` as a static file, written with PUT
@@ -91,6 +142,7 @@ export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ o
       if (!opts.silent) showToast('ارسال داده به سرور ناموفق بود', 'error');
       return { ok: false, error: ERR_NETWORK };
     }
+    await updateRegistry(payload, base);
     await db.updateSettings({ lastSyncAt: new Date().toISOString() });
     syncStatus.set('synced');
     if (!opts.silent) showToast('داده‌ها با سرور همگام شد', 'success');
