@@ -16,7 +16,7 @@ import { recalculateAllTheoreticalStock } from './utils/inventory-engine';
 import { recalculateAllRfm } from './utils/rfm';
 import { runAutomationTriggers } from './utils/automation';
 import { setupAutoSync } from './utils/sync';
-import { isPlatformOwnerSession } from './platform-owner';
+import { fetchLatestBroadcast, isPlatformOwnerSession } from './platform-owner';
 import { renderAuthGate } from './views/login';
 import { openPlatformOwnerPanel } from './views/platform-admin';
 import { renderAccounting } from './views/accounting';
@@ -245,6 +245,9 @@ async function bootstrap(): Promise<void> {
     if (banner) bannerHost.appendChild(banner);
   }
 
+  // Non-blocking: the broadcast is a best-effort notice, not boot-critical.
+  void maybeShowPlatformBroadcast(bannerHost);
+
   registerRoutes(
     ALL_ROUTES.map((r) => ({ path: r.path, title: r.title, render: r.roles.includes(user.role) ? r.render : renderAccessDenied })),
   );
@@ -260,6 +263,24 @@ async function bootstrap(): Promise<void> {
   console.log('[boot] router started, app ready');
 
   if (user.role === 'buyer') maybeShowBuyerLowStockAlert(user);
+}
+
+const LAST_SEEN_BROADCAST_KEY = 'lastSeenBroadcastId';
+
+/** Shows the latest platform broadcast in the banner host, once per business, if not already seen on this device. */
+async function maybeShowPlatformBroadcast(bannerHost: HTMLElement): Promise<void> {
+  try {
+    const serverUrl = settings.get()?.syncServerUrl ?? '';
+    const entry = await fetchLatestBroadcast(serverUrl);
+    if (!entry || entry.id === localStorage.getItem(LAST_SEEN_BROADCAST_KEY)) return;
+    const banner = createAlertBanner({ id: `broadcast-${entry.id}`, message: entry.message, tone: 'info' });
+    if (banner) {
+      bannerHost.appendChild(banner);
+      localStorage.setItem(LAST_SEEN_BROADCAST_KEY, entry.id);
+    }
+  } catch (err) {
+    console.error('[boot] platform broadcast fetch failed:', err);
+  }
 }
 
 function showBootError(error: unknown): void {

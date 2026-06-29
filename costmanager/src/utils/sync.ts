@@ -2,7 +2,7 @@ import * as db from '../db';
 import { confirmModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import {
-  customers, employees, expenses, ingredients, menuItems, refreshAll, sales, settings, shoppingList, smsLogs, syncStatus,
+  customers, employees, expenses, ingredients, isOnline, menuItems, refreshAll, sales, settings, shoppingList, smsLogs, syncStatus,
 } from '../store';
 import type { AppUser, FullBackup } from '../types';
 
@@ -137,6 +137,9 @@ export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ o
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    // The round trip reached the server at all — proves real connectivity regardless of
+    // the HTTP outcome, which navigator.onLine alone can't tell us.
+    isOnline.set(true);
     if (!res.ok) {
       syncStatus.set('error');
       if (!opts.silent) showToast('ارسال داده به سرور ناموفق بود', 'error');
@@ -149,6 +152,7 @@ export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ o
     return { ok: true };
   } catch {
     syncStatus.set('error');
+    isOnline.set(false);
     if (!opts.silent) showToast(ERR_NETWORK, 'error');
     return { ok: false, error: ERR_NETWORK };
   }
@@ -163,6 +167,7 @@ export async function pullFromServer(
   syncStatus.set('syncing');
   try {
     const res = await fetchWithTimeout(`${base}/${encodeURIComponent(businessId)}.json`);
+    isOnline.set(true);
     if (res.status === 404) {
       // Nothing has ever been pushed for this business yet — not an error.
       syncStatus.set('synced');
@@ -195,6 +200,7 @@ export async function pullFromServer(
     return { ok: true, applied: true };
   } catch {
     syncStatus.set('error');
+    isOnline.set(false);
     if (!opts.silent) showToast(ERR_NETWORK, 'error');
     return { ok: false, error: ERR_NETWORK };
   }
@@ -206,8 +212,10 @@ export async function testSyncConnection(serverUrl: string): Promise<{ ok: boole
   if (!base) return { ok: false, error: 'آدرس سرور را وارد کنید' };
   try {
     await fetchWithTimeout(`${base}/`);
+    isOnline.set(true);
     return { ok: true };
   } catch {
+    isOnline.set(false);
     return { ok: false, error: ERR_NETWORK };
   }
 }
@@ -310,4 +318,15 @@ export function setupAutoSync(): void {
   window.addEventListener('online', () => {
     void pullFromServer({ silent: true, skipConfirm: true });
   });
+
+  // navigator.onLine only reflects whether the device has a network interface up — a device
+  // can be "online" on that signal while the configured sync server itself is unreachable
+  // (wrong WiFi, firewall, server down). Correct the indicator with a real probe.
+  function checkReachability(): void {
+    const base = serverBase();
+    if (!base || !navigator.onLine) return;
+    void testSyncConnection(base);
+  }
+  checkReachability();
+  setInterval(checkReachability, 20000);
 }

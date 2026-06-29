@@ -147,16 +147,21 @@ export async function fetchPlatformBusinesses(serverUrl: string): Promise<Platfo
   }
 }
 
-/** Best-effort broadcast push to the server so all business devices can pick it up; never throws. */
+/**
+ * Best-effort broadcast push to the server so all business devices can pick it up; never throws.
+ * The sync server is a plain WebDAV directory with no application routes (see `_registry.json`
+ * in `utils/sync.ts`), so this writes a static `_broadcast.json` file rather than POSTing to a
+ * `/admin/broadcast` endpoint that doesn't exist anywhere on that server.
+ */
 export async function sendPlatformBroadcast(serverUrl: string, message: string): Promise<{ ok: boolean }> {
-  const base = serverUrl.trim();
-  recordPlatformBroadcast(message);
+  const base = serverUrl.trim().replace(/\/+$/, '');
+  const entry = recordPlatformBroadcast(message);
   if (!base || !navigator.onLine) return { ok: false };
   try {
-    const res = await fetchWithTimeout(`${base}/admin/broadcast`, {
-      method: 'POST',
+    const res = await fetchWithTimeout(`${base}/_broadcast.json`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, createdAt: new Date().toISOString() }),
+      body: JSON.stringify(entry),
     });
     return { ok: res.ok };
   } catch {
@@ -166,10 +171,10 @@ export async function sendPlatformBroadcast(serverUrl: string, message: string):
 
 /** Best-effort fetch of the latest broadcast for display to business users; returns null on any failure. */
 export async function fetchLatestBroadcast(serverUrl: string): Promise<PlatformBroadcastMessage | null> {
-  const base = serverUrl.trim();
+  const base = serverUrl.trim().replace(/\/+$/, '');
   if (!base || !navigator.onLine) return null;
   try {
-    const res = await fetchWithTimeout(`${base}/admin/broadcast/latest`);
+    const res = await fetchWithTimeout(`${base}/_broadcast.json`);
     if (!res.ok) return null;
     const data = await res.json();
     return data && data.message ? (data as PlatformBroadcastMessage) : null;
