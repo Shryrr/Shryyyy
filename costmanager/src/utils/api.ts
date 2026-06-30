@@ -1,9 +1,6 @@
 import { settings } from '../store';
 import type { PaidSubscriptionPlan, SubscriptionPaymentStatus, UserRole } from '../types';
 
-/** Falls back to this when settings.apiBaseUrl is unset (matches the type comment in types.ts). Host only — each endpoint call supplies its own /api/... path. */
-const DEFAULT_API_BASE_URL = 'http://91.107.249.240';
-
 const TOKEN_KEY = 'apiAccessToken';
 const REFRESH_KEY = 'apiRefreshToken';
 const EXPIRES_KEY = 'apiExpiresAt';
@@ -17,9 +14,16 @@ export class ApiError extends Error {
   }
 }
 
-/** Strips a trailing slash and a trailing /api (older settings.apiBaseUrl values included it) so callers can append /api/... paths without doubling it. */
+/**
+ * Defaults to the page's own origin — nginx reverse-proxies /api/ on the same
+ * origin the PWA is served from (see costmanager-api/deploy/nginx-costmanager-api.conf),
+ * so this works under both http://<ip> and https://<domain> without ever hardcoding
+ * a protocol/host that could mismatch the page's scheme (mixed-content blocking).
+ * Strips a trailing slash and a trailing /api (older settings.apiBaseUrl values
+ * included it) so callers can append /api/... paths without doubling it.
+ */
 function baseUrl(): string {
-  return (settings.get()?.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '').replace(/\/api$/, '');
+  return (settings.get()?.apiBaseUrl || window.location.origin).replace(/\/+$/, '').replace(/\/api$/, '');
 }
 
 export function isOnline(): boolean {

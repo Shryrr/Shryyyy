@@ -120,8 +120,8 @@
     "semantic_hash": ""
   },
   "costmanager/src/db.ts": {
-    "mtime": 1782801537.152778,
-    "ast_hash": "b195b3c647795ad3589d720ed05034a3",
+    "mtime": 1782821570.8941267,
+    "ast_hash": "21465e7c256596d36e60a07226acd8a6",
     "semantic_hash": ""
   },
   "costmanager/src/main.ts": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "costmanager/src/types.ts": {
-    "mtime": 1782818729.943132,
-    "ast_hash": "08cd235bafbd17eeda40e9ffc7629cfc",
+    "mtime": 1782821577.378127,
+    "ast_hash": "9979df75ae17a01270f60235c1f59867",
     "semantic_hash": ""
   },
   "costmanager/src/utils/ai.ts": {
@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "costmanager/src/utils/api.ts": {
-    "mtime": 1782818726.2471316,
-    "ast_hash": "f753e5d045f35f33181021f9ef306cd5",
+    "mtime": 1782821533.1621244,
+    "ast_hash": "72d40caf6f844a7d1dd86b12f3fb014f",
     "semantic_hash": ""
   },
   "costmanager/src/utils/automation.ts": {
@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "costmanager/sw.js": {
-    "mtime": 1782818733.115132,
-    "ast_hash": "ce6dc13487f5dcef2efa8cffee9c5264",
+    "mtime": 1782821581.8581274,
+    "ast_hash": "5baa9a8bb56ee604e45f85f483785db9",
     "semantic_hash": ""
   },
   "costmanager/tsconfig.json": {

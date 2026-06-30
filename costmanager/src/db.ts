@@ -1583,7 +1583,8 @@ export async function recordAutomationRun(id: string, success: boolean): Promise
 
 // ---------- Settings ----------
 
-export const DEFAULT_SYNC_SERVER_URL = 'http://91.107.249.240/sync';
+/** Legacy field, no longer read by any fetch (sync.ts now goes through utils/api.ts's own origin-relative baseUrl()) — kept only so existing Settings rows still satisfy the required string field. */
+export const DEFAULT_SYNC_SERVER_URL = `${window.location.origin}/sync`;
 export const TRIAL_DAYS = 7;
 
 const DEFAULT_SETTINGS: Settings = {
