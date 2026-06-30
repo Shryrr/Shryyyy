@@ -1,8 +1,10 @@
 import * as db from './db';
 import { signal } from './store';
 import type { AppUser, Settings, UserRole } from './types';
+import { verifyPassword } from './utils/password';
 
 const SESSION_KEY = 'currentUser';
+const SESSION_TOKEN_KEY = 'sessionToken';
 const LAST_ACTIVITY_KEY = 'lastActivityAt';
 const SESSION_EXPIRED_KEY = 'sessionExpiredReason';
 const INACTIVITY_LIMIT_MS = 8 * 60 * 60 * 1000;
@@ -28,8 +30,10 @@ function readSession(): SessionUser | null {
 function writeSession(user: AppUser | null): void {
   if (!user) {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
     return;
   }
+  if (!sessionStorage.getItem(SESSION_TOKEN_KEY)) sessionStorage.setItem(SESSION_TOKEN_KEY, crypto.randomUUID());
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, name: user.name, role: user.role }));
 }
 
@@ -53,6 +57,36 @@ export async function login(user: AppUser): Promise<void> {
   currentUser.set(user);
   recordActivity();
   await db.recordLogin(user.id);
+}
+
+export interface LoginResult {
+  ok: boolean;
+  user?: AppUser;
+  error?: string;
+}
+
+/** Username+password login with persisted lockout: 5 failed attempts locks the account for 15 minutes. */
+export async function attemptLogin(username: string, password: string): Promise<LoginResult> {
+  const user = await db.findUserByUsername(username);
+  if (!user) return { ok: false, error: 'نام کاربری یا رمز عبور اشتباه است' };
+
+  if (user.lockedUntil && new Date(user.lockedUntil).getTime() > Date.now()) {
+    const minutesLeft = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+    return { ok: false, error: `حساب به دلیل تلاش‌های ناموفق قفل شده است. ${minutesLeft} دقیقه دیگر دوباره تلاش کنید` };
+  }
+
+  const valid = await verifyPassword(password, user.passwordSalt, user.passwordHash);
+  if (!valid) {
+    const updated = await db.recordFailedLoginAttempt(user.id);
+    if (updated?.lockedUntil) {
+      return { ok: false, error: 'به دلیل ۵ تلاش ناموفق، حساب به مدت ۱۵ دقیقه قفل شد' };
+    }
+    return { ok: false, error: 'نام کاربری یا رمز عبور اشتباه است' };
+  }
+
+  await db.resetLoginAttempts(user.id);
+  await login(user);
+  return { ok: true, user };
 }
 
 /** Full reload, deliberately: router.ts has no route-clear mechanism, so a reload is the simplest way to reset all module state for whichever role logs in next. */

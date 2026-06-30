@@ -2,7 +2,7 @@ import * as db from '../db';
 import { hasFullAccess } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, iconTextBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatMoney, formatPct, formatUnit, toPersian } from '../utils/format';
 import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
@@ -95,7 +95,7 @@ function openRecipeBuilderModal(existingId?: string): void {
 
     const listEl = el('div', { class: 'recipe-ingredient-list' });
     if (!item.recipe.length) {
-      listEl.appendChild(emptyState({ icon: '🍽️', title: 'هنوز موردی به دستور پخت اضافه نشده' }));
+      listEl.appendChild(emptyState({ icon: 'utensils', title: 'هنوز موردی به دستور پخت اضافه نشده' }));
     } else {
       for (const ri of item.recipe) {
         const ingredient = ingById.get(ri.ingredientId);
@@ -105,19 +105,10 @@ function openRecipeBuilderModal(existingId?: string): void {
               el('span', { class: 'recipe-ingredient-row__name recipe-ingredient-row__name--deleted' }, ['ماده حذف‌شده ⚠']),
               el('span', { class: 'recipe-ingredient-row__unit' }, [toPersian(ri.quantity)]),
               el('span', { class: 'recipe-ingredient-row__cost' }, ['هزینه: —']),
-              el(
-                'button',
-                {
-                  type: 'button',
-                  class: 'icon-btn',
-                  title: 'حذف',
-                  onclick: async () => {
-                    await db.removeRecipeIngredient(itemId, ri.ingredientId);
-                    await refreshMenuItems();
-                  },
-                },
-                ['🗑️'],
-              ),
+              iconBtn('trash', 'حذف', async () => {
+                await db.removeRecipeIngredient(itemId, ri.ingredientId);
+                await refreshMenuItems();
+              }),
             ]),
           );
           continue;
@@ -135,19 +126,10 @@ function openRecipeBuilderModal(existingId?: string): void {
             rowQtyInput,
             el('span', { class: 'recipe-ingredient-row__unit' }, [formatUnit(ingredient.unit)]),
             el('span', { class: 'recipe-ingredient-row__cost' }, [`هزینه: ${formatMoney(ri.quantity * ingredient.pricePerUnit)}`]),
-            el(
-              'button',
-              {
-                type: 'button',
-                class: 'icon-btn',
-                title: 'حذف',
-                onclick: async () => {
-                  await db.removeRecipeIngredient(itemId, ingredient.id);
-                  await refreshMenuItems();
-                },
-              },
-              ['🗑️'],
-            ),
+            iconBtn('trash', 'حذف', async () => {
+              await db.removeRecipeIngredient(itemId, ingredient.id);
+              await refreshMenuItems();
+            }),
           ]),
         );
       }
@@ -272,17 +254,17 @@ function renderStatsPanel(items: MenuItem[], ingById: Map<string, Ingredient>, a
     .sort((a, b) => b.pct - a.pct)[0];
 
   return el('div', { class: 'kpi-grid' }, [
-    kpiCard('🍽️', 'آیتم‌های فعال', toPersian(active.length), undefined, actions.onShowActive),
-    kpiCard('📊', 'میانگین فودکاست', formatPct(avgPct), foodCostStatus(avgPct) === 'red' ? 'negative' : undefined, actions.onSortByFoodCost),
+    kpiCard('utensils', 'آیتم‌های فعال', toPersian(active.length), undefined, actions.onShowActive),
+    kpiCard('bar-chart', 'میانگین فودکاست', formatPct(avgPct), foodCostStatus(avgPct) === 'red' ? 'negative' : undefined, actions.onSortByFoodCost),
     kpiCard(
-      '⚠️',
+      'alert-triangle',
       'آیتم‌های پرخطر (فودکاست بالا)',
       toPersian(risky.length),
       risky.length > 0 ? 'warning' : undefined,
       actions.onShowRiskyOnly,
     ),
     kpiCard(
-      '🔺',
+      'trending-up',
       'بالاترین فودکاست',
       worst ? `${worst.item.name} — ${formatPct(worst.pct)}` : '—',
       undefined,
@@ -314,13 +296,9 @@ function renderRow(item: MenuItem, ingById: Map<string, Ingredient>, isHighlight
     el('div', { class: `recipe-row__pct recipe-row__pct--${status}` }, [formatPct(pct)]),
     hasFullAccess()
       ? el('div', { class: 'recipe-row__actions' }, [
-          el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openRecipeBuilderModal(item.id) }, ['✏️']),
-          el(
-            'button',
-            { class: 'icon-btn', type: 'button', title: item.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', onclick: () => toggleActive(item) },
-            [item.isActive ? '👁️' : '🚫'],
-          ),
-          el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(item) }, ['🗑️']),
+          iconBtn('edit', 'ویرایش', () => openRecipeBuilderModal(item.id)),
+          iconBtn(item.isActive ? 'eye' : 'eye-off', item.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', () => toggleActive(item)),
+          iconBtn('trash', 'حذف', () => handleDelete(item)),
         ])
       : null,
   ]);
@@ -384,7 +362,7 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
     el('div', { class: 'view-header' }, [
       el('h1', { class: 'view-header__title' }, ['منو و فودکاست']),
       el('div', { class: 'view-header__actions' }, [
-        el('button', { class: 'btn btn-secondary', type: 'button', onclick: () => navigate('/menu-engineering') }, ['🧠 مهندسی منو']),
+        iconTextBtn('cpu', 'مهندسی منو', 'btn btn-secondary', () => navigate('/menu-engineering')),
         hasFullAccess()
           ? el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openRecipeBuilderModal() }, ['+ افزودن آیتم منو'])
           : null,
@@ -430,7 +408,7 @@ export async function renderRecipes(container: HTMLElement): Promise<RouteCleanu
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '🍽️',
+          icon: 'utensils',
           title: items.length ? 'نتیجه‌ای یافت نشد' : 'هنوز آیتمی به منو اضافه نشده است',
           message: items.length ? 'فیلترها را تغییر دهید.' : 'اولین آیتم منو را اضافه کنید.',
           ctaLabel: items.length || !hasFullAccess() ? undefined : 'افزودن آیتم منو',

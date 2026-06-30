@@ -325,15 +325,18 @@ export type BusinessSubscriptionStatus = 'trial' | 'pending_payment' | 'active' 
 export interface AppUser {
   id: string;
   name: string;
-  pin: string;
+  username: string;
+  passwordHash: string;
+  passwordSalt: string;
   role: UserRole;
   isActive: boolean;
-  /** Only superadmin/manager use these — set during business registration or a new-device join, never via the PIN grid. */
   email?: string;
   phone?: string;
-  password?: string;
   createdAt: string;
   lastLogin?: string;
+  /** Persisted (not in-memory) so a page reload can't reset a lockout window. */
+  failedLoginAttempts?: number;
+  lockedUntil?: string;
 }
 
 export interface AuthConfig {

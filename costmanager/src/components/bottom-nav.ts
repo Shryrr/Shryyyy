@@ -1,24 +1,26 @@
 import { hasRole } from '../auth';
 import { currentPath, navigate } from '../router';
 import { ingredients, lowStockCount } from '../store';
+import { svgIcon } from '../utils/icons';
+import type { IconName } from '../utils/icons';
 import { toPersian } from '../utils/format';
 import type { UserRole } from '../types';
 
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
+  icon: IconName;
   badge?: boolean;
   roles?: UserRole[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/', label: 'داشبورد', icon: '🏠', roles: ['superadmin', 'manager'] },
-  { path: '/ingredients', label: 'انبار', icon: '📦', roles: ['superadmin', 'manager', 'warehouse'] },
-  { path: '/recipes', label: 'منو و فودکاست', icon: '🍽️', roles: ['superadmin', 'manager'] },
-  { path: '/accounting', label: 'حسابداری', icon: '📊', roles: ['superadmin', 'manager'] },
-  { path: '/crm', label: 'CRM', icon: '👥', roles: ['superadmin', 'manager'] },
-  { path: '/shopping', label: 'لیست خرید', icon: '🛒', badge: true, roles: ['warehouse', 'buyer'] },
+  { path: '/', label: 'داشبورد', icon: 'home', roles: ['superadmin', 'manager'] },
+  { path: '/ingredients', label: 'انبار', icon: 'box', roles: ['superadmin', 'manager', 'warehouse'] },
+  { path: '/recipes', label: 'منو و فودکاست', icon: 'utensils', roles: ['superadmin', 'manager'] },
+  { path: '/accounting', label: 'حسابداری', icon: 'bar-chart', roles: ['superadmin', 'manager'] },
+  { path: '/crm', label: 'CRM', icon: 'users', roles: ['superadmin', 'manager'] },
+  { path: '/shopping', label: 'لیست خرید', icon: 'cart', badge: true, roles: ['warehouse', 'buyer'] },
 ];
 
 export function createAppNav(): HTMLElement {
@@ -36,7 +38,7 @@ export function createAppNav(): HTMLElement {
 
     const iconWrap = document.createElement('span');
     iconWrap.className = 'app-nav__icon';
-    iconWrap.textContent = item.icon;
+    iconWrap.appendChild(svgIcon(item.icon));
 
     if (item.badge) {
       const badge = document.createElement('span');

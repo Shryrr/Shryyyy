@@ -1,29 +1,68 @@
 import { uuid } from './db';
+import { generateSalt, hashPassword, verifyPassword } from './utils/password';
 import type { PaidSubscriptionPlan } from './types';
 
-const PIN_KEY = 'platformOwnerPin';
+const USERNAME_KEY = 'platformOwnerUsername';
+const PASSWORD_HASH_KEY = 'platformOwnerPasswordHash';
+const PASSWORD_SALT_KEY = 'platformOwnerPasswordSalt';
+const ATTEMPTS_KEY = 'platformOwnerFailedAttempts';
+const LOCKED_UNTIL_KEY = 'platformOwnerLockedUntil';
 const SESSION_KEY = 'platformOwnerSession';
 const PRICING_KEY = 'platformPricing';
 const PAYMENT_CARD_KEY = 'platformPaymentCard';
 const INVOICES_KEY = 'platformInvoices';
 const BROADCASTS_KEY = 'platformBroadcasts';
 
-export const DEFAULT_PLATFORM_PIN = '000000';
+export const DEFAULT_PLATFORM_USERNAME = 'admin';
+export const DEFAULT_PLATFORM_PASSWORD = 'ChangeMe123!';
 
-export function getPlatformPin(): string {
-  return localStorage.getItem(PIN_KEY) || DEFAULT_PLATFORM_PIN;
+/** No password has been set yet on this device — credentials still default and must be changed before first use. */
+export function isDefaultPlatformCredentials(): boolean {
+  return !localStorage.getItem(PASSWORD_HASH_KEY);
 }
 
-export function isDefaultPlatformPin(): boolean {
-  return getPlatformPin() === DEFAULT_PLATFORM_PIN;
+export async function verifyPlatformCredentials(username: string, password: string): Promise<boolean> {
+  if (isDefaultPlatformCredentials()) {
+    return username === DEFAULT_PLATFORM_USERNAME && password === DEFAULT_PLATFORM_PASSWORD;
+  }
+  const storedUsername = localStorage.getItem(USERNAME_KEY) || DEFAULT_PLATFORM_USERNAME;
+  if (username.toLowerCase() !== storedUsername.toLowerCase()) return false;
+  const hash = localStorage.getItem(PASSWORD_HASH_KEY) || '';
+  const salt = localStorage.getItem(PASSWORD_SALT_KEY) || '';
+  return verifyPassword(password, salt, hash);
 }
 
-export function verifyPlatformPin(pin: string): boolean {
-  return pin === getPlatformPin();
+export async function setPlatformCredentials(username: string, password: string): Promise<void> {
+  const salt = generateSalt();
+  const hash = await hashPassword(password, salt);
+  localStorage.setItem(USERNAME_KEY, username);
+  localStorage.setItem(PASSWORD_HASH_KEY, hash);
+  localStorage.setItem(PASSWORD_SALT_KEY, salt);
 }
 
-export function setPlatformPin(pin: string): void {
-  localStorage.setItem(PIN_KEY, pin);
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+
+/** Persisted in localStorage (not in-memory) so a page reload can't reset the lockout window. */
+export function platformLockedUntil(): number {
+  return Number(localStorage.getItem(LOCKED_UNTIL_KEY) ?? 0);
+}
+
+/** Returns the lockout end timestamp if this attempt just tripped the lockout, otherwise 0. */
+export function recordPlatformFailedAttempt(): number {
+  const attempts = Number(localStorage.getItem(ATTEMPTS_KEY) ?? 0) + 1;
+  localStorage.setItem(ATTEMPTS_KEY, String(attempts));
+  if (attempts >= MAX_LOGIN_ATTEMPTS) {
+    const until = Date.now() + LOGIN_LOCKOUT_MS;
+    localStorage.setItem(LOCKED_UNTIL_KEY, String(until));
+    return until;
+  }
+  return 0;
+}
+
+export function resetPlatformLoginAttempts(): void {
+  localStorage.removeItem(ATTEMPTS_KEY);
+  localStorage.removeItem(LOCKED_UNTIL_KEY);
 }
 
 export function isPlatformOwnerSession(): boolean {

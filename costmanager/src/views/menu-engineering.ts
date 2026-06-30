@@ -4,9 +4,12 @@ import { showToast } from '../components/toast';
 import { askClaude } from '../utils/ai';
 import { salesInPeriod } from '../utils/calc';
 import { el, emptyState, field, kpiCard } from '../utils/dom';
+import type { KpiTone } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
+import type { IconName } from '../utils/icons';
 import { formatMoney, formatPct, toPersian } from '../utils/format';
 import {
-  QUADRANT_DESCRIPTIONS, QUADRANT_ICONS, QUADRANT_LABELS, QUADRANT_ORDER, classifyMenuItems,
+  QUADRANT_DESCRIPTIONS, QUADRANT_LABELS, QUADRANT_ORDER, classifyMenuItems,
 } from '../utils/menu-engineering';
 import type { MenuEngineeringItem, MenuEngineeringResult, MenuQuadrant } from '../utils/menu-engineering';
 import type { RouteCleanup } from '../router';
@@ -18,7 +21,7 @@ const PERIOD_DAYS = 90;
 const QUADRANT_BADGE_CLASS: Record<MenuQuadrant, string> = {
   star: 'badge--success',
   plowhorse: 'badge--warning',
-  puzzle: '',
+  puzzle: 'badge--muted',
   dog: 'badge--danger',
 };
 
@@ -29,13 +32,31 @@ const QUADRANT_COLORS: Record<MenuQuadrant, string> = {
   dog: palette.coral,
 };
 
+const QUADRANT_KPI_ICON: Record<MenuQuadrant, IconName> = {
+  star: 'sparkles',
+  plowhorse: 'truck',
+  puzzle: 'megaphone',
+  dog: 'x-circle',
+};
+
+const QUADRANT_KPI_TONE: Record<MenuQuadrant, KpiTone | undefined> = {
+  star: 'positive',
+  plowhorse: 'warning',
+  puzzle: undefined,
+  dog: 'negative',
+};
+
+function quadrantSwatch(q: MenuQuadrant): HTMLElement {
+  return el('span', { class: 'quadrant-swatch', style: `background:${QUADRANT_COLORS[q]}` }, []);
+}
+
 function settingsCard(title: string, body: HTMLElement): HTMLElement {
   return el('div', { class: 'settings-card' }, [el('h3', { class: 'settings-card__title' }, [title]), body]);
 }
 
 function quadrantCard(q: MenuQuadrant, count: number): HTMLElement {
   return el('div', { class: 'quadrant-card' }, [
-    el('div', { class: 'quadrant-card__title' }, [`${QUADRANT_ICONS[q]} ${QUADRANT_LABELS[q]} (${toPersian(count)})`]),
+    el('div', { class: 'quadrant-card__title' }, [quadrantSwatch(q), ` ${QUADRANT_LABELS[q]} (${toPersian(count)})`]),
     el('div', { class: 'quadrant-card__desc' }, [QUADRANT_DESCRIPTIONS[q]]),
   ]);
 }
@@ -46,7 +67,7 @@ function renderItemRow(r: MenuEngineeringItem): HTMLElement {
     el('div', { class: 'recipe-row__main' }, [
       el('div', { class: 'recipe-row__title-row' }, [
         el('span', { class: 'recipe-row__name' }, [r.item.name]),
-        el('span', { class: badgeClass }, [`${QUADRANT_ICONS[r.quadrant]} ${QUADRANT_LABELS[r.quadrant]}`]),
+        el('span', { class: badgeClass }, [quadrantSwatch(r.quadrant), ` ${QUADRANT_LABELS[r.quadrant]}`]),
       ]),
       el('div', { class: 'recipe-row__meta' }, [
         `فروش: ${toPersian(r.quantitySold)} عدد · سود هر واحد: ${formatMoney(r.marginPerUnit)} · فودکاست: ${formatPct(r.foodCostPct)}`,
@@ -59,7 +80,8 @@ function buildAiPrompt(result: MenuEngineeringResult): string {
   const lines = result.items
     .map((r) => `- ${r.item.name}: ${QUADRANT_LABELS[r.quadrant]} | فروش ${toPersian(r.quantitySold)} عدد | سود هر واحد ${formatMoney(r.marginPerUnit)} | فودکاست ${formatPct(r.foodCostPct)}`)
     .join('\n');
-  return `بر اساس ماتریس مهندسی منو (Kasavana-Smith) زیر، برای هر دسته (ستاره، اسب بارکش، پازل، سگ) حداکثر دو پیشنهاد عملی و کوتاه به زبان فارسی برای بهبود سودآوری منو بده. پاسخ را خلاصه و کاربردی بنویس.\n\n${lines}`;
+  const categories = QUADRANT_ORDER.map((q) => QUADRANT_LABELS[q]).join('، ');
+  return `بر اساس ماتریس مهندسی منو (Kasavana-Smith) زیر، برای هر دسته (${categories}) حداکثر دو پیشنهاد عملی و کوتاه به زبان فارسی برای بهبود سودآوری منو بده. پاسخ را خلاصه و کاربردی بنویس.\n\n${lines}`;
 }
 
 function renderAiCard(result: MenuEngineeringResult): HTMLElement {
@@ -67,7 +89,9 @@ function renderAiCard(result: MenuEngineeringResult): HTMLElement {
     type: 'text', class: 'input', value: settings.get()?.anthropicApiKey ?? '', placeholder: 'کلید API آنتروپیک (Claude)',
   });
   const saveBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['ذخیره کلید']);
-  const generateBtn = el('button', { type: 'button', class: 'btn btn-primary' }, ['🤖 تولید پیشنهاد هوش مصنوعی']);
+  const generateBtn = el('button', { type: 'button', class: 'btn btn-primary' }, []);
+  const generateBtnLabel = 'تولید پیشنهاد هوش مصنوعی';
+  generateBtn.append(svgIcon('cpu', 14), ` ${generateBtnLabel}`);
   const resultBox = el('div', { class: 'ai-insight-card__text' });
 
   saveBtn.addEventListener('click', async () => {
@@ -87,7 +111,8 @@ function renderAiCard(result: MenuEngineeringResult): HTMLElement {
     resultBox.textContent = '';
     const res = await askClaude(apiKey, buildAiPrompt(result));
     generateBtn.removeAttribute('disabled');
-    generateBtn.textContent = '🤖 تولید پیشنهاد هوش مصنوعی';
+    generateBtn.innerHTML = '';
+    generateBtn.append(svgIcon('cpu', 14), ` ${generateBtnLabel}`);
     if (!res.ok) {
       showToast(res.error ?? 'خطا در دریافت پاسخ هوش مصنوعی', 'error');
       return;
@@ -101,7 +126,7 @@ function renderAiCard(result: MenuEngineeringResult): HTMLElement {
     resultBox,
   ]);
 
-  return settingsCard('🤖 پیشنهاد هوش مصنوعی برای منو', configBody);
+  return settingsCard('پیشنهاد هوش مصنوعی برای منو', configBody);
 }
 
 export async function renderMenuEngineering(container: HTMLElement): Promise<RouteCleanup> {
@@ -126,7 +151,7 @@ export async function renderMenuEngineering(container: HTMLElement): Promise<Rou
 
     if (!items.length) {
       listEl.appendChild(
-        emptyState({ icon: '🧠', title: 'موردی یافت نشد', message: 'فیلتر یا عبارت جست‌وجو را تغییر دهید.' }),
+        emptyState({ icon: 'search', title: 'موردی یافت نشد', message: 'فیلتر یا عبارت جست‌وجو را تغییر دهید.' }),
       );
       return;
     }
@@ -151,7 +176,7 @@ export async function renderMenuEngineering(container: HTMLElement): Promise<Rou
 
     root.append(
       el('div', { class: 'view-header' }, [
-        el('h1', { class: 'view-header__title' }, ['🧠 مهندسی منو']),
+        el('h1', { class: 'view-header__title' }, ['مهندسی منو']),
         el('span', { class: 'view-header__date' }, [`بر اساس فروش ${toPersian(PERIOD_DAYS)} روز اخیر`]),
       ]),
     );
@@ -159,7 +184,7 @@ export async function renderMenuEngineering(container: HTMLElement): Promise<Rou
     if (!result.items.length) {
       root.appendChild(
         emptyState({
-          icon: '🧠',
+          icon: 'utensils',
           title: 'هنوز آیتم فعالی در منو ثبت نشده است',
           message: 'برای مشاهدهٔ ماتریس مهندسی منو، ابتدا چند آیتم منو اضافه کنید.',
         }),
@@ -172,9 +197,9 @@ export async function renderMenuEngineering(container: HTMLElement): Promise<Rou
 
     root.append(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('🍽️', 'آیتم‌های فعال', toPersian(result.items.length)),
+        kpiCard('utensils', 'آیتم‌های فعال', toPersian(result.items.length)),
         ...QUADRANT_ORDER.map((q) =>
-          kpiCard(QUADRANT_ICONS[q], QUADRANT_LABELS[q], toPersian(counts[q]), undefined, () => {
+          kpiCard(QUADRANT_KPI_ICON[q], QUADRANT_LABELS[q], toPersian(counts[q]), QUADRANT_KPI_TONE[q], () => {
             quadrantFilter = quadrantFilter === q ? null : q;
             renderList();
           }),
@@ -194,7 +219,7 @@ export async function renderMenuEngineering(container: HTMLElement): Promise<Rou
       type: 'scatter',
       data: {
         datasets: QUADRANT_ORDER.map((q) => ({
-          label: `${QUADRANT_ICONS[q]} ${QUADRANT_LABELS[q]}`,
+          label: QUADRANT_LABELS[q],
           data: result.items
             .filter((r) => r.quadrant === q)
             .map((r) => ({ x: r.popularityIndex, y: r.marginPerUnit, name: r.item.name })),

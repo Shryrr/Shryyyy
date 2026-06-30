@@ -1,7 +1,7 @@
 {
   "manifest.json": {
-    "mtime": 1782786463.5026252,
-    "ast_hash": "37bda7e1bc6b243889c4edf299c3246a",
+    "mtime": 1782506942.8309793,
+    "ast_hash": "50aad3e9fee13ee1c08511982a53da4b",
     "semantic_hash": ""
   },
   "package.json": {
@@ -260,13 +260,13 @@
     "semantic_hash": ""
   },
   "competitive-advantage.html": {
-    "mtime": 1782786436.5026257,
-    "ast_hash": "726a1bf35e9517f9ae222b926e1dbad2",
+    "mtime": 1782688030.2721384,
+    "ast_hash": "5fa9fbc8e1b3b8b25eb35f2d86c5c93d",
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1782786450.0506256,
-    "ast_hash": "da04ed40a0178a7e973114ef67597549",
+    "mtime": 1782597638.4936066,
+    "ast_hash": "89897ade9cdea938b134ae63b2a07186",
     "semantic_hash": ""
   },
   "assets/icons/icon-192-maskable.png": {

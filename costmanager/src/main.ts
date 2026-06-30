@@ -3,12 +3,14 @@ import { createAlertBanner } from './components/alert-banner';
 import { createAppNav } from './components/bottom-nav';
 import { confirmModal } from './components/modal';
 import { createNotificationBell } from './components/notification-bell';
+import { createSidebar } from './components/sidebar';
 import { showToast } from './components/toast';
 import { el, emptyState } from './utils/dom';
+import { svgIcon } from './utils/icons';
+import type { IconName } from './utils/icons';
 import { currentPath, navigate, registerRoutes, startRouter } from './router';
 import type { Route, RouteCleanup } from './router';
 import { initOnlineWatcher, initThemeWatcher, isOnline, refreshAll, settings, syncStatus } from './store';
-import { seedDatabase } from './seed';
 import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon, logout, restoreSession, takeSessionExpiredReason } from './auth';
 import { initLowStockWatcher, requestNotificationPermission, setNotificationBannerHost } from './utils/notifications';
 import { formatDate, toPersian } from './utils/format';
@@ -16,9 +18,9 @@ import { recalculateAllTheoreticalStock } from './utils/inventory-engine';
 import { recalculateAllRfm } from './utils/rfm';
 import { runAutomationTriggers } from './utils/automation';
 import { setupAutoSync } from './utils/sync';
-import { fetchLatestBroadcast, isPlatformOwnerSession } from './platform-owner';
+import { fetchLatestBroadcast } from './platform-owner';
 import { renderAuthGate } from './views/login';
-import { openPlatformOwnerPanel } from './views/platform-admin';
+import { openPlatformOwnerGate, openPlatformOwnerPanel } from './views/platform-admin';
 import { renderAccounting } from './views/accounting';
 import { renderAdmin } from './views/admin';
 import { renderCrm } from './views/crm';
@@ -31,15 +33,6 @@ import { renderSales } from './views/sales';
 import { renderSettings } from './views/settings';
 import { maybeShowBuyerLowStockAlert, renderShopping } from './views/shopping';
 import type { AppUser, UserRole } from './types';
-
-const HEADER_LINKS: { path: string; label: string; icon: string; roles?: UserRole[] }[] = [
-  { path: '/sales', label: 'فروش', icon: '🧾', roles: ['superadmin', 'manager'] },
-  { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: '💸', roles: ['superadmin', 'manager'] },
-  { path: '/shopping', label: 'لیست خرید', icon: '🛒', roles: ['superadmin', 'manager'] },
-  { path: '/menu-engineering', label: 'مهندسی منو', icon: '🧠', roles: ['superadmin', 'manager'] },
-  { path: '/admin', label: 'مدیریت', icon: '🛠️', roles: ['superadmin'] },
-  { path: '/settings', label: 'تنظیمات', icon: '⚙️', roles: ['superadmin'] },
-];
 
 const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
   { path: '/', title: 'داشبورد', render: renderDashboard, roles: ['superadmin', 'manager'] },
@@ -58,12 +51,12 @@ const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
 function renderAccessDenied(container: HTMLElement): RouteCleanup {
   container.appendChild(
     el('div', { class: 'view view-access-denied' }, [
-      emptyState({ icon: '🚫', title: 'دسترسی ندارید', message: 'شما اجازهٔ دسترسی به این بخش را ندارید.' }),
+      emptyState({ icon: 'shield', title: 'دسترسی ندارید', message: 'شما اجازهٔ دسترسی به این بخش را ندارید.' }),
     ]),
   );
 }
 
-const SYNC_STATUS_ICON: Record<string, string> = { idle: '', syncing: '🔄', synced: '✓', error: '⚠' };
+const SYNC_STATUS_ICON_NAME: Record<string, IconName> = { idle: 'refresh-cw', syncing: 'refresh-cw', synced: 'check', error: 'alert-circle' };
 const SYNC_STATUS_LABEL: Record<string, string> = {
   idle: '',
   syncing: 'در حال همگام‌سازی…',
@@ -77,13 +70,6 @@ function openPlatformOwnerOverlay(): void {
   openPlatformOwnerPanel(overlay, () => overlay.remove());
 }
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  superadmin: 'مدیر اصلی',
-  manager: 'مدیر',
-  warehouse: 'انباردار',
-  buyer: 'خریدار',
-};
-
 async function handleLogoutClick(): Promise<void> {
   const confirmed = await confirmModal({
     title: 'خروج از حساب',
@@ -94,41 +80,21 @@ async function handleLogoutClick(): Promise<void> {
   if (confirmed) logout();
 }
 
-function createAppHeader(user: AppUser): HTMLElement {
-  const offlineBadge = el('span', { class: 'app-header__offline-badge' }, ['آفلاین']);
+/** Minimal top bar: logo+name on one side, hamburger (opens the sidebar) + notification bell on the other. */
+function createAppHeader(user: AppUser, onMenuClick: () => void): HTMLElement {
+  const offlineBadge = el('span', { class: 'app-header__offline-badge' }, []);
+  offlineBadge.appendChild(svgIcon('wifi-off', 14));
+  offlineBadge.append('آفلاین');
   offlineBadge.hidden = true;
 
-  const syncBadge = el('span', { class: 'app-header__sync-badge' }, ['']);
+  const syncBadge = el('span', { class: 'app-header__sync-badge' }, []);
   syncBadge.hidden = true;
 
-  const links = HEADER_LINKS.filter((link) => !link.roles || link.roles.includes(user.role));
+  const menuBtn = el('button', { type: 'button', class: 'app-header__icon-btn', title: 'منو', onclick: onMenuClick }, []);
+  menuBtn.setAttribute('aria-label', 'باز کردن منو');
+  menuBtn.appendChild(svgIcon('menu'));
 
-  const actions = el(
-    'div',
-    { class: 'app-header__actions' },
-    links.map((link) => {
-      const btn = el('button', { type: 'button', class: 'app-header__icon-btn', title: link.label, onclick: () => navigate(link.path) }, [
-        link.icon,
-      ]);
-      btn.setAttribute('aria-label', link.label);
-      return btn;
-    }),
-  );
-
-  if (isPlatformOwnerSession()) {
-    const platformBtn = el(
-      'button',
-      { type: 'button', class: 'app-header__icon-btn', title: 'پنل پلتفرم', onclick: openPlatformOwnerOverlay },
-      ['🔧'],
-    );
-    platformBtn.setAttribute('aria-label', 'پنل پلتفرم');
-    actions.appendChild(platformBtn);
-  }
-
-  const userChip = el('span', { class: 'app-header__user-chip' }, [`${user.name} (${ROLE_LABELS[user.role]})`]);
-  const logoutBtn = el('button', { type: 'button', class: 'app-header__icon-btn', title: 'خروج', onclick: handleLogoutClick }, ['🚪']);
-  logoutBtn.setAttribute('aria-label', 'خروج');
-  actions.append(createNotificationBell(user), userChip, logoutBtn);
+  const actions = el('div', { class: 'app-header__actions' }, [createNotificationBell(user), menuBtn]);
 
   const header = el('header', { class: 'app-header' }, [el('span', { class: 'app-header__logo' }, ['منوبان']), offlineBadge, syncBadge, actions]);
 
@@ -138,7 +104,8 @@ function createAppHeader(user: AppUser): HTMLElement {
 
   syncStatus.subscribe((status) => {
     syncBadge.hidden = status === 'idle';
-    syncBadge.textContent = SYNC_STATUS_ICON[status];
+    syncBadge.innerHTML = '';
+    if (status !== 'idle') syncBadge.appendChild(svgIcon(SYNC_STATUS_ICON_NAME[status] ?? 'refresh-cw', 14));
     syncBadge.title = SYNC_STATUS_LABEL[status];
     syncBadge.className = `app-header__sync-badge app-header__sync-badge--${status}`;
   });
@@ -152,7 +119,8 @@ function createBreadcrumb(routes: (Route & { roles: UserRole[] })[]): HTMLElemen
   currentPath.subscribe((path) => {
     const route = routes.find((r) => r.path === path);
     bar.innerHTML = '';
-    const home = el('button', { type: 'button', class: 'breadcrumb__item', onclick: () => navigate('/') }, ['🏠 داشبورد']);
+    const home = el('button', { type: 'button', class: 'breadcrumb__item', onclick: () => navigate('/') }, []);
+    home.append(svgIcon('home', 14), ' داشبورد');
     if (path === '/' || !route) {
       home.classList.add('breadcrumb__item--current');
       bar.appendChild(home);
@@ -165,10 +133,12 @@ function createBreadcrumb(routes: (Route & { roles: UserRole[] })[]): HTMLElemen
 }
 
 function renderExpiredScreen(app: HTMLElement, expiry: string): void {
+  const logo = el('div', { class: 'boot-logo' }, []);
+  logo.appendChild(svgIcon('alert-circle', 28));
   app.append(
     el('div', { class: 'boot-splash', role: 'alert' }, [
       el('div', { class: 'auth-card' }, [
-        el('div', { class: 'boot-logo' }, ['⛔']),
+        logo,
         el('h2', { class: 'auth-title' }, ['اشتراک شما منقضی شده است']),
         el('p', { class: 'auth-subtitle' }, [`اشتراک کسب‌وکار شما در ${formatDate(expiry)} منقضی شده`]),
         el('p', { class: 'auth-subtitle' }, ['برای تمدید با مدیر اصلی تماس بگیرید']),
@@ -185,14 +155,6 @@ async function bootstrap(): Promise<void> {
   setupAutoSync();
   console.log('[boot] watchers initialized');
 
-  const empty = await db.isDatabaseEmpty();
-  console.log('[boot] isDatabaseEmpty:', empty);
-  if (empty) {
-    console.log('[boot] seeding database...');
-    await seedDatabase();
-    console.log('[boot] seeding complete');
-  }
-
   console.log('[boot] refreshing store...');
   await refreshAll();
   console.log('[boot] store refreshed');
@@ -207,6 +169,11 @@ async function bootstrap(): Promise<void> {
   const app = document.getElementById('app');
   if (!app) {
     console.error('[boot] #app element not found, aborting');
+    return;
+  }
+
+  if (location.hash.replace(/^#/, '') === '/platform-login') {
+    openPlatformOwnerGate(app);
     return;
   }
 
@@ -233,7 +200,8 @@ async function bootstrap(): Promise<void> {
   const main = el('main', { class: 'app-main' });
   const bannerHost = el('div', { class: 'app-banner-host' });
 
-  app.append(createAppHeader(user), createBreadcrumb(ALL_ROUTES), bannerHost, main, createAppNav());
+  const sidebar = createSidebar(user, { onLogout: handleLogoutClick, onPlatformPanel: openPlatformOwnerOverlay });
+  app.append(createAppHeader(user, sidebar.open), createBreadcrumb(ALL_ROUTES), bannerHost, main, createAppNav(), sidebar.element);
 
   if (isBusinessExpiringSoon(businessSettings)) {
     const days = daysUntilBusinessExpiry(businessSettings);
@@ -289,9 +257,11 @@ function showBootError(error: unknown): void {
   if (!app) return;
   const message = error instanceof Error ? error.message : String(error);
   app.innerHTML = '';
+  const logo = el('div', { class: 'boot-logo' }, []);
+  logo.appendChild(svgIcon('alert-triangle', 28));
   app.append(
     el('div', { class: 'boot-splash boot-splash--error', role: 'alert' }, [
-      el('div', { class: 'boot-logo' }, ['⚠️']),
+      logo,
       el('p', {}, ['خطا در بارگذاری برنامه']),
       el('p', { style: 'font-size: 12px; opacity: 0.7; direction: ltr;' }, [message]),
     ]),

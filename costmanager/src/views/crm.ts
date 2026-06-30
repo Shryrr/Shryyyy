@@ -5,7 +5,8 @@ import { showToast } from '../components/toast';
 import {
   automationTriggers, customers, refreshAutomationTriggers, refreshCustomers, refreshSettings, refreshSmsLogs, settings, smsLogs,
 } from '../store';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
 import {
   RFM_SEGMENT_ORDER, formatDateTime, formatMoney, formatPct, formatRfmSegment, rfmSegmentIcon, toPersian,
 } from '../utils/format';
@@ -131,21 +132,27 @@ function openRecordVisitModal(customer: Customer): void {
   const modal = openModal({ title: `ثبت بازدید — ${customer.name}`, body });
 }
 
+function rfmSegmentBadge(segment: RFMSegment): HTMLElement {
+  const badge = el('span', { class: 'badge' }, [` ${formatRfmSegment(segment)}`]);
+  badge.prepend(svgIcon(rfmSegmentIcon(segment), 14));
+  return badge;
+}
+
 function renderCustomerRow(customer: Customer): HTMLElement {
   return el('div', { class: 'expense-row' }, [
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
         el('span', { class: 'expense-row__name' }, [customer.name]),
-        el('span', { class: 'badge' }, [`${rfmSegmentIcon(customer.segment)} ${formatRfmSegment(customer.segment)}`]),
+        rfmSegmentBadge(customer.segment),
       ]),
       el('div', { class: 'expense-row__meta' }, [
         `${customer.phone} · ${toPersian(customer.visitCount)} بازدید · ${formatMoney(customer.totalSpent)} · ${toPersian(customer.loyaltyPoints)} امتیاز`,
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ثبت بازدید', onclick: () => openRecordVisitModal(customer) }, ['🧾']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openCustomerFormModal(customer) }, ['✏️']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteCustomer(customer) }, ['🗑️']),
+      iconBtn('receipt', 'ثبت بازدید', () => openRecordVisitModal(customer)),
+      iconBtn('edit', 'ویرایش', () => openCustomerFormModal(customer)),
+      iconBtn('trash', 'حذف', () => handleDeleteCustomer(customer)),
     ]),
   ]);
 }
@@ -371,7 +378,13 @@ function openCustomerImportModal(): void {
     summaryContainer,
   ]);
 
-  openModal({ title: '📥 وارد کردن مشتریان از فایل Excel', body, maxWidth: '640px' });
+  openModal({ title: 'وارد کردن مشتریان از فایل Excel', body, maxWidth: '640px' });
+}
+
+function importCustomersBtn(): HTMLElement {
+  const btn = el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: openCustomerImportModal }, []);
+  btn.append(svgIcon('upload', 14), ' وارد کردن مشتریان از فایل Excel');
+  return btn;
 }
 
 function renderCustomersTab(container: HTMLElement): () => void {
@@ -380,7 +393,7 @@ function renderCustomersTab(container: HTMLElement): () => void {
   container.append(
     el('div', { class: 'tab-toolbar' }, [
       searchInput,
-      el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: openCustomerImportModal }, ['📥 وارد کردن مشتریان از فایل Excel']),
+      importCustomersBtn(),
       el('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openCustomerFormModal() }, ['+ افزودن مشتری']),
     ]),
     listEl,
@@ -396,7 +409,7 @@ function renderCustomersTab(container: HTMLElement): () => void {
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '👤',
+          icon: 'user',
           title: all.length ? 'موردی یافت نشد' : 'هنوز مشتری‌ای ثبت نشده است',
           message: all.length ? 'عبارت جستجو را تغییر دهید.' : 'اولین مشتری را اضافه کنید.',
           ctaLabel: all.length ? undefined : 'افزودن مشتری',
@@ -447,7 +460,7 @@ function renderSegmentsTab(container: HTMLElement): () => void {
 
     summaryEl.innerHTML = '';
     summaryEl.appendChild(
-      kpiCard('👥', 'همه مشتریان', toPersian(list.length), undefined, () => {
+      kpiCard('users', 'همه مشتریان', toPersian(list.length), undefined, () => {
         activeSegment = 'all';
         renderList();
       }),
@@ -465,7 +478,7 @@ function renderSegmentsTab(container: HTMLElement): () => void {
       listEl.innerHTML = '';
       const shown = activeSegment === 'all' ? list : bySegment.get(activeSegment)!;
       if (!shown.length) {
-        listEl.appendChild(emptyState({ icon: '🔍', title: 'مشتری‌ای در این بخش نیست' }));
+        listEl.appendChild(emptyState({ icon: 'search', title: 'مشتری‌ای در این بخش نیست' }));
         return;
       }
       for (const c of shown) listEl.appendChild(renderRow(c));
@@ -637,7 +650,7 @@ function renderSmsTab(container: HTMLElement): () => void {
     'selected',
   );
   const manualInput = el('textarea', { class: 'input', rows: 3, placeholder: '۰۹xxxxxxxxx، ۰۹xxxxxxxxx', hidden: true });
-  const segmentSelect = selectEl(RFM_SEGMENT_ORDER.map((seg) => ({ value: seg, label: `${rfmSegmentIcon(seg)} ${formatRfmSegment(seg)}` })));
+  const segmentSelect = selectEl(RFM_SEGMENT_ORDER.map((seg) => ({ value: seg, label: formatRfmSegment(seg) })));
   segmentSelect.hidden = true;
   modeSelect.addEventListener('change', () => {
     const mode = (modeSelect as HTMLSelectElement).value as RecipientMode;
@@ -719,7 +732,7 @@ function renderSmsTab(container: HTMLElement): () => void {
     historyEl.innerHTML = '';
     const list = [...smsLogs.get()].sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
     if (!list.length) {
-      historyEl.appendChild(emptyState({ icon: '📨', title: 'هنوز پیامکی ارسال نشده است' }));
+      historyEl.appendChild(emptyState({ icon: 'mail', title: 'هنوز پیامکی ارسال نشده است' }));
       return;
     }
     for (const log of list) historyEl.appendChild(renderSmsLogRow(log));
@@ -763,7 +776,7 @@ function renderLoyaltyRow(c: Customer, rank: number): HTMLElement {
       el('div', { class: 'expense-row__meta' }, [`${toPersian(c.loyaltyPoints)} امتیاز · ${c.phone}`]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش امتیاز', onclick: () => openAdjustPointsModal(c) }, ['🏆']),
+      iconBtn('award', 'ویرایش امتیاز', () => openAdjustPointsModal(c)),
     ]),
   ]);
 }
@@ -783,7 +796,7 @@ function renderLoyaltyTab(container: HTMLElement): () => void {
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '🏆',
+          icon: 'award',
           title: 'هنوز امتیاز وفاداری ثبت نشده است',
           message: 'با ثبت بازدید مشتریان از تب «مشتریان»، امتیاز وفاداری انباشته می‌شود.',
         }),
@@ -833,12 +846,12 @@ function renderReportTab(container: HTMLElement): () => void {
       : 0;
 
     statsEl.innerHTML = '';
-    statsEl.appendChild(kpiCard('👥', 'تعداد مشتریان', toPersian(list.length)));
-    statsEl.appendChild(kpiCard('💰', 'مجموع خرید مشتریان', formatMoney(totalSpent)));
-    statsEl.appendChild(kpiCard('📊', 'میانگین خرید هر مشتری', formatMoney(avgSpend)));
-    statsEl.appendChild(kpiCard('🤖', 'پیامک‌های اتوماسیون', toPersian(automatedCampaigns.length)));
-    statsEl.appendChild(kpiCard('✅', 'نرخ موفقیت اتوماسیون', formatPct(successRate)));
-    statsEl.appendChild(kpiCard('📨', 'تعداد پیامک‌های گروهی', toPersian(smsLogs.get().length)));
+    statsEl.appendChild(kpiCard('users', 'تعداد مشتریان', toPersian(list.length)));
+    statsEl.appendChild(kpiCard('wallet', 'مجموع خرید مشتریان', formatMoney(totalSpent)));
+    statsEl.appendChild(kpiCard('bar-chart', 'میانگین خرید هر مشتری', formatMoney(avgSpend)));
+    statsEl.appendChild(kpiCard('cpu', 'پیامک‌های اتوماسیون', toPersian(automatedCampaigns.length)));
+    statsEl.appendChild(kpiCard('check', 'نرخ موفقیت اتوماسیون', formatPct(successRate)));
+    statsEl.appendChild(kpiCard('mail', 'تعداد پیامک‌های گروهی', toPersian(smsLogs.get().length)));
 
     const bySegment = new Map<RFMSegment, number>();
     for (const c of list) bySegment.set(c.segment, (bySegment.get(c.segment) ?? 0) + 1);
@@ -852,7 +865,7 @@ function renderReportTab(container: HTMLElement): () => void {
       renderChart(canvas, {
         type: 'doughnut',
         data: {
-          labels: segs.map((s) => `${rfmSegmentIcon(s)} ${formatRfmSegment(s)}`),
+          labels: segs.map((s) => formatRfmSegment(s)),
           datasets: [{ data: segs.map((s) => bySegment.get(s) ?? 0), backgroundColor: segs.map((s) => SEGMENT_CHART_COLORS[s]) }],
         },
         options: { responsive: true, maintainAspectRatio: false },
@@ -862,7 +875,7 @@ function renderReportTab(container: HTMLElement): () => void {
     topListEl.innerHTML = '';
     const top = [...list].sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
     if (!top.length) {
-      topListEl.appendChild(emptyState({ icon: '🏅', title: 'هنوز داده‌ای برای نمایش وجود ندارد' }));
+      topListEl.appendChild(emptyState({ icon: 'award', title: 'هنوز داده‌ای برای نمایش وجود ندارد' }));
       return;
     }
     top.forEach((c, idx) => {

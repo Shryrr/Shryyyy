@@ -1,4 +1,6 @@
 import { parsePersianDigits, toPersian } from './format';
+import { svgIcon } from './icons';
+import type { IconName } from './icons';
 
 type Child = HTMLElement | string | null | undefined | false;
 
@@ -66,7 +68,7 @@ export function field(label: string, input: HTMLElement, hint?: string): HTMLEle
 }
 
 export interface EmptyStateOptions {
-  icon: string;
+  icon: IconName;
   title: string;
   message?: string;
   ctaLabel?: string;
@@ -74,8 +76,10 @@ export interface EmptyStateOptions {
 }
 
 export function emptyState(opts: EmptyStateOptions): HTMLElement {
+  const iconEl = el('div', { class: 'empty-state__icon' }, []);
+  iconEl.appendChild(svgIcon(opts.icon, 28));
   return el('div', { class: 'empty-state' }, [
-    el('div', { class: 'empty-state__icon' }, [opts.icon]),
+    iconEl,
     el('p', { class: 'empty-state__title' }, [opts.title]),
     opts.message ? el('p', { class: 'empty-state__message' }, [opts.message]) : null,
     opts.ctaLabel && opts.onCta
@@ -100,7 +104,9 @@ export function parseNumberInput(input: HTMLInputElement): number {
 
 export type KpiTone = 'positive' | 'negative' | 'warning';
 
-export function kpiCard(icon: string, label: string, value: string, tone?: KpiTone, onClick?: () => void): HTMLElement {
+export function kpiCard(icon: IconName, label: string, value: string, tone?: KpiTone, onClick?: () => void): HTMLElement {
+  const iconEl = el('span', { class: 'kpi-card__icon' }, []);
+  iconEl.appendChild(svgIcon(icon, 20));
   return el(
     'div',
     {
@@ -119,7 +125,7 @@ export function kpiCard(icon: string, label: string, value: string, tone?: KpiTo
         : undefined,
     },
     [
-      el('span', { class: 'kpi-card__icon' }, [icon]),
+      iconEl,
       el('div', { class: 'kpi-card__body' }, [
         el('span', { class: 'kpi-card__label' }, [label]),
         el('span', { class: 'kpi-card__value' }, [value]),
@@ -127,6 +133,20 @@ export function kpiCard(icon: string, label: string, value: string, tone?: KpiTo
       onClick ? el('span', { class: 'kpi-card__arrow' }, ['←']) : null,
     ],
   );
+}
+
+/** Square icon-only button (edit/delete/etc. row actions) rendered with an inline SVG icon instead of emoji. */
+export function iconBtn(icon: IconName, title: string, onClick: () => void): HTMLElement {
+  const btn = el('button', { type: 'button', class: 'icon-btn', title, onclick: onClick }, []);
+  btn.appendChild(svgIcon(icon, 16));
+  return btn;
+}
+
+/** Text button with a leading SVG icon instead of an emoji prefix, e.g. for `btn btn-primary`/`btn btn-secondary` actions. */
+export function iconTextBtn(icon: IconName, label: string, className: string, onClick: () => void): HTMLElement {
+  const btn = el('button', { type: 'button', class: className, onclick: onClick }, []);
+  btn.append(svgIcon(icon, 14), ` ${label}`);
+  return btn;
 }
 
 export function selectEl(options: { value: string; label: string }[], selected?: string): HTMLSelectElement {

@@ -2,7 +2,7 @@ import * as db from '../db';
 import { currentUser } from '../auth';
 import { openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
+import { el, emptyState, iconTextBtn, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
 import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian } from '../utils/format';
 import { shareOrCopyText } from '../utils/export';
 import type { RouteCleanup } from '../router';
@@ -47,10 +47,10 @@ function renderBudgetSection(container: HTMLElement, items: ShoppingListItem[]):
   const total = items.reduce((sum, i) => sum + i.estimatedCost, 0);
 
   const cards = [
-    kpiCard('💰', 'مجموع بودجه خرید', formatMoney(total), budgetTone(total)),
+    kpiCard('wallet', 'مجموع بودجه خرید', formatMoney(total), budgetTone(total)),
     ...Array.from(byCategory.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([category, amount]) => kpiCard('📦', formatIngredientCategory(category), formatMoney(amount), budgetTone(amount))),
+      .map(([category, amount]) => kpiCard('box', formatIngredientCategory(category), formatMoney(amount), budgetTone(amount))),
   ];
 
   container.appendChild(
@@ -155,9 +155,9 @@ function openPurchaseRequestActionSheet(text: string, user: AppUser): void {
   }
 
   const body = el('div', { class: 'action-sheet' }, [
-    el('button', { type: 'button', class: 'btn btn-secondary action-sheet__btn', onclick: handleSms }, ['📱 ارسال پیامک از گوشی']),
-    el('button', { type: 'button', class: 'btn btn-secondary action-sheet__btn', onclick: handleCopy }, ['📋 کپی متن']),
-    el('button', { type: 'button', class: 'btn btn-primary action-sheet__btn', onclick: handleNotify }, ['🔔 ارسال نوتیفیکیشن']),
+    iconTextBtn('smartphone', 'ارسال پیامک از گوشی', 'btn btn-secondary action-sheet__btn', handleSms),
+    iconTextBtn('clipboard', 'کپی متن', 'btn btn-secondary action-sheet__btn', handleCopy),
+    iconTextBtn('bell', 'ارسال نوتیفیکیشن', 'btn btn-primary action-sheet__btn', handleNotify),
   ]);
 
   const modal = openModal({ title: 'ارسال درخواست خرید', body, maxWidth: '380px' });
@@ -212,18 +212,14 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
       el('h1', { class: 'view-header__title' }, ['لیست خرید']),
       el('div', { class: 'view-header__actions' }, [
         el('button', { class: 'btn btn-secondary', type: 'button', onclick: handleShare }, ['اشتراک‌گذاری']),
-        el('button', { class: 'btn btn-primary', type: 'button', onclick: handleRegenerate }, ['🔄 بروزرسانی']),
+        iconTextBtn('refresh-cw', 'بروزرسانی', 'btn btn-primary', handleRegenerate),
       ]),
     ]),
   );
 
   if (currentUser.get()?.role !== 'buyer') {
     root.appendChild(
-      el(
-        'button',
-        { type: 'button', class: 'btn btn-primary purchase-request-btn', onclick: handlePurchaseRequest },
-        ['📤 ارسال درخواست خرید به مسئول خرید'],
-      ),
+      iconTextBtn('send', 'ارسال درخواست خرید به مسئول خرید', 'btn btn-primary purchase-request-btn', handlePurchaseRequest),
     );
   }
 
@@ -240,7 +236,7 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
 
     if (!items.length) {
       listEl.appendChild(
-        emptyState({ icon: '🛒', title: 'لیست خرید خالی است', message: 'موجودی همهٔ مواد اولیه بالاتر از حد آستانه است.' }),
+        emptyState({ icon: 'cart', title: 'لیست خرید خالی است', message: 'موجودی همهٔ مواد اولیه بالاتر از حد آستانه است.' }),
       );
       footerEl.innerHTML = '';
       return;
@@ -317,6 +313,6 @@ export function maybeShowBuyerLowStockAlert(user: AppUser): boolean {
     ]),
   ]);
 
-  const modal = openModal({ title: '⚠️ لیست خرید آماده است', body, maxWidth: '480px', dismissible: false });
+  const modal = openModal({ title: 'لیست خرید آماده است', body, maxWidth: '480px', dismissible: false });
   return true;
 }

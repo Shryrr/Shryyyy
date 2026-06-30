@@ -2,27 +2,35 @@ import * as db from '../db';
 import { confirmModal, openModal } from '../components/modal';
 import { destroyChart, palette, renderChart } from '../components/chart';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatExpenseCategory, formatExpenseFrequency, formatMoney, formatPayType, formatPct } from '../utils/format';
 import type { RouteCleanup } from '../router';
 import { employees, expenses, refreshEmployees, refreshExpenses } from '../store';
 import { expenseMonthlyEquivalent, monthlyEquivalent, monthlyFixedCost } from '../utils/calc';
+import { svgIcon } from '../utils/icons';
+import type { IconName } from '../utils/icons';
 import type { Employee, Expense, ExpenseCategory, ExpenseFrequency, PayType } from '../types';
 
 const EXPENSE_CATEGORY_OPTIONS: ExpenseCategory[] = [
   'rent', 'utilities', 'insurance', 'marketing', 'maintenance', 'packaging', 'transport', 'tax', 'other',
 ];
-const EXPENSE_CATEGORY_ICONS: Record<ExpenseCategory, string> = {
-  rent: '🏠',
-  utilities: '⚡',
-  insurance: '🛡️',
-  marketing: '📣',
-  maintenance: '🔧',
-  packaging: '📦',
-  transport: '🚚',
-  tax: '📋',
-  other: '🗂️',
+const EXPENSE_CATEGORY_ICONS: Record<ExpenseCategory, IconName> = {
+  rent: 'home',
+  utilities: 'zap',
+  insurance: 'shield',
+  marketing: 'megaphone',
+  maintenance: 'wrench',
+  packaging: 'box',
+  transport: 'truck',
+  tax: 'clipboard',
+  other: 'folder',
 };
+
+function expenseCategoryBadge(category: ExpenseCategory): HTMLElement {
+  const badge = el('span', { class: 'badge' }, [` ${formatExpenseCategory(category)}`]);
+  badge.prepend(svgIcon(EXPENSE_CATEGORY_ICONS[category], 14));
+  return badge;
+}
 const FREQUENCY_OPTIONS: ExpenseFrequency[] = ['monthly', 'yearly', 'one_time'];
 const PAY_TYPE_OPTIONS: PayType[] = ['monthly', 'daily', 'hourly'];
 const CHART_COLORS = [palette.primary, palette.coral, palette.mint, palette.amber, palette.blue, palette.red, palette.primaryD];
@@ -111,7 +119,7 @@ function renderExpenseRow(expense: Expense): HTMLElement {
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
         el('span', { class: 'expense-row__name' }, [expense.name]),
-        el('span', { class: 'badge' }, [`${EXPENSE_CATEGORY_ICONS[expense.category]} ${formatExpenseCategory(expense.category)}`]),
+        expenseCategoryBadge(expense.category),
         !expense.isActive ? el('span', { class: 'badge badge--muted' }, ['غیرفعال']) : null,
       ]),
       el('div', { class: 'expense-row__meta' }, [
@@ -119,18 +127,9 @@ function renderExpenseRow(expense: Expense): HTMLElement {
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openExpenseFormModal(expense) }, ['✏️']),
-      el(
-        'button',
-        {
-          class: 'icon-btn',
-          type: 'button',
-          title: expense.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی',
-          onclick: () => toggleExpenseActive(expense),
-        },
-        [expense.isActive ? '👁️' : '🚫'],
-      ),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteExpense(expense) }, ['🗑️']),
+      iconBtn('edit', 'ویرایش', () => openExpenseFormModal(expense)),
+      iconBtn(expense.isActive ? 'eye' : 'eye-off', expense.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', () => toggleExpenseActive(expense)),
+      iconBtn('trash', 'حذف', () => handleDeleteExpense(expense)),
     ]),
   ]);
 }
@@ -150,7 +149,7 @@ export function renderExpensesTab(container: HTMLElement): () => void {
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '🧾',
+          icon: 'receipt',
           title: 'هنوز هزینه‌ای ثبت نشده است',
           message: 'اولین هزینهٔ ثابت یا متغیر را اضافه کنید.',
           ctaLabel: 'افزودن هزینه',
@@ -255,18 +254,9 @@ function renderEmployeeRow(employee: Employee): HTMLElement {
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openEmployeeFormModal(employee) }, ['✏️']),
-      el(
-        'button',
-        {
-          class: 'icon-btn',
-          type: 'button',
-          title: employee.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی',
-          onclick: () => toggleEmployeeActive(employee),
-        },
-        [employee.isActive ? '👁️' : '🚫'],
-      ),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteEmployee(employee) }, ['🗑️']),
+      iconBtn('edit', 'ویرایش', () => openEmployeeFormModal(employee)),
+      iconBtn(employee.isActive ? 'eye' : 'eye-off', employee.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', () => toggleEmployeeActive(employee)),
+      iconBtn('trash', 'حذف', () => handleDeleteEmployee(employee)),
     ]),
   ]);
 }
@@ -286,7 +276,7 @@ export function renderPayrollTab(container: HTMLElement): () => void {
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '👥',
+          icon: 'users',
           title: 'هنوز پرسنلی ثبت نشده است',
           message: 'اولین عضو تیم را اضافه کنید.',
           ctaLabel: 'افزودن پرسنل',
@@ -321,7 +311,7 @@ export function renderSummaryTab(container: HTMLElement): () => void {
     const total = monthlyFixedCost(exp, emp);
 
     statsEl.innerHTML = '';
-    statsEl.appendChild(kpiCard('🏢', 'هزینهٔ ثابت ماهانه (هزینه‌ها + حقوق)', formatMoney(total)));
+    statsEl.appendChild(kpiCard('building', 'هزینهٔ ثابت ماهانه (هزینه‌ها + حقوق)', formatMoney(total)));
 
     const byLabel = new Map<string, number>();
     for (const e of exp.filter((e) => e.isActive)) {
@@ -350,7 +340,7 @@ export function renderSummaryTab(container: HTMLElement): () => void {
 
     breakdownEl.innerHTML = '';
     if (!labels.length) {
-      breakdownEl.appendChild(emptyState({ icon: '📊', title: 'هنوز هزینهٔ ثابتی برای نمایش وجود ندارد' }));
+      breakdownEl.appendChild(emptyState({ icon: 'bar-chart', title: 'هنوز هزینهٔ ثابتی برای نمایش وجود ندارد' }));
       return;
     }
     for (let i = 0; i < labels.length; i++) {

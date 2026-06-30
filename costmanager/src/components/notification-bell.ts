@@ -3,7 +3,8 @@ import { navigate } from '../router';
 import { notifications, refreshNotifications, unreadNotificationCount } from '../store';
 import type { AppNotification, AppUser } from '../types';
 import { el } from '../utils/dom';
-import { formatDateTime, toPersian } from '../utils/format';
+import { svgIcon } from '../utils/icons';
+import { formatDateTime } from '../utils/format';
 
 const NOTIFICATION_ROUTE: Record<AppNotification['type'], string> = {
   purchase_request: '/shopping',
@@ -15,7 +16,7 @@ const NOTIFICATION_ROUTE: Record<AppNotification['type'], string> = {
 };
 
 export function createNotificationBell(user: AppUser): HTMLElement {
-  const badge = el('span', { class: 'notification-bell__badge' }, ['']);
+  const badge = el('span', { class: 'notification-bell__badge' }, []);
   badge.hidden = true;
 
   const panel = el('div', { class: 'notification-bell__panel' });
@@ -24,8 +25,9 @@ export function createNotificationBell(user: AppUser): HTMLElement {
   const btn = el(
     'button',
     { type: 'button', class: 'app-header__icon-btn', title: 'اعلان‌ها', onclick: () => toggle() },
-    ['🔔'],
+    [],
   );
+  btn.appendChild(svgIcon('bell'));
   btn.setAttribute('aria-label', 'اعلان‌ها');
 
   const wrapper = el('div', { class: 'notification-bell' }, [btn, badge, panel]);
@@ -90,7 +92,6 @@ export function createNotificationBell(user: AppUser): HTMLElement {
   notifications.subscribe(() => {
     const count = unreadNotificationCount(user.role);
     badge.hidden = count === 0;
-    badge.textContent = count > 0 ? toPersian(count) : '';
     if (!panel.hidden) renderPanel();
   });
 

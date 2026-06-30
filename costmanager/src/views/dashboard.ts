@@ -1,6 +1,7 @@
 import { createAlertBanner } from '../components/alert-banner';
 import { palette, renderChart, destroyChart } from '../components/chart';
 import { el, kpiCard } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
 import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
 import { customers, employees, expenses, ingredients, ingredientsById, menuItems, navigationIntent, sales, suppliers } from '../store';
@@ -19,7 +20,7 @@ import {
   salesInPeriod,
 } from '../utils/calc';
 import {
-  RFM_SEGMENT_ORDER, formatDate, formatDateShort, formatMoney, formatMoneyShort, formatPct, formatRfmSegment, rfmSegmentIcon, toPersian,
+  RFM_SEGMENT_ORDER, formatDate, formatDateShort, formatMoney, formatMoneyShort, formatPct, formatRfmSegment, toPersian,
 } from '../utils/format';
 import { STOCKOUT_WARNING_DAYS } from '../utils/stock-alerts';
 import type { RFMSegment } from '../types';
@@ -48,20 +49,17 @@ function chartCard(title: string): { card: HTMLElement; canvas: HTMLCanvasElemen
   return { card, canvas };
 }
 
+function quickActionBtn(icon: Parameters<typeof svgIcon>[0], label: string, onClick: () => void): HTMLElement {
+  const iconEl = el('span', { class: 'quick-actions__icon' }, []);
+  iconEl.appendChild(svgIcon(icon, 22));
+  return el('button', { class: 'quick-actions__btn', type: 'button', onclick: onClick }, [iconEl, label]);
+}
+
 function quickActions(): HTMLElement {
   return el('div', { class: 'quick-actions' }, [
-    el('button', { class: 'quick-actions__btn', type: 'button', onclick: () => navigate('/sales') }, [
-      el('span', { class: 'quick-actions__icon' }, ['🧾']),
-      'ثبت فروش',
-    ]),
-    el('button', { class: 'quick-actions__btn', type: 'button', onclick: () => navigate('/ingredients') }, [
-      el('span', { class: 'quick-actions__icon' }, ['📥']),
-      'ثبت خرید مواد',
-    ]),
-    el('button', { class: 'quick-actions__btn', type: 'button', onclick: () => navigate('/shopping') }, [
-      el('span', { class: 'quick-actions__icon' }, ['🛒']),
-      'مشاهده لیست خرید',
-    ]),
+    quickActionBtn('receipt', 'ثبت فروش', () => navigate('/sales')),
+    quickActionBtn('download', 'ثبت خرید مواد', () => navigate('/ingredients')),
+    quickActionBtn('cart', 'مشاهده لیست خرید', () => navigate('/shopping')),
   ]);
 }
 
@@ -79,7 +77,7 @@ function renderOnboardingChecklist(steps: OnboardingStep[]): HTMLElement | null 
 
   const card = el('div', { class: 'chart-card onboarding-card' }, [
     el('div', { class: 'onboarding-card__header' }, [
-      el('h3', { class: 'chart-card__title' }, ['🚀 شروع به کار با منوبان']),
+      el('h3', { class: 'chart-card__title' }, ['شروع به کار با منوبان']),
       el(
         'button',
         {
@@ -95,8 +93,10 @@ function renderOnboardingChecklist(steps: OnboardingStep[]): HTMLElement | null 
       ),
     ]),
     el('ul', { class: 'onboarding-checklist' }, [
-      ...steps.map((step) =>
-        el('li', {}, [
+      ...steps.map((step) => {
+        const iconEl = el('span', { class: 'onboarding-checklist__icon' }, []);
+        iconEl.appendChild(svgIcon(step.done ? 'check' : 'circle', 14));
+        return el('li', {}, [
           el(
             'button',
             {
@@ -106,13 +106,13 @@ function renderOnboardingChecklist(steps: OnboardingStep[]): HTMLElement | null 
               onclick: () => navigate(step.path),
             },
             [
-              el('span', { class: 'onboarding-checklist__icon' }, [step.done ? '✅' : '⬜']),
+              iconEl,
               el('span', {}, [step.label]),
               step.done ? null : el('span', { class: 'onboarding-checklist__arrow' }, ['←']),
             ],
           ),
-        ]),
-      ),
+        ]);
+      }),
     ]),
   ]);
 
@@ -185,20 +185,20 @@ export async function renderDashboard(container: HTMLElement): Promise<RouteClea
 
     root.append(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('📦', 'تعداد مواد اولیه', toPersian(ing.length), undefined, () => navigate('/ingredients')),
-        kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(ing)), undefined, () => {
+        kpiCard('box', 'تعداد مواد اولیه', toPersian(ing.length), undefined, () => navigate('/ingredients')),
+        kpiCard('wallet', 'ارزش انبار', formatMoneyShort(inventoryValue(ing)), undefined, () => {
           navigationIntent.set({ sortByValue: true });
           navigate('/ingredients');
         }),
-        kpiCard('🍽️', 'فودکاست (۳۰ روز)', formatPct(foodCostPctValue), foodCostStatus(foodCostPctValue) === 'red' ? 'negative' : undefined, () => {
+        kpiCard('utensils', 'فودکاست (۳۰ روز)', formatPct(foodCostPctValue), foodCostStatus(foodCostPctValue) === 'red' ? 'negative' : undefined, () => {
           navigationIntent.set({ sortBy: 'pct_desc' });
           navigate('/recipes');
         }),
-        kpiCard('🏢', 'هزینهٔ ثابت ماهانه', formatMoneyShort(monthlyFixed), undefined, () => navigate('/expenses')),
-        kpiCard('📈', 'سود خالص (۳۰ روز)', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => navigate('/accounting')),
-        kpiCard('⚠️', 'کسری موجودی', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, () => navigate('/shopping')),
-        kpiCard('📉', 'پیش‌بینی اتمام موجودی', toPersian(predictedStockouts.length), predictedStockouts.length > 0 ? 'warning' : undefined, () => navigate('/ingredients')),
-        kpiCard('🚨', 'مشتریان در معرض ریزش', toPersian(atRiskCustomers.length), atRiskCustomers.length > 0 ? 'warning' : undefined, () => navigate('/crm')),
+        kpiCard('building', 'هزینهٔ ثابت ماهانه', formatMoneyShort(monthlyFixed), undefined, () => navigate('/expenses')),
+        kpiCard('trending-up', 'سود خالص (۳۰ روز)', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => navigate('/accounting')),
+        kpiCard('alert-triangle', 'کسری موجودی', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, () => navigate('/shopping')),
+        kpiCard('trending-down', 'پیش‌بینی اتمام موجودی', toPersian(predictedStockouts.length), predictedStockouts.length > 0 ? 'warning' : undefined, () => navigate('/ingredients')),
+        kpiCard('alert-triangle', 'مشتریان در معرض ریزش', toPersian(atRiskCustomers.length), atRiskCustomers.length > 0 ? 'warning' : undefined, () => navigate('/crm')),
       ]),
     );
 
@@ -295,7 +295,7 @@ export async function renderDashboard(container: HTMLElement): Promise<RouteClea
       renderChart(segmentChart.canvas, {
         type: 'doughnut',
         data: {
-          labels: presentSegments.map((seg) => `${rfmSegmentIcon(seg)} ${formatRfmSegment(seg)}`),
+          labels: presentSegments.map((seg) => formatRfmSegment(seg)),
           datasets: [{ data: presentSegments.map((seg) => segmentCounts.get(seg) ?? 0), backgroundColor: presentSegments.map((seg) => RFM_SEGMENT_COLORS[seg]) }],
         },
         options: { responsive: true, maintainAspectRatio: false },

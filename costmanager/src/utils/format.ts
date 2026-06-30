@@ -1,4 +1,5 @@
 import type { BusinessType, ExpenseCategory, ExpenseFrequency, IngredientCategory, PayType, RFMSegment, Unit } from '../types';
+import type { IconName } from './icons';
 
 const moneyFmt = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 });
 const numberFmt = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 2 });
@@ -155,23 +156,24 @@ const RFM_SEGMENT_LABELS: Record<RFMSegment, string> = {
   regular: 'عادی',
 };
 
-const RFM_SEGMENT_ICONS: Record<RFMSegment, string> = {
-  champions: '🏆',
-  loyal: '💙',
-  potential: '🌱',
-  new: '✨',
-  at_risk: '⚠️',
-  lost: '👻',
-  hibernating: '😴',
-  regular: '🙂',
+const RFM_SEGMENT_ICONS: Record<RFMSegment, IconName> = {
+  champions: 'award',
+  loyal: 'heart',
+  potential: 'sparkles',
+  new: 'zap',
+  at_risk: 'alert-triangle',
+  lost: 'x-circle',
+  hibernating: 'moon',
+  regular: 'user',
 };
 
 export function formatRfmSegment(segment: RFMSegment): string {
   return RFM_SEGMENT_LABELS[segment] ?? segment;
 }
 
-export function rfmSegmentIcon(segment: RFMSegment): string {
-  return RFM_SEGMENT_ICONS[segment] ?? '🙂';
+/** Real icon name for HTMLElement contexts (kpiCard, badges) — for text-only contexts (chart labels, select options), use formatRfmSegment alone. */
+export function rfmSegmentIcon(segment: RFMSegment): IconName {
+  return RFM_SEGMENT_ICONS[segment] ?? 'user';
 }
 
 /** Display order for RFM segments, best to worst — shared by the dashboard and CRM views. */

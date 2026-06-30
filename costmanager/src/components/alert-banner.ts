@@ -1,3 +1,5 @@
+import { svgIcon } from '../utils/icons';
+
 export interface AlertBannerOptions {
   id: string;
   message: string;
@@ -17,7 +19,7 @@ export function createAlertBanner(opts: AlertBannerOptions): HTMLElement | null 
 
   const icon = document.createElement('span');
   icon.className = 'alert-banner__icon';
-  icon.textContent = '⚠️';
+  icon.appendChild(svgIcon(opts.tone === 'danger' ? 'alert-circle' : 'alert-triangle', 18));
   el.appendChild(icon);
 
   const text = document.createElement('span');

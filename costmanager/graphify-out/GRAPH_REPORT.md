@@ -1,16 +1,16 @@
-# Graph Report - costmanager  (2026-06-29)
+# Graph Report - costmanager  (2026-06-30)
 
 ## Corpus Check
-- 52 files · ~57,603 words
+- 54 files · ~59,856 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 842 nodes · 2727 edges · 46 communities
+- 866 nodes · 2889 edges · 45 communities
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 6 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `31eec43f`
+- Built from commit: `e9cd521a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -58,20 +58,19 @@
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 42|Community 42]]
-- [[_COMMUNITY_Community 43|Community 43]]
 - [[_COMMUNITY_Community 44|Community 44]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `el()` - 152 edges
-2. `getDB()` - 81 edges
-3. `toPersian()` - 75 edges
-4. `showToast()` - 67 edges
-5. `formatMoney()` - 50 edges
-6. `field()` - 47 edges
-7. `nowISO()` - 32 edges
-8. `bootstrap()` - 30 edges
-9. `selectEl()` - 30 edges
-10. `numberInput()` - 29 edges
+1. `el()` - 159 edges
+2. `getDB()` - 83 edges
+3. `toPersian()` - 72 edges
+4. `showToast()` - 68 edges
+5. `field()` - 50 edges
+6. `formatMoney()` - 50 edges
+7. `svgIcon()` - 41 edges
+8. `nowISO()` - 32 edges
+9. `bootstrap()` - 31 edges
+10. `selectEl()` - 30 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `renderRenewalSection()` --calls--> `render()`  [INFERRED]
@@ -82,212 +81,208 @@
   src/views/settings.ts → scripts/gen-icons.js
 - `renderSetupWizard()` --calls--> `render()`  [INFERRED]
   src/views/setup.ts → scripts/gen-icons.js
-- `showBootError()` --calls--> `el()`  [EXTRACTED]
-  src/main.ts → src/utils/dom.ts
+- `renderFixedVariableTab()` --calls--> `el()`  [EXTRACTED]
+  src/views/accounting.ts → src/utils/dom.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (46 total, 0 thin omitted)
+## Communities (45 total, 0 thin omitted)
 
 ### Community 0 - "UI Components & Refresh Handlers"
-Cohesion: 0.08
-Nodes (82): confirmModal(), ConfirmOptions, ModalHandle, ModalOptions, openModal(), ensureContainer(), showToast(), ToastType (+74 more)
+Cohesion: 0.26
+Nodes (25): openModal(), showToast(), refreshCustomers(), refreshSuppliers(), field(), numberInput(), parseNumberInput(), selectEl() (+17 more)
 
 ### Community 1 - "Session & Auth Management"
 Cohesion: 0.06
-Nodes (56): adjustLoyaltyPoints(), adjustWalletBalance(), BACKUP_STORE_NAMES, DEFAULT_SETTINGS, deleteAutomationTrigger(), deleteCustomer(), deleteEmployee(), deleteExpense() (+48 more)
+Nodes (58): adjustLoyaltyPoints(), adjustWalletBalance(), BACKUP_STORE_NAMES, DEFAULT_SETTINGS, deleteAutomationTrigger(), deleteCustomer(), deleteEmployee(), deleteExpense() (+50 more)
 
 ### Community 2 - "Inventory & Notification Types"
-Cohesion: 0.05
-Nodes (51): buildSalesPlan(), computeConsumption(), INGREDIENTS, MENU_ITEMS, PlannedSale, roundQty(), seedDatabase(), seedExpensesAndPayroll() (+43 more)
+Cohesion: 0.11
+Nodes (24): refreshEmployees(), refreshExpenses(), expenseMonthlyEquivalent(), monthlyEquivalent(), formatExpenseCategory(), formatExpenseFrequency(), formatPayType(), CHART_COLORS (+16 more)
 
 ### Community 3 - "Platform Owner Admin"
-Cohesion: 0.08
-Nodes (41): customers, employees, expenses, isOnline, menuItems, sales, smsLogs, SyncStatus (+33 more)
+Cohesion: 0.10
+Nodes (40): confirmModal(), ConfirmOptions, ModalHandle, ModalOptions, ensureContainer(), ToastType, refreshSettings(), FullBackup (+32 more)
 
 ### Community 4 - "Reactive Store & Shared Components"
-Cohesion: 0.11
-Nodes (38): addPlatformInvoice(), DEFAULT_PLATFORM_PRICING, deletePlatformInvoice(), fetchLatestBroadcast(), fetchPlatformBusinesses(), fetchWithTimeout(), getPlatformPaymentCard(), getPlatformPin() (+30 more)
+Cohesion: 0.09
+Nodes (47): openPlatformOwnerOverlay(), addPlatformInvoice(), DEFAULT_PLATFORM_PRICING, deletePlatformInvoice(), fetchLatestBroadcast(), fetchPlatformBusinesses(), fetchWithTimeout(), getPlatformPaymentCard() (+39 more)
 
 ### Community 5 - "Database CRUD Operations"
 Cohesion: 0.09
-Nodes (30): buildCashierRows(), buildCustomerRows(), buildSnappfoodRows(), CASHIER_FIELD_LABELS, CASHIER_KEYWORDS, CashierField, CashierImportRow, CUSTOMER_FIELD_LABELS (+22 more)
+Nodes (33): IngredientInUseError, MenuItem, buildCashierRows(), buildSnappfoodRows(), CASHIER_FIELD_LABELS, CASHIER_KEYWORDS, CashierField, CashierImportRow (+25 more)
 
 ### Community 6 - "Modal Component & State Collections"
 Cohesion: 0.11
 Nodes (32): addSurveyResponse(), createAutomationTrigger(), createCustomer(), createEmployee(), createExpense(), createIngredient(), createMenuItem(), createNotification() (+24 more)
 
 ### Community 7 - "Excel Import Parsing"
-Cohesion: 0.10
-Nodes (26): automationTriggers, refreshAutomationTriggers(), refreshSmsLogs(), kpiCard(), formatRfmSegment(), rfmSegmentIcon(), AUTOMATION_DEFAULT_TEMPLATES, AUTOMATION_DESCRIPTIONS (+18 more)
+Cohesion: 0.07
+Nodes (33): refreshAutomationTriggers(), refreshSmsLogs(), buildCustomerRows(), CUSTOMER_FIELD_LABELS, CustomerField, CustomerImportRow, formatRfmSegment(), rfmSegmentIcon() (+25 more)
 
 ### Community 8 - "Toast UI & AI Menu Engineering"
-Cohesion: 0.12
-Nodes (23): navigationIntent, suppliers, RecipeIngredient, avgGrossMarginRatio(), DailyAggregate, dailySeries(), inventoryValue(), ItemRecipeCostFn (+15 more)
+Cohesion: 0.19
+Nodes (13): RecipeIngredient, avgGrossMarginRatio(), DailyAggregate, dailyBreakEven(), dailySeries(), ItemRecipeCostFn, monthlyFixedCost(), PeriodPL (+5 more)
 
 ### Community 9 - "Database Create/Update Ops"
 Cohesion: 0.09
 Nodes (22): dependencies, chart.js, idb, workbox-core, workbox-precaching, workbox-routing, workbox-strategies, xlsx (+14 more)
 
 ### Community 10 - "Accounting & P&L Reporting"
-Cohesion: 0.16
-Nodes (23): renderChart(), renderAccessDenied(), el(), emptyState(), toPersian(), renderSuppliersSubTab(), sourceBreakdownPanel(), sourceBreakdownRow() (+15 more)
+Cohesion: 0.17
+Nodes (23): renderAccessDenied(), el(), emptyState(), plRow(), plStatement(), sourceBreakdownPanel(), sourceBreakdownRow(), renderBackupSection() (+15 more)
 
 ### Community 11 - "Expense Management"
-Cohesion: 0.14
-Nodes (19): NewIngredientInput, Ingredient, askClaude(), ClaudeApiResponse, ClaudeResult, classifyMenuItems(), MenuEngineeringItem, MenuEngineeringResult (+11 more)
+Cohesion: 0.15
+Nodes (17): askClaude(), ClaudeApiResponse, ClaudeResult, classifyMenuItems(), MenuEngineeringItem, MenuEngineeringResult, MenuQuadrant, QUADRANT_DESCRIPTIONS (+9 more)
 
 ### Community 12 - "Chart Theming & Cost Calculations"
-Cohesion: 0.13
-Nodes (18): AlertBannerOptions, createAlertBanner(), dismissedThisSession, createNotificationBell(), ALL_ROUTES, createAppHeader(), HEADER_LINKS, maybeShowPlatformBroadcast() (+10 more)
+Cohesion: 0.11
+Nodes (16): ExpenseFrequency, BUSINESS_TYPE_LABELS, dateFmt, dateShortFmt, dateTimeFmt, EXPENSE_CATEGORY_LABELS, EXPENSE_FREQUENCY_LABELS, INGREDIENT_CATEGORY_LABELS (+8 more)
 
 ### Community 13 - "Seed Data Generator"
-Cohesion: 0.16
-Nodes (17): render(), login(), AppUser, BusinessType, authShell(), renderAuthGate(), renderPinEntry(), renderUserGrid() (+9 more)
+Cohesion: 0.18
+Nodes (15): buildSalesPlan(), computeConsumption(), INGREDIENTS, MENU_ITEMS, PlannedSale, roundQty(), seedDatabase(), seedExpensesAndPayroll() (+7 more)
 
 ### Community 14 - "Automation & SMS"
-Cohesion: 0.19
-Nodes (15): NOTIFICATION_ROUTE, Schema, notifications, resolvedTheme, unreadNotificationCount(), AppNotification, AutomationTrigger, Customer (+7 more)
+Cohesion: 0.11
+Nodes (22): automationTriggers, customers, employees, expenses, isOnline, menuItems, navigationIntent, notifications (+14 more)
 
 ### Community 15 - "CSV/JSON Export & P&L Calc"
-Cohesion: 0.11
-Nodes (17): AppNotificationType, AuthConfig, AutomationTriggerType, BulkSaleBreakdownEntry, BusinessSubscriptionStatus, CampaignRecord, CustomerSource, CustomerTag (+9 more)
+Cohesion: 0.09
+Nodes (28): RegisterBusinessInput, Schema, AppNotification, AppNotificationType, AuthConfig, AutomationTriggerType, BulkSaleBreakdownEntry, BusinessSubscriptionStatus (+20 more)
 
 ### Community 16 - "User Auth CRUD"
-Cohesion: 0.13
-Nodes (16): supplierPayments, SaleSource, AccountingTab, bySourceBreakdown(), effectiveSource(), ExpenseSubTab, PERIOD_OPTIONS, renderFixedVariableTab() (+8 more)
+Cohesion: 0.14
+Nodes (17): refreshSupplierPayments(), SaleSource, AccountingTab, bySourceBreakdown(), effectiveSource(), ExpenseSubTab, handleDeleteSupplierPayment(), PERIOD_OPTIONS (+9 more)
 
 ### Community 17 - "Recipe Cost Calculations"
 Cohesion: 0.12
 Nodes (15): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, lib, module, moduleResolution, noEmit (+7 more)
 
 ### Community 18 - "Business Subscription Logic"
-Cohesion: 0.14
-Nodes (10): Child, ElProps, EmptyStateOptions, KpiTone, parseCell(), parsePersianDigits(), featureCard(), FEATURES (+2 more)
+Cohesion: 0.13
+Nodes (15): createAppNav(), createNotificationBell(), NOTIFICATION_ROUTE, createAppHeader(), renderExpiredScreen(), showBootError(), Child, ElProps (+7 more)
 
 ### Community 19 - "Ingredient Deletion Guard"
 Cohesion: 0.15
 Nodes (12): background_color, description, dir, display, icons, lang, name, orientation (+4 more)
 
 ### Community 20 - "Sale Recording Types"
-Cohesion: 0.26
-Nodes (12): checkInactivityTimeout(), currentUser, isSuperadmin(), logout(), logoutWithReason(), readSession(), recordActivity(), refreshCurrentUser() (+4 more)
+Cohesion: 0.15
+Nodes (20): attemptLogin(), checkInactivityTimeout(), isSuperadmin(), login(), LoginResult, logout(), logoutWithReason(), readSession() (+12 more)
 
 ### Community 21 - "Service Worker Entry"
 Cohesion: 0.21
-Nodes (12): createBreadcrumb(), getHashPath(), navigate(), registerRoutes(), renderCurrent(), Route, RouteCleanup, RouteRender (+4 more)
+Nodes (12): NAV_ITEMS, createBreadcrumb(), currentPath, getHashPath(), navigate(), renderCurrent(), Route, RouteRender (+4 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.33
-Nodes (12): ingredientsById(), avgFoodCostPct(), foodCostPct(), foodCostStatus, grossProfit(), recipeCost(), suggestedPriceForTarget(), openRecipeBuilderModal() (+4 more)
+Cohesion: 0.28
+Nodes (15): refreshMenuItems(), avgFoodCostPct(), foodCostPct(), foodCostStatus, grossProfit(), suggestedPriceForTarget(), iconBtn(), formatPct() (+7 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.26
 Nodes (10): ConsumptionRecord, Sale, WasteEntry, buildContext(), computeDailyConsumption(), computeEstimation(), ConsumptionContext, IngredientEstimation (+2 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.26
-Nodes (11): applyTemplate(), isEligible(), recencyDaysFor(), runAutomationTriggers(), withinCooldown(), fetchWithTimeout(), KavenegarConfig, KavenegarResponse (+3 more)
+Cohesion: 0.23
+Nodes (12): AutomationTrigger, applyTemplate(), isEligible(), recencyDaysFor(), runAutomationTriggers(), withinCooldown(), fetchWithTimeout(), KavenegarConfig (+4 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.15
 Nodes (12): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, lib, module, moduleResolution, noEmit (+4 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.24
-Nodes (12): dailyBreakEven(), formatDateShort(), formatMoney(), formatPct(), breakEvenPanel(), plRow(), plStatement(), renderSupplierPaymentRow() (+4 more)
+Cohesion: 0.13
+Nodes (30): currentUser, ingredientsById(), kpiCard(), formatDateShort(), formatIngredientCategory(), formatMoney(), formatUnit(), toPersian() (+22 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.25
 Nodes (10): buildManifest(), crypto, entry(), esbuild, fs, hashFile(), main(), minify (+2 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.29
-Nodes (11): daysUntilBusinessExpiry(), isBusinessExpired(), isBusinessExpiringSoon(), bootstrap(), renderExpiredScreen(), initOnlineWatcher(), formatDate(), renderRenewalSection() (+3 more)
+Cohesion: 0.14
+Nodes (16): daysUntilBusinessExpiry(), isBusinessExpired(), isBusinessExpiringSoon(), RouteCleanup, BUSINESS_TYPE_OPTIONS, EXTEND_OPTIONS, PLAN_OPTIONS, PLAN_TOTAL_DAYS (+8 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.18
-Nodes (11): changeSuperadminPin(), createUser(), deleteUser(), findUserByPin(), getAuthConfig(), getUser(), hasSuperadmin(), listUsers() (+3 more)
+Cohesion: 0.14
+Nodes (14): changeSuperadminPassword(), createUser(), deleteUser(), findUserByUsername(), getAuthConfig(), getUser(), hasSuperadmin(), isUsernameTaken() (+6 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.20
 Nodes (9): اسکریپت‌ها, ذخیره‌سازی و حریم خصوصی, ساختار پروژه, منوبان — MenuBan CostManager, نصب و اجرا, همگام‌سازی چند دستگاهی, ویژگی‌ها, پشته فنی (+1 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.29
-Nodes (9): settings, checkLowStockAndNotify(), initLowStockWatcher(), lowStockMessage(), notifiedIds, notifyBrowser(), notifyInApp(), requestNotificationPermission() (+1 more)
+Cohesion: 0.16
+Nodes (22): AlertBannerOptions, createAlertBanner(), dismissedThisSession, ALL_ROUTES, bootstrap(), maybeShowPlatformBroadcast(), SYNC_STATUS_ICON_NAME, SYNC_STATUS_LABEL (+14 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.25
-Nodes (8): SessionUser, createAppNav(), NAV_ITEMS, NavItem, NewUserInput, currentPath, ingredients, UserRole
+Cohesion: 0.18
+Nodes (14): SessionUser, NavItem, createSidebar(), navButton(), ROLE_LABELS, Sidebar, SIDEBAR_LINKS, SidebarLink (+6 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.25
-Nodes (4): initThemeWatcher(), Listener, lowStockCount(), signal
+Nodes (4): Listener, lowStockCount(), signal, unreadNotificationCount()
 
 ### Community 34 - "Community 34"
-Cohesion: 0.33
-Nodes (8): refreshNotifications(), ALERT_ROLES, checkStockAlertsAndNotify(), lowStockMessage(), notifiedLowStock, notifiedStockout, notifyRoles(), stockoutMessage()
+Cohesion: 0.24
+Nodes (11): NewIngredientInput, refreshNotifications(), Ingredient, formatDate(), ALERT_ROLES, checkStockAlertsAndNotify(), lowStockMessage(), notifiedLowStock (+3 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.36
-Nodes (8): hasFullAccess(), hasRole(), takeNavigationIntent(), formatIngredientCategory(), renderIngredientCard(), renderIngredients(), renderRecipes(), renderBudgetSection()
+Cohesion: 0.25
+Nodes (13): hasFullAccess(), hasRole(), takeNavigationIntent(), inventoryValue(), lowStockIngredients(), formatMoneyShort(), trimmed(), CATEGORY_OPTIONS (+5 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.29
-Nodes (8): addMonthsISO(), effectivePointsPerToman(), extendBusinessSubscription(), getSettings(), importAllData(), registerBusiness(), reverseCustomerVisit(), updateSettings()
+Cohesion: 0.25
+Nodes (9): addMonthsISO(), deleteSale(), effectivePointsPerToman(), extendBusinessSubscription(), getSettings(), importAllData(), registerBusiness(), reverseCustomerVisit() (+1 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.36
 Nodes (6): downloadBlob(), downloadCSV(), downloadJSON(), readFileAsJSON(), shareOrCopyText(), toCSV()
 
 ### Community 38 - "Community 38"
-Cohesion: 0.38
-Nodes (5): RFMScore, RFMSegment, assignSegment(), quintileScores(), recalculateAllRfm()
+Cohesion: 0.32
+Nodes (6): Customer, RFMScore, RFMSegment, assignSegment(), quintileScores(), recalculateAllRfm()
 
 ### Community 39 - "Community 39"
 Cohesion: 0.33
 Nodes (5): DEST_DIR, fs, path, SRC_DIR, WEIGHTS
 
 ### Community 40 - "Community 40"
-Cohesion: 0.33
-Nodes (4): { chromium }, fs, OUT_DIR, path
+Cohesion: 0.25
+Nodes (6): { chromium }, fs, OUT_DIR, path, render(), renderSetupWizard()
 
 ### Community 41 - "Community 41"
-Cohesion: 0.40
-Nodes (5): applyChartTheme(), cssVar(), destroyChart(), instances, palette
+Cohesion: 0.33
+Nodes (6): applyChartTheme(), cssVar(), destroyChart(), instances, palette, renderChart()
 
 ### Community 42 - "Community 42"
-Cohesion: 0.50
-Nodes (4): deleteIngredient(), getRecipesUsingIngredient(), listMenuItems(), listShoppingList()
-
-### Community 43 - "Community 43"
-Cohesion: 0.50
-Nodes (3): IngredientInUseError, MenuItem, ItemMatch
+Cohesion: 0.38
+Nodes (14): refreshAll(), refreshIngredients(), refreshSales(), refreshShoppingList(), scheduleAutomationRun(), todayISO(), scheduleRecalculation(), scheduleRfmRecalculation() (+6 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.67
 Nodes (4): RecordImportedSaleInput, RecordSaleInput, DeliveryInfo, OrderType
 
 ## Knowledge Gaps
-- **211 isolated node(s):** `name`, `short_name`, `description`, `start_url`, `scope` (+206 more)
+- **212 isolated node(s):** `name`, `short_name`, `description`, `start_url`, `scope` (+207 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `el()` connect `Accounting & P&L Reporting` to `UI Components & Refresh Handlers`, `Inventory & Notification Types`, `Platform Owner Admin`, `Community 35`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Toast UI & AI Menu Engineering`, `Expense Management`, `Chart Theming & Cost Calculations`, `Seed Data Generator`, `Automation & SMS`, `User Auth CRUD`, `Business Subscription Logic`, `Service Worker Entry`, `Community 22`, `Community 26`, `Community 28`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
-- **Why does `toPersian()` connect `Accounting & P&L Reporting` to `UI Components & Refresh Handlers`, `Inventory & Notification Types`, `Platform Owner Admin`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Toast UI & AI Menu Engineering`, `Expense Management`, `Chart Theming & Cost Calculations`, `Seed Data Generator`, `Automation & SMS`, `User Auth CRUD`, `Business Subscription Logic`, `Community 22`, `Community 24`, `Community 26`, `Community 28`, `Community 31`, `Community 32`, `Community 34`, `Community 35`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `showToast()` connect `UI Components & Refresh Handlers` to `Inventory & Notification Types`, `Platform Owner Admin`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Accounting & P&L Reporting`, `Expense Management`, `Chart Theming & Cost Calculations`, `User Auth CRUD`, `Community 22`, `Community 28`?**
+- **Why does `el()` connect `Accounting & P&L Reporting` to `UI Components & Refresh Handlers`, `Inventory & Notification Types`, `Platform Owner Admin`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Toast UI & AI Menu Engineering`, `Expense Management`, `Automation & SMS`, `User Auth CRUD`, `Business Subscription Logic`, `Sale Recording Types`, `Service Worker Entry`, `Community 22`, `Community 26`, `Community 28`, `Community 31`, `Community 35`, `Community 42`?**
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
+- **Why does `toPersian()` connect `Community 26` to `UI Components & Refresh Handlers`, `Platform Owner Admin`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Accounting & P&L Reporting`, `Expense Management`, `Chart Theming & Cost Calculations`, `Automation & SMS`, `User Auth CRUD`, `Business Subscription Logic`, `Service Worker Entry`, `Community 22`, `Community 24`, `Community 28`, `Community 31`, `Community 34`, `Community 35`, `Community 42`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `showToast()` connect `UI Components & Refresh Handlers` to `Inventory & Notification Types`, `Platform Owner Admin`, `Community 35`, `Reactive Store & Shared Components`, `Database CRUD Operations`, `Excel Import Parsing`, `Accounting & P&L Reporting`, `Community 42`, `Expense Management`, `User Auth CRUD`, `Community 22`, `Community 26`, `Community 28`, `Community 31`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `name`, `short_name`, `description` to the rest of the system?**
-  _211 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `UI Components & Refresh Handlers` be split into smaller, more focused modules?**
-  _Cohesion score 0.07654127481713689 - nodes in this community are weakly interconnected._
+  _212 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Session & Auth Management` be split into smaller, more focused modules?**
-  _Cohesion score 0.06077694235588972 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06078316773816481 - nodes in this community are weakly interconnected._
 - **Should `Inventory & Notification Types` be split into smaller, more focused modules?**
-  _Cohesion score 0.05117845117845118 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11333333333333333 - nodes in this community are weakly interconnected._
+- **Should `Platform Owner Admin` be split into smaller, more focused modules?**
+  _Cohesion score 0.10042283298097252 - nodes in this community are weakly interconnected._

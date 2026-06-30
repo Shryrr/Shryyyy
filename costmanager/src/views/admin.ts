@@ -2,7 +2,9 @@ import * as db from '../db';
 import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, selectEl } from '../utils/dom';
+import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
+import { el, emptyState, field, iconBtn, iconTextBtn, selectEl } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
 import { formatBusinessType, formatDate, formatDateTime, formatMoney, toPersian } from '../utils/format';
 import { generateSyncCode, importFromSyncCode, pullFromServer, pushToServer, testSyncConnection } from '../utils/sync';
@@ -66,18 +68,27 @@ async function loadUsers(): Promise<AppUser[]> {
 function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
   const isSuperadminUser = existing?.role === 'superadmin';
   const nameInput = el('input', { type: 'text', class: 'input', value: existing?.name ?? '', autocomplete: 'off' });
-  const pinInput = el('input', {
-    type: 'text', inputmode: 'numeric', class: 'input', autocomplete: 'off',
-    placeholder: existing ? 'برای حفظ پین فعلی خالی بگذارید' : '',
-  });
-  const confirmPinInput = el('input', { type: 'text', inputmode: 'numeric', class: 'input', autocomplete: 'off' });
+  const usernameInput = el('input', { type: 'text', class: 'input', autocomplete: 'username', dir: 'ltr', value: existing?.username ?? '' });
+  const passwordInput = el('input', {
+    type: 'password', class: 'input', dir: 'ltr', autocomplete: 'new-password',
+    placeholder: existing ? 'برای حفظ رمز فعلی خالی بگذارید' : '',
+  }) as HTMLInputElement;
+  const confirmPasswordInput = el('input', { type: 'password', class: 'input', dir: 'ltr', autocomplete: 'new-password' });
+  const strengthEl = el('p', { class: 'form-hint' }, ['']);
   const roleSelect = selectEl(ROLE_OPTIONS, existing && !isSuperadminUser ? existing.role : 'manager');
   const activeCheckbox = el('input', { type: 'checkbox', checked: existing?.isActive ?? true });
 
+  passwordInput.addEventListener('input', () => {
+    const { label } = passwordStrength(passwordInput.value);
+    strengthEl.textContent = passwordInput.value ? `قدرت رمز عبور: ${label}` : '';
+  });
+
   const body = el('form', { class: 'form' }, [
     field('نام کاربر', nameInput),
-    field(existing ? 'پین جدید (اختیاری)' : 'پین (۴ رقم)', pinInput),
-    field('تکرار پین', confirmPinInput),
+    field('نام کاربری', usernameInput),
+    field(existing ? 'رمز عبور جدید (اختیاری)' : 'رمز عبور', passwordInput),
+    strengthEl,
+    field('تکرار رمز عبور', confirmPasswordInput),
     isSuperadminUser ? el('p', { class: 'form-hint' }, ['نقش مدیر اصلی قابل تغییر نیست']) : field('نقش', roleSelect),
     !existing ? el('p', { class: 'form-hint' }, ['کارمندان رایگان اضافه می‌شوند و اشتراک جداگانه ندارند.']) : null,
     existing && !isSuperadminUser ? el('label', { class: 'toolbar__checkbox' }, [activeCheckbox, ' فعال']) : null,
@@ -90,33 +101,40 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
   body.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = nameInput.value.trim();
-    const pin = pinInput.value.trim();
-    const confirmPin = confirmPinInput.value.trim();
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
     if (!name) {
       showToast('نام کاربر الزامی است', 'error');
       return;
     }
-    if (!existing || pin) {
-      if (!/^\d{4}$/.test(pin)) {
-        showToast('پین باید دقیقاً ۴ رقم باشد', 'error');
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      showToast(usernameError, 'error');
+      return;
+    }
+    if (!existing || password) {
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        showToast(passwordError, 'error');
         return;
       }
-      if (pin !== confirmPin) {
-        showToast('پین و تکرار آن یکسان نیستند', 'error');
+      if (password !== confirmPassword) {
+        showToast('رمز عبور و تکرار آن یکسان نیستند', 'error');
         return;
       }
     }
     try {
       if (existing) {
-        const patch: Partial<Omit<AppUser, 'id'>> = { name };
-        if (pin) patch.pin = pin;
+        const patch: db.UpdateUserInput = { name, username };
+        if (password) patch.password = password;
         if (!isSuperadminUser) {
           patch.role = roleSelect.value as UserRole;
           patch.isActive = activeCheckbox.checked;
         }
         await db.updateUser(existing.id, patch);
       } else {
-        await db.createUser({ name, pin, role: roleSelect.value as UserRole });
+        await db.createUser({ name, username, password, role: roleSelect.value as UserRole });
       }
       showToast(existing ? 'تغییرات ذخیره شد' : 'کاربر افزوده شد', 'success');
       modal.close();
@@ -157,24 +175,15 @@ function renderUserRow(user: AppUser, onChange: () => void): HTMLElement {
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openUserFormModal(onChange, user) }, ['✏️']),
+      iconBtn('edit', 'ویرایش', () => openUserFormModal(onChange, user)),
       !isSuperadminUser
-        ? el(
-          'button',
-          {
-            class: 'icon-btn',
-            type: 'button',
-            title: user.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی',
-            onclick: async () => {
-              await db.updateUser(user.id, { isActive: !user.isActive });
-              onChange();
-            },
-          },
-          [user.isActive ? '👁️' : '🚫'],
-        )
+        ? iconBtn(user.isActive ? 'eye' : 'eye-off', user.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', async () => {
+          await db.updateUser(user.id, { isActive: !user.isActive });
+          onChange();
+        })
         : null,
       !isSuperadminUser
-        ? el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteUser(user, onChange) }, ['🗑️'])
+        ? iconBtn('trash', 'حذف', () => handleDeleteUser(user, onChange))
         : null,
     ]),
   ]);
@@ -197,7 +206,7 @@ function renderUsersTab(container: HTMLElement): () => void {
       return a.name.localeCompare(b.name, 'fa');
     });
     if (!users.length) {
-      listEl.appendChild(emptyState({ icon: '👤', title: 'هنوز کاربری ثبت نشده است' }));
+      listEl.appendChild(emptyState({ icon: 'user', title: 'هنوز کاربری ثبت نشده است' }));
       return;
     }
     for (const user of users) listEl.appendChild(renderUserRow(user, render));
@@ -255,16 +264,20 @@ function renderRenewalSection(container: HTMLElement): () => void {
       );
 
       if (expired) {
+        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
+        iconEl.appendChild(svgIcon('alert-circle', 18));
         cardHost.appendChild(
           el('div', { class: 'alert-banner alert-banner--danger' }, [
-            el('span', { class: 'alert-banner__icon' }, ['⛔']),
+            iconEl,
             el('span', { class: 'alert-banner__text' }, ['اشتراک کسب‌وکار منقضی شده است. برای ادامه کار، اشتراک را تمدید کنید.']),
           ]),
         );
       } else if (soon) {
+        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
+        iconEl.appendChild(svgIcon('alert-triangle', 18));
         cardHost.appendChild(
           el('div', { class: `alert-banner alert-banner--${days <= 3 ? 'danger' : 'warning'}` }, [
-            el('span', { class: 'alert-banner__icon' }, ['⚠️']),
+            iconEl,
             el('span', { class: 'alert-banner__text' }, [`اشتراک کسب‌وکار تا ${toPersian(days)} روز دیگر منقضی می‌شود.`]),
           ]),
         );
@@ -315,43 +328,52 @@ function renderSubscriptionsTab(container: HTMLElement): () => void {
 
 // ---------- System settings tab ----------
 
-function renderChangePinSection(container: HTMLElement): () => void {
-  const currentPinInput = el('input', { type: 'password', inputmode: 'numeric', class: 'input', autocomplete: 'off' });
-  const newPinInput = el('input', { type: 'password', inputmode: 'numeric', class: 'input', autocomplete: 'off' });
-  const confirmPinInput = el('input', { type: 'password', inputmode: 'numeric', class: 'input', autocomplete: 'off' });
+function renderChangePasswordSection(container: HTMLElement): () => void {
+  const currentPasswordInput = el('input', { type: 'password', class: 'input', dir: 'ltr', autocomplete: 'current-password' });
+  const newPasswordInput = el('input', { type: 'password', class: 'input', dir: 'ltr', autocomplete: 'new-password' }) as HTMLInputElement;
+  const confirmPasswordInput = el('input', { type: 'password', class: 'input', dir: 'ltr', autocomplete: 'new-password' });
+  const strengthEl = el('p', { class: 'form-hint' }, ['']);
+
+  newPasswordInput.addEventListener('input', () => {
+    const { label } = passwordStrength(newPasswordInput.value);
+    strengthEl.textContent = newPasswordInput.value ? `قدرت رمز عبور: ${label}` : '';
+  });
 
   const form = el('form', { class: 'form' }, [
-    field('پین فعلی', currentPinInput),
-    field('پین جدید (۴ رقم)', newPinInput),
-    field('تکرار پین جدید', confirmPinInput),
-    el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['تغییر پین'])]),
+    field('رمز عبور فعلی', currentPasswordInput),
+    field('رمز عبور جدید', newPasswordInput),
+    strengthEl,
+    field('تکرار رمز عبور جدید', confirmPasswordInput),
+    el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['تغییر رمز عبور'])]),
   ]);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const currentPin = currentPinInput.value.trim();
-    const pin = newPinInput.value.trim();
-    const confirmPin = confirmPinInput.value.trim();
-    if (!/^\d{4}$/.test(pin)) {
-      showToast('پین جدید باید دقیقاً ۴ رقم باشد', 'error');
+    const currentPassword = currentPasswordInput.value;
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      showToast(passwordError, 'error');
       return;
     }
-    if (pin !== confirmPin) {
-      showToast('پین و تکرار آن یکسان نیستند', 'error');
+    if (newPassword !== confirmPassword) {
+      showToast('رمز عبور و تکرار آن یکسان نیستند', 'error');
       return;
     }
     try {
-      await db.changeSuperadminPin(currentPin, pin);
-      currentPinInput.value = '';
-      newPinInput.value = '';
-      confirmPinInput.value = '';
-      showToast('پین مدیر اصلی تغییر کرد', 'success');
+      await db.changeSuperadminPassword(currentPassword, newPassword);
+      currentPasswordInput.value = '';
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      strengthEl.textContent = '';
+      showToast('رمز عبور مدیر اصلی تغییر کرد', 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'خطایی رخ داد', 'error');
     }
   });
 
-  container.appendChild(settingsCard('تغییر پین مدیر اصلی', form));
+  container.appendChild(settingsCard('تغییر رمز عبور مدیر اصلی', form));
   return () => {};
 }
 
@@ -403,30 +425,14 @@ function renderSyncSection(container: HTMLElement): () => void {
     statusEl,
     el('div', { class: 'settings-actions' }, [
       el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره و تست اتصال']),
-      el(
-        'button',
-        {
-          type: 'button',
-          class: 'btn btn-secondary',
-          onclick: async () => {
-            const result = await pushToServer();
-            if (result.ok) refreshStatus();
-          },
-        },
-        ['🔄 ارسال به سرور'],
-      ),
-      el(
-        'button',
-        {
-          type: 'button',
-          class: 'btn btn-secondary',
-          onclick: async () => {
-            const result = await pullFromServer();
-            if (result.ok) refreshStatus();
-          },
-        },
-        ['☁️ دریافت از سرور'],
-      ),
+      iconTextBtn('refresh-cw', 'ارسال به سرور', 'btn btn-secondary', async () => {
+        const result = await pushToServer();
+        if (result.ok) refreshStatus();
+      }),
+      iconTextBtn('cloud', 'دریافت از سرور', 'btn btn-secondary', async () => {
+        const result = await pullFromServer();
+        if (result.ok) refreshStatus();
+      }),
     ]),
   ]);
 
@@ -452,19 +458,11 @@ function renderSyncSection(container: HTMLElement): () => void {
 
   // ---- Sync code: quick one-time transfer between two devices ----
   const codeDisplay = el('div', { class: 'sync-code-display', hidden: true });
-  const generateBtn = el(
-    'button',
-    {
-      type: 'button',
-      class: 'btn btn-secondary',
-      onclick: async () => {
-        const code = await generateSyncCode();
-        codeDisplay.hidden = false;
-        codeDisplay.textContent = toPersian(code);
-      },
-    },
-    ['🔢 ساخت کد همگام‌سازی'],
-  );
+  const generateBtn = iconTextBtn('hash', 'ساخت کد همگام‌سازی', 'btn btn-secondary', async () => {
+    const code = await generateSyncCode();
+    codeDisplay.hidden = false;
+    codeDisplay.textContent = toPersian(code);
+  });
 
   const importInput = el('input', {
     type: 'text', inputmode: 'numeric', class: 'input', placeholder: '۶ رقمی', dir: 'ltr', maxlength: 6,
@@ -560,20 +558,12 @@ function renderBackupSection(container: HTMLElement): () => void {
     settingsCard(
       'پشتیبان‌گیری محلی',
       el('div', { class: 'settings-actions' }, [
-        el(
-          'button',
-          {
-            type: 'button',
-            class: 'btn btn-secondary',
-            onclick: async () => {
-              const backup = await db.exportAllData();
-              downloadJSON(`menuban-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
-              showToast('فایل پشتیبان دانلود شد', 'success');
-            },
-          },
-          ['⬇️ خروجی کامل (JSON)'],
-        ),
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => fileInput.click() }, ['⬆️ بازگردانی از فایل']),
+        iconTextBtn('download', 'خروجی کامل (JSON)', 'btn btn-secondary', async () => {
+          const backup = await db.exportAllData();
+          downloadJSON(`menuban-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
+          showToast('فایل پشتیبان دانلود شد', 'success');
+        }),
+        iconTextBtn('upload', 'بازگردانی از فایل', 'btn btn-secondary', () => fileInput.click()),
         fileInput,
       ]),
     ),
@@ -583,7 +573,8 @@ function renderBackupSection(container: HTMLElement): () => void {
 
 function renderResetSection(container: HTMLElement): () => void {
   const confirmInput = el('input', { type: 'text', class: 'input', placeholder: RESET_PHRASE });
-  const resetBtn = el('button', { type: 'button', class: 'btn btn-danger', disabled: true }, ['🗑️ بازنشانی کامل داده‌ها']);
+  const resetBtn = el('button', { type: 'button', class: 'btn btn-danger', disabled: true }, []);
+  resetBtn.append(svgIcon('trash', 14), ' بازنشانی کامل داده‌ها');
 
   confirmInput.addEventListener('input', () => {
     resetBtn.disabled = confirmInput.value.trim() !== RESET_PHRASE;
@@ -621,7 +612,7 @@ function renderSystemTab(container: HTMLElement): () => void {
   const grid = el('div', { class: 'settings-grid' });
   container.appendChild(grid);
   const cleanups = [
-    renderChangePinSection(grid),
+    renderChangePasswordSection(grid),
     renderBusinessSection(grid),
     renderSyncSection(grid),
     renderBackupSection(grid),

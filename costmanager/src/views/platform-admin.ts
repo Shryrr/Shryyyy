@@ -1,26 +1,31 @@
 import { confirmModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { settings } from '../store';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, iconTextBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
 import { formatDateTime, formatMoney, toPersian } from '../utils/format';
 import {
-  DEFAULT_PLATFORM_PIN,
+  DEFAULT_PLATFORM_USERNAME,
   addPlatformInvoice,
   deletePlatformInvoice,
   fetchPlatformBusinesses,
   getPlatformPaymentCard,
   getPlatformPricing,
-  isDefaultPlatformPin,
+  isDefaultPlatformCredentials,
   listPlatformBroadcasts,
   listPlatformInvoices,
+  platformLockedUntil,
+  recordPlatformFailedAttempt,
+  resetPlatformLoginAttempts,
   sendPlatformBroadcast,
+  setPlatformCredentials,
   setPlatformOwnerSession,
   setPlatformPaymentCard,
-  setPlatformPin,
   setPlatformPricing,
-  verifyPlatformPin,
+  verifyPlatformCredentials,
   type PlatformPricing,
 } from '../platform-owner';
+import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
 import type { PaidSubscriptionPlan } from '../types';
 
 const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
@@ -31,11 +36,6 @@ const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
 ];
 
 type Tab = 'businesses' | 'pricing' | 'broadcast' | 'revenue';
-
-const PIN_MAX_ATTEMPTS = 3;
-const PIN_LOCKOUT_MS = 30_000;
-let failedAttempts = 0;
-let lockoutUntil = 0;
 
 function serverUrl(): string {
   return settings.get()?.syncServerUrl ?? '';
@@ -50,34 +50,28 @@ function settingsCard(title: string, body: HTMLElement): HTMLElement {
 }
 
 /**
- * Entry point: called when the hidden 7-tap gesture on the login logo fires. Takes over `container`
- * entirely for PIN entry; on success the platform-owner session flag is set (survives page reload via
- * sessionStorage) and the panel renders directly, with its exit button reloading back to the normal login.
+ * Entry point: reached via the dedicated `/platform-login` route (not a hidden gesture). Takes over
+ * `container` entirely for username/password entry; on success the platform-owner session flag is set
+ * (survives page reload via sessionStorage) and the panel renders directly, with its exit button reloading
+ * back to the normal login.
  */
 export function openPlatformOwnerGate(container: HTMLElement): void {
-  renderPinScreen(container);
+  renderLoginScreen(container);
 }
 
-/** Re-opens the panel for an already-unlocked session (e.g. the header 🔧 icon), without requiring the PIN again. */
+/** Re-opens the panel for an already-unlocked session (e.g. the header icon), without requiring login again. */
 export function openPlatformOwnerPanel(container: HTMLElement, onExit: () => void): void {
   renderPlatformAdminPanel(container, onExit);
 }
 
-function renderPinScreen(container: HTMLElement): void {
+function renderLoginScreen(container: HTMLElement): void {
   container.innerHTML = '';
 
-  let digits = '';
-  const circles = Array.from({ length: 6 }, () => el('span', { class: 'auth-pin-circle' }));
-  const circleRow = el('div', { class: 'auth-pin-circles' }, circles);
-  const hiddenInput = el('input', {
-    type: 'tel',
-    inputmode: 'numeric',
-    autocomplete: 'off',
-    maxlength: 6,
-    class: 'auth-pin-hidden-input',
-  });
+  const usernameInput = el('input', { type: 'text', class: 'input', autocomplete: 'username', dir: 'ltr' }) as HTMLInputElement;
+  const passwordInput = el('input', { type: 'password', class: 'input', autocomplete: 'current-password', dir: 'ltr' }) as HTMLInputElement;
   const errorEl = el('p', { class: 'auth-error', hidden: true }, []);
   const lockEl = el('p', { class: 'auth-lockout', hidden: true }, []);
+  const submitBtn = el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['ورود']) as HTMLButtonElement;
 
   let lockTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -86,130 +80,130 @@ function renderPinScreen(container: HTMLElement): void {
     errorEl.hidden = false;
   }
 
-  function renderCircles(): void {
-    circles.forEach((c, i) => c.classList.toggle('auth-pin-circle--filled', i < digits.length));
-  }
-
   function tickLock(): void {
-    const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+    const remaining = Math.ceil((platformLockedUntil() - Date.now()) / 1000);
     if (remaining <= 0) {
       lockEl.hidden = true;
-      hiddenInput.disabled = false;
+      submitBtn.disabled = false;
       if (lockTimer) clearInterval(lockTimer);
       return;
     }
     lockEl.hidden = false;
-    lockEl.textContent = `به دلیل ورود پین اشتباه، ${toPersian(remaining)} ثانیه صبر کنید`;
-    hiddenInput.disabled = true;
+    lockEl.textContent = `به دلیل ورود نادرست، ${toPersian(remaining)} ثانیه صبر کنید`;
+    submitBtn.disabled = true;
   }
 
-  if (Date.now() < lockoutUntil) {
+  if (Date.now() < platformLockedUntil()) {
     tickLock();
     lockTimer = setInterval(tickLock, 1000);
   }
 
-  function submit(): void {
+  async function submit(e: Event): Promise<void> {
+    e.preventDefault();
+    if (Date.now() < platformLockedUntil()) return;
     errorEl.hidden = true;
-    if (!verifyPlatformPin(digits)) {
-      failedAttempts += 1;
-      digits = '';
-      hiddenInput.value = '';
-      renderCircles();
-      circleRow.classList.add('auth-pin-circles--shake');
-      setTimeout(() => circleRow.classList.remove('auth-pin-circles--shake'), 300);
-      if (failedAttempts >= PIN_MAX_ATTEMPTS) {
-        failedAttempts = 0;
-        lockoutUntil = Date.now() + PIN_LOCKOUT_MS;
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) {
+      showError('نام کاربری و رمز عبور را وارد کنید');
+      return;
+    }
+    const valid = await verifyPlatformCredentials(username, password);
+    if (!valid) {
+      const until = recordPlatformFailedAttempt();
+      if (until) {
         tickLock();
         lockTimer = setInterval(tickLock, 1000);
       } else {
-        showError(`پین نادرست است (${toPersian(PIN_MAX_ATTEMPTS - failedAttempts)} تلاش باقی‌مانده)`);
+        showError('نام کاربری یا رمز عبور اشتباه است');
       }
-      if (!hiddenInput.disabled) hiddenInput.focus();
       return;
     }
-    failedAttempts = 0;
+    resetPlatformLoginAttempts();
     if (lockTimer) clearInterval(lockTimer);
-    if (isDefaultPlatformPin()) renderForceChangeScreen(container);
+    if (isDefaultPlatformCredentials()) renderForceChangeScreen(container);
     else {
       setPlatformOwnerSession(true);
-      renderPlatformAdminPanel(container, () => location.reload());
+      renderPlatformAdminPanel(container, () => { location.hash = ''; location.reload(); });
     }
   }
 
-  hiddenInput.addEventListener('input', () => {
-    digits = hiddenInput.value.replace(/\D/g, '').slice(0, 6);
-    hiddenInput.value = digits;
-    renderCircles();
-    if (digits.length === 6 && Date.now() >= lockoutUntil) submit();
-  });
-
-  circleRow.addEventListener('click', () => {
-    if (!hiddenInput.disabled) hiddenInput.focus();
-  });
+  const form = el('form', { class: 'auth-form', onsubmit: submit }, [
+    field('نام کاربری', usernameInput),
+    field('رمز عبور', passwordInput),
+    errorEl,
+    lockEl,
+    submitBtn,
+  ]);
 
   container.appendChild(
     el('div', { class: 'auth-screen' }, [
       el('div', { class: 'auth-card' }, [
-        el('button', { type: 'button', class: 'auth-back-btn', onclick: () => location.reload() }, ['→ بازگشت']),
-        el('div', { class: 'boot-logo auth-logo' }, ['🔧']),
+        el('button', { type: 'button', class: 'auth-back-btn', onclick: () => { location.hash = ''; location.reload(); } }, ['→ بازگشت']),
+        el('div', { class: 'boot-logo auth-logo' }, ['م']),
         el('span', { class: 'auth-brand' }, ['پنل پلتفرم']),
         el('h2', { class: 'auth-title' }, ['ورود مدیر پلتفرم']),
-        el('p', { class: 'auth-subtitle' }, ['پین ۶ رقمی پلتفرم را وارد کنید']),
-        circleRow,
-        hiddenInput,
-        errorEl,
-        lockEl,
+        form,
       ]),
     ]),
   );
 
-  setTimeout(() => {
-    if (!hiddenInput.disabled) hiddenInput.focus();
-  }, 50);
+  setTimeout(() => usernameInput.focus(), 50);
 }
 
 function renderForceChangeScreen(container: HTMLElement): void {
   container.innerHTML = '';
 
-  const newPinInput = el('input', { type: 'password', inputmode: 'numeric', class: 'input', autocomplete: 'off', maxlength: 6 });
-  const confirmPinInput = el('input', { type: 'password', inputmode: 'numeric', class: 'input', autocomplete: 'off', maxlength: 6 });
+  const usernameInput = el('input', { type: 'text', class: 'input', autocomplete: 'username', dir: 'ltr', value: DEFAULT_PLATFORM_USERNAME }) as HTMLInputElement;
+  const passwordInput = el('input', { type: 'password', class: 'input', autocomplete: 'new-password', dir: 'ltr' }) as HTMLInputElement;
+  const confirmInput = el('input', { type: 'password', class: 'input', autocomplete: 'new-password', dir: 'ltr' }) as HTMLInputElement;
+  const strengthEl = el('p', { class: 'auth-hint' }, ['']);
+
+  passwordInput.addEventListener('input', () => {
+    const { label } = passwordStrength(passwordInput.value);
+    strengthEl.textContent = passwordInput.value ? `قدرت رمز عبور: ${label}` : '';
+  });
 
   const form = el('form', { class: 'auth-form' }, [
-    field('پین جدید پلتفرم (۶ رقم)', newPinInput),
-    field('تکرار پین جدید', confirmPinInput),
-    el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['تنظیم پین و ادامه']),
+    field('نام کاربری جدید', usernameInput),
+    field('رمز عبور جدید', passwordInput),
+    strengthEl,
+    field('تکرار رمز عبور جدید', confirmInput),
+    el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['تنظیم اطلاعات ورود و ادامه']),
   ]);
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pin = newPinInput.value.trim();
-    const confirmPin = confirmPinInput.value.trim();
-    if (!/^\d{6}$/.test(pin)) {
-      showToast('پین جدید باید دقیقاً ۶ رقم باشد', 'error');
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    const confirm = confirmInput.value;
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      showToast(usernameError, 'error');
       return;
     }
-    if (pin === DEFAULT_PLATFORM_PIN) {
-      showToast('پین جدید نمی‌تواند همان پین پیش‌فرض باشد', 'error');
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      showToast(passwordError, 'error');
       return;
     }
-    if (pin !== confirmPin) {
-      showToast('پین و تکرار آن یکسان نیستند', 'error');
+    if (password !== confirm) {
+      showToast('رمز عبور و تکرار آن یکسان نیستند', 'error');
       return;
     }
-    setPlatformPin(pin);
+    await setPlatformCredentials(username, password);
     setPlatformOwnerSession(true);
-    showToast('پین پلتفرم تغییر کرد', 'success');
-    renderPlatformAdminPanel(container, () => location.reload());
+    showToast('اطلاعات ورود پلتفرم تغییر کرد', 'success');
+    renderPlatformAdminPanel(container, () => { location.hash = ''; location.reload(); });
   });
 
   container.appendChild(
     el('div', { class: 'auth-screen' }, [
       el('div', { class: 'auth-card' }, [
-        el('div', { class: 'boot-logo auth-logo' }, ['🔧']),
+        el('div', { class: 'boot-logo auth-logo' }, ['م']),
         el('span', { class: 'auth-brand' }, ['پنل پلتفرم']),
-        el('h2', { class: 'auth-title' }, ['تغییر پین پیش‌فرض']),
-        el('p', { class: 'auth-subtitle' }, ['برای امنیت بیشتر، پین پیش‌فرض را تغییر دهید']),
+        el('h2', { class: 'auth-title' }, ['تغییر اطلاعات ورود پیش‌فرض']),
+        el('p', { class: 'auth-subtitle' }, ['برای امنیت بیشتر، نام کاربری و رمز عبور پیش‌فرض را تغییر دهید']),
         form,
       ]),
     ]),
@@ -233,7 +227,11 @@ function renderPlatformAdminPanel(container: HTMLElement, onExit: () => void): v
   const root = el('div', { class: 'platform-admin-screen' }, [
     el('div', { class: 'platform-admin-header' }, [
       el('div', { class: 'platform-admin-header__title' }, [
-        el('span', { class: 'platform-admin-header__badge' }, ['🔧 پنل پلتفرم']),
+        (() => {
+          const badge = el('span', { class: 'platform-admin-header__badge' }, []);
+          badge.append(svgIcon('wrench', 14), ' پنل پلتفرم');
+          return badge;
+        })(),
         el('h1', { class: 'view-header__title' }, ['مدیریت پلتفرم']),
       ]),
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: onExit }, ['بستن پنل']),
@@ -282,12 +280,12 @@ function renderStats(host: HTMLElement): void {
   const totalRevenue = invoices.reduce((sum, i) => sum + i.amount, 0);
   const broadcasts = listPlatformBroadcasts();
 
-  const businessesCard = kpiCard('🏢', 'کسب‌وکارها', '…');
+  const businessesCard = kpiCard('building', 'کسب‌وکارها', '…');
   host.append(
     businessesCard,
-    kpiCard('💰', 'درآمد کل پلتفرم', `${formatMoney(totalRevenue)} ت`),
-    kpiCard('🧾', 'تعداد فاکتورها', toPersian(invoices.length)),
-    kpiCard('📨', 'پیام‌های ارسالی', toPersian(broadcasts.length)),
+    kpiCard('wallet', 'درآمد کل پلتفرم', `${formatMoney(totalRevenue)} ت`),
+    kpiCard('receipt', 'تعداد فاکتورها', toPersian(invoices.length)),
+    kpiCard('mail', 'پیام‌های ارسالی', toPersian(broadcasts.length)),
   );
 
   void fetchPlatformBusinesses(serverUrl()).then((list) => {
@@ -298,7 +296,7 @@ function renderStats(host: HTMLElement): void {
 
 function renderBusinessesTab(container: HTMLElement): void {
   const listHost = el('div', { class: 'platform-list' });
-  const refreshBtn = el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => void load() }, ['🔄 بروزرسانی']);
+  const refreshBtn = iconTextBtn('refresh-cw', 'بروزرسانی', 'btn btn-secondary', () => void load());
 
   container.append(el('div', { class: 'settings-actions' }, [refreshBtn]), listHost);
 
@@ -310,7 +308,7 @@ function renderBusinessesTab(container: HTMLElement): void {
     if (!businesses.length) {
       listHost.appendChild(
         emptyState({
-          icon: '🏢',
+          icon: 'building',
           title: 'کسب‌وکاری یافت نشد',
           message: 'فهرست کسب‌وکارها از سرور همگام‌سازی دریافت می‌شود؛ اگر سرور در دسترس نباشد یا این قابلیت را هنوز نداشته باشد، این فهرست خالی نمایش داده می‌شود.',
         }),
@@ -382,14 +380,14 @@ function renderPricingTab(container: HTMLElement): void {
 
 function renderBroadcastTab(container: HTMLElement): void {
   const messageInput = el('textarea', { class: 'input', rows: 3, placeholder: 'متن پیام برای همه کسب‌وکارها…' });
-  const sendBtn = el('button', { type: 'button', class: 'btn btn-primary' }, ['📨 ارسال پیام']);
+  const sendBtn = iconTextBtn('mail', 'ارسال پیام', 'btn btn-primary', () => {});
   const historyHost = el('div', { class: 'platform-list' });
 
   function renderHistory(): void {
     historyHost.innerHTML = '';
     const items = listPlatformBroadcasts();
     if (!items.length) {
-      historyHost.appendChild(emptyState({ icon: '📨', title: 'پیامی ارسال نشده است' }));
+      historyHost.appendChild(emptyState({ icon: 'mail', title: 'پیامی ارسال نشده است' }));
       return;
     }
     for (const item of items) {
@@ -443,7 +441,7 @@ function renderRevenueTab(container: HTMLElement): void {
     totalEl.textContent = `جمع درآمد ثبت‌شده: ${formatMoney(invoices.reduce((sum, i) => sum + i.amount, 0))} تومان`;
     listHost.innerHTML = '';
     if (!invoices.length) {
-      listHost.appendChild(emptyState({ icon: '🧾', title: 'فاکتوری ثبت نشده است' }));
+      listHost.appendChild(emptyState({ icon: 'receipt', title: 'فاکتوری ثبت نشده است' }));
       return;
     }
     for (const inv of [...invoices].reverse()) {
@@ -455,22 +453,13 @@ function renderRevenueTab(container: HTMLElement): void {
               `${planLabel(inv.plan)} · ${formatMoney(inv.amount)} تومان · ${formatDateTime(inv.paidAt)}`,
             ]),
           ]),
-          el(
-            'button',
-            {
-              class: 'icon-btn',
-              type: 'button',
-              title: 'حذف',
-              onclick: async () => {
-                const ok = await confirmModal({ title: 'حذف فاکتور', message: 'این فاکتور حذف شود؟', confirmLabel: 'حذف', danger: true });
-                if (!ok) return;
-                deletePlatformInvoice(inv.id);
-                refresh();
-                refreshStats();
-              },
-            },
-            ['🗑️'],
-          ),
+          iconBtn('trash', 'حذف', async () => {
+            const ok = await confirmModal({ title: 'حذف فاکتور', message: 'این فاکتور حذف شود؟', confirmLabel: 'حذف', danger: true });
+            if (!ok) return;
+            deletePlatformInvoice(inv.id);
+            refresh();
+            refreshStats();
+          }),
         ]),
       );
     }

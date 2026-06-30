@@ -76,10 +76,10 @@ export function classifyMenuItems(items: MenuItem[], sales: Sale[], ingredientsB
 }
 
 export const QUADRANT_LABELS: Record<MenuQuadrant, string> = {
-  star: 'ستاره',
-  plowhorse: 'اسب بارکش',
-  puzzle: 'پازل',
-  dog: 'سگ',
+  star: 'پرفروش و سودآور',
+  plowhorse: 'پرفروش، کم‌سود',
+  puzzle: 'کم‌فروش، سودآور',
+  dog: 'کم‌فروش و کم‌سود',
 };
 
 export const QUADRANT_DESCRIPTIONS: Record<MenuQuadrant, string> = {
@@ -87,13 +87,6 @@ export const QUADRANT_DESCRIPTIONS: Record<MenuQuadrant, string> = {
   plowhorse: 'محبوب اما سود کم — قیمت یا بهای تمام‌شدهٔ آن را بازبینی کنید.',
   puzzle: 'سودآور اما کم‌فروش — با تبلیغ و چیدمان بهتر در منو فروش را افزایش دهید.',
   dog: 'نه محبوب نه سودآور — کاندید حذف یا بازطراحی کامل از منو.',
-};
-
-export const QUADRANT_ICONS: Record<MenuQuadrant, string> = {
-  star: '⭐',
-  plowhorse: '🐴',
-  puzzle: '🧩',
-  dog: '🐶',
 };
 
 export const QUADRANT_ORDER: MenuQuadrant[] = ['star', 'plowhorse', 'puzzle', 'dog'];

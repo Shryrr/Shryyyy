@@ -1,41 +1,46 @@
 import { el } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
+import type { IconName } from '../utils/icons';
 
 export interface LandingCallbacks {
   onRegister: () => void;
   onJoin: () => void;
+  onLogin: () => void;
 }
 
-const FEATURES: { icon: string; title: string; desc: string }[] = [
+const FEATURES: { icon: IconName; title: string; desc: string }[] = [
   {
-    icon: '📦',
+    icon: 'box',
     title: 'پیش‌بینی هوشمند موجودی',
     desc: 'برآورد خودکار موجودی واقعی و نرخ مصرف روزانه از فروش و ضایعات، با هشدار پیش از اتمام هر ماده اولیه.',
   },
   {
-    icon: '👥',
+    icon: 'users',
     title: 'بازاریابی خودکار مشتریان',
     desc: 'تقسیم‌بندی مشتریان بر اساس تازگی، تکرار و ارزش خرید (RFM) و ارسال خودکار پیامک به مشتریان وفادار، تازه‌وارد و در حال ریزش.',
   },
   {
-    icon: '🧠',
+    icon: 'cpu',
     title: 'مهندسی منو با هوش مصنوعی',
     desc: 'تحلیل سودآوری و محبوبیت هر آیتم منو برای شناسایی ستاره‌ها، اسب‌های زحمتکش و آیتم‌های ضعیف.',
   },
   {
-    icon: '📊',
+    icon: 'bar-chart',
     title: 'سود و زیان یکپارچه',
     desc: 'ترکیب داده‌های صندوق فروشگاهی، اسنپ‌فود و فروش دستی در یک گزارش واحد سود و زیان.',
   },
   {
-    icon: '📡',
+    icon: 'radio',
     title: 'کاملاً آفلاین',
     desc: 'تمام امکانات بدون نیاز به اینترنت کار می‌کنند؛ داده‌ها به‌محض اتصال مجدد همگام‌سازی می‌شوند.',
   },
 ];
 
-function featureCard(f: { icon: string; title: string; desc: string }): HTMLElement {
+function featureCard(f: { icon: IconName; title: string; desc: string }): HTMLElement {
+  const iconEl = el('span', { class: 'landing-feature__icon' }, []);
+  iconEl.appendChild(svgIcon(f.icon, 24));
   return el('div', { class: 'landing-feature' }, [
-    el('span', { class: 'landing-feature__icon' }, [f.icon]),
+    iconEl,
     el('h3', { class: 'landing-feature__title' }, [f.title]),
     el('p', { class: 'landing-feature__desc' }, [f.desc]),
   ]);
@@ -55,15 +60,16 @@ export function renderLandingPage(container: HTMLElement, callbacks: LandingCall
           'منوبان داده‌های صندوق، اسنپ‌فود و ثبت دستی شما را در یک‌جا یکپارچه می‌کند و با پیش‌بینی موجودی، بازاریابی خودکار مشتریان و تحلیل منو، یک لایه هوش تجاری روی کسب‌وکار شما می‌سازد — نه یک صندوق فروش جدید.',
         ]),
       ]),
-      el('div', { class: 'landing-features' }, FEATURES.map(featureCard)),
       el('div', { class: 'landing-cta' }, [
-        el('button', { type: 'button', class: 'btn btn-primary auth-submit', onclick: callbacks.onRegister }, ['ثبت کسب‌وکار جدید']),
+        el('button', { type: 'button', class: 'btn btn-primary auth-submit', onclick: callbacks.onRegister }, ['ثبت‌نام رایگان']),
+        el('button', { type: 'button', class: 'btn btn-secondary auth-submit', onclick: callbacks.onLogin }, ['ورود به حساب']),
         el(
           'button',
-          { type: 'button', class: 'btn btn-secondary auth-submit', onclick: callbacks.onJoin },
-          ['پیوستن به کسب‌وکار موجود با کد همگام‌سازی'],
+          { type: 'button', class: 'landing-join-link', onclick: callbacks.onJoin },
+          ['کد دعوت دارید؟ پیوستن به کسب‌وکار موجود'],
         ),
       ]),
+      el('div', { class: 'landing-features' }, FEATURES.map(featureCard)),
     ]),
   );
 }

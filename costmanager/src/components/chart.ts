@@ -10,8 +10,8 @@ export function cssVar(name: string): string {
 }
 
 export const palette = {
-  primary: '#6C5CE7',
-  primaryD: '#5747D6',
+  primary: '#5C4FD4',
+  primaryD: '#4A3FB8',
   coral: '#FF7A59',
   mint: '#13C7A6',
   amber: '#F5A623',

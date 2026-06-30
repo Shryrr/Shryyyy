@@ -2,7 +2,8 @@ import * as db from '../db';
 import { currentUser, hasFullAccess, hasRole } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { emptyState, el, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { emptyState, el, field, iconBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
 import { formatDateShort, formatIngredientCategory, formatMoney, formatMoneyShort, formatUnit, toPersian, todayISO } from '../utils/format';
 import { navigate } from '../router';
 import type { RouteCleanup } from '../router';
@@ -184,7 +185,7 @@ function renderPurchaseRow(ingredient: Ingredient, record: PurchaseRecord): HTML
       el('span', { class: 'purchase-history-row__qty' }, [`${toPersian(record.quantity)} ${formatUnit(ingredient.unit)}`]),
       el('span', { class: 'purchase-history-row__price' }, [formatMoney(record.pricePerUnit)]),
       el('span', { class: 'purchase-history-row__meta' }, [[record.supplier, record.note].filter(Boolean).join(' — ')]),
-      el('button', { type: 'button', class: 'icon-btn', title: 'ویرایش', onclick: showEdit }, ['✏️']),
+      iconBtn('edit', 'ویرایش', showEdit),
     );
   }
 
@@ -212,8 +213,8 @@ function renderPurchaseRow(ingredient: Ingredient, record: PurchaseRecord): HTML
       priceInput,
       dateInput,
       supplierInput,
-      el('button', { type: 'button', class: 'icon-btn', title: 'ذخیره', onclick: save }, ['✔️']),
-      el('button', { type: 'button', class: 'icon-btn', title: 'انصراف', onclick: showView }, ['✕']),
+      iconBtn('check', 'ذخیره', save),
+      iconBtn('x', 'انصراف', showView),
     );
   }
 
@@ -233,7 +234,7 @@ function openPurchaseHistoryModal(ingredientId: string): void {
     body.innerHTML = '';
     const history = [...ingredient.purchaseHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     if (!history.length) {
-      body.appendChild(emptyState({ icon: '🧾', title: 'تاریخچه خریدی ثبت نشده است' }));
+      body.appendChild(emptyState({ icon: 'receipt', title: 'تاریخچه خریدی ثبت نشده است' }));
       return;
     }
     const list = el('div', { class: 'purchase-history-list' });
@@ -298,9 +299,11 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
         `${toPersian(ingredient.currentStock)} / ${toPersian(ingredient.maxStock)} ${formatUnit(ingredient.unit)} · میانگین قیمت: ${formatMoney(ingredient.pricePerUnit)}`,
       ]),
       ingredient.dailyUsageRate > 0
-        ? el('div', { class: `ingredient-card__predict${isPredictedStockout ? ' ingredient-card__predict--warning' : ''}` }, [
-            `📉 با نرخ مصرف فعلی، تا ${toPersian(Math.round(ingredient.daysOfStockRemaining))} روز دیگر تمام می‌شود`,
-          ])
+        ? (() => {
+            const predictEl = el('div', { class: `ingredient-card__predict${isPredictedStockout ? ' ingredient-card__predict--warning' : ''}` }, []);
+            predictEl.append(svgIcon('trending-down', 14), ` با نرخ مصرف فعلی، تا ${toPersian(Math.round(ingredient.daysOfStockRemaining))} روز دیگر تمام می‌شود`);
+            return predictEl;
+          })()
         : null,
       ingredient.lastPhysicalCount
         ? el('div', { class: 'ingredient-card__meta ingredient-card__meta--muted' }, [
@@ -310,10 +313,10 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
     ]),
     el('div', { class: 'ingredient-card__actions' }, [
       canEdit ? el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']) : null,
-      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'ثبت شمارش فیزیکی', onclick: () => openPhysicalCountModal(ingredient) }, ['📋']) : null,
-      el('button', { class: 'icon-btn', type: 'button', title: 'تاریخچه خرید', onclick: () => openPurchaseHistoryModal(ingredient.id) }, ['🧾']),
-      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openIngredientFormModal(ingredient) }, ['✏️']) : null,
-      canEdit ? el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDelete(ingredient) }, ['🗑️']) : null,
+      canEdit ? iconBtn('clipboard', 'ثبت شمارش فیزیکی', () => openPhysicalCountModal(ingredient)) : null,
+      iconBtn('receipt', 'تاریخچه خرید', () => openPurchaseHistoryModal(ingredient.id)),
+      canEdit ? iconBtn('edit', 'ویرایش', () => openIngredientFormModal(ingredient)) : null,
+      canEdit ? iconBtn('trash', 'حذف', () => handleDelete(ingredient)) : null,
     ]),
   ]);
 }
@@ -325,9 +328,9 @@ function renderIngredientsStatsPanel(
   const lowStock = lowStockIngredients(all);
   const predictedStockouts = all.filter((i) => i.dailyUsageRate > 0 && i.daysOfStockRemaining <= STOCKOUT_WARNING_DAYS);
   return el('div', { class: 'kpi-grid' }, [
-    kpiCard('💰', 'ارزش انبار', formatMoneyShort(inventoryValue(all)), undefined, actions.onSortByValue),
-    kpiCard('⚠️', 'اقلام رو به اتمام', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowShortage),
-    kpiCard('📉', 'پیش‌بینی اتمام موجودی', toPersian(predictedStockouts.length), predictedStockouts.length > 0 ? 'warning' : undefined, actions.onSortByStockout),
+    kpiCard('wallet', 'ارزش انبار', formatMoneyShort(inventoryValue(all)), undefined, actions.onSortByValue),
+    kpiCard('alert-triangle', 'اقلام رو به اتمام', toPersian(lowStock.length), lowStock.length > 0 ? 'warning' : undefined, actions.onShowShortage),
+    kpiCard('trending-down', 'پیش‌بینی اتمام موجودی', toPersian(predictedStockouts.length), predictedStockouts.length > 0 ? 'warning' : undefined, actions.onSortByStockout),
   ]);
 }
 
@@ -414,7 +417,7 @@ export async function renderIngredients(container: HTMLElement): Promise<RouteCl
     if (!list.length) {
       listEl.appendChild(
         emptyState({
-          icon: '📦',
+          icon: 'box',
           title: all.length ? 'نتیجه‌ای یافت نشد' : 'هنوز مواد اولیه‌ای ثبت نشده است',
           message: all.length ? 'فیلترها را تغییر دهید.' : 'اولین ماده اولیه را اضافه کنید.',
           ctaLabel: all.length || !(hasFullAccess() || hasRole('warehouse')) ? undefined : 'افزودن ماده اولیه',

@@ -2,7 +2,7 @@ import * as db from '../db';
 import { confirmModal } from '../components/modal';
 import { destroyChart, palette, renderChart } from '../components/chart';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatDateShort, formatMoney, formatPct, formatUnit, toPersian, todayISO } from '../utils/format';
 import type { RouteCleanup } from '../router';
 import { ingredientsById, menuItems, refreshIngredients, refreshSales, refreshShoppingList, sales, settings } from '../store';
@@ -178,7 +178,7 @@ function renderSaleRow(s: Sale, onDelete: (s: Sale) => void): HTMLElement {
     el('span', { class: 'sales-log-row__name' }, [s.menuItemName, sourceBadge ? el('span', { class: 'badge' }, [sourceBadge]) : null]),
     el('span', { class: 'sales-log-row__qty' }, [s.type === 'bulk' ? '—' : `${toPersian(s.quantity)} عدد`]),
     el('span', { class: 'sales-log-row__total' }, [formatMoney(s.unitSalePrice * s.quantity)]),
-    el('button', { type: 'button', class: 'icon-btn', title: 'حذف', onclick: () => onDelete(s) }, ['🗑️']),
+    iconBtn('trash', 'حذف', () => onDelete(s)),
   ]);
 }
 
@@ -240,10 +240,10 @@ export function renderSalesLogTab(container: HTMLElement): () => void {
     statsContainer.innerHTML = '';
     statsContainer.appendChild(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('💰', 'فروش دوره', formatMoney(revenue)),
-        kpiCard('🧾', 'تعداد فروش', toPersian(quantity)),
-        kpiCard('📈', 'سود ناخالص دوره', formatMoney(profit), profit >= 0 ? 'positive' : 'negative'),
-        kpiCard('🍽️', 'فودکاست دوره', formatPct(pct)),
+        kpiCard('wallet', 'فروش دوره', formatMoney(revenue)),
+        kpiCard('receipt', 'تعداد فروش', toPersian(quantity)),
+        kpiCard('trending-up', 'سود ناخالص دوره', formatMoney(profit), profit >= 0 ? 'positive' : 'negative'),
+        kpiCard('utensils', 'فودکاست دوره', formatPct(pct)),
       ]),
     );
 
@@ -291,7 +291,7 @@ export function renderSalesLogTab(container: HTMLElement): () => void {
             ]),
           ),
         )
-      : emptyState({ icon: '📊', title: 'فروشی در این دوره ثبت نشده است' });
+      : emptyState({ icon: 'bar-chart', title: 'فروشی در این دوره ثبت نشده است' });
     topItemsContainer.appendChild(panel('پرفروش‌ترین آیتم‌ها', topItemsBody));
 
     logContainer.innerHTML = '';
@@ -302,7 +302,7 @@ export function renderSalesLogTab(container: HTMLElement): () => void {
           { class: 'sales-log' },
           sortedLog.map((s) => renderSaleRow(s, handleDeleteSale)),
         )
-      : emptyState({ icon: '🧾', title: 'فروشی در این دوره ثبت نشده است' });
+      : emptyState({ icon: 'receipt', title: 'فروشی در این دوره ثبت نشده است' });
     logContainer.appendChild(panel('سوابق فروش', logBody));
   }
 
@@ -611,12 +611,12 @@ function renderSnappfoodImport(container: HTMLElement): () => void {
     summaryContainer.innerHTML = '';
     summaryContainer.appendChild(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('💰', 'فروش ناخالص', formatMoney(grossSales)),
-        kpiCard('🏷️', 'تخفیف اسنپ', formatMoney(discount)),
-        kpiCard('📉', 'کمیسیون اسنپ', formatMoney(commission)),
-        kpiCard('💳', 'مبلغ دریافتی', formatMoney(netReceived)),
-        kpiCard('🧮', 'بهای تمام‌شده', formatMoney(cogs)),
-        kpiCard('📈', 'سود تخمینی', formatMoney(profit), profit >= 0 ? 'positive' : 'negative'),
+        kpiCard('wallet', 'فروش ناخالص', formatMoney(grossSales)),
+        kpiCard('tag', 'تخفیف اسنپ', formatMoney(discount)),
+        kpiCard('trending-down', 'کمیسیون اسنپ', formatMoney(commission)),
+        kpiCard('credit-card', 'مبلغ دریافتی', formatMoney(netReceived)),
+        kpiCard('calculator', 'بهای تمام‌شده', formatMoney(cogs)),
+        kpiCard('trending-up', 'سود تخمینی', formatMoney(profit), profit >= 0 ? 'positive' : 'negative'),
       ]),
     );
   }

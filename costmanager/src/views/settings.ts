@@ -1,18 +1,21 @@
 import * as db from '../db';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, field, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, field, iconTextBtn, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { svgIcon } from '../utils/icons';
+import type { IconName } from '../utils/icons';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
 import { formatBusinessType, formatDateTime, toPersian } from '../utils/format';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
+import { seedDatabase } from '../seed';
 import type { BusinessType, FullBackup, Theme } from '../types';
 
 const BUSINESS_TYPE_OPTIONS: BusinessType[] = ['cafe', 'restaurant', 'fast_food', 'bakery', 'other'];
-const THEME_OPTIONS: { value: Theme; label: string; icon: string }[] = [
-  { value: 'light', label: 'روشن', icon: '☀️' },
-  { value: 'dark', label: 'تاریک', icon: '🌙' },
-  { value: 'auto', label: 'خودکار (سیستم)', icon: '🖥️' },
+const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
+  { value: 'light', label: 'روشن', icon: 'sun' },
+  { value: 'dark', label: 'تاریک', icon: 'moon' },
+  { value: 'auto', label: 'خودکار (سیستم)', icon: 'monitor' },
 ];
 
 interface BeforeInstallPromptEvent extends Event {
@@ -90,6 +93,8 @@ function renderThemeSection(container: HTMLElement): () => void {
     wrap.innerHTML = '';
     const current = settings.get()?.theme ?? 'auto';
     for (const opt of THEME_OPTIONS) {
+      const iconEl = el('span', { class: 'theme-picker__icon' }, []);
+      iconEl.appendChild(svgIcon(opt.icon, 16));
       wrap.appendChild(
         el(
           'button',
@@ -101,7 +106,7 @@ function renderThemeSection(container: HTMLElement): () => void {
               await refreshSettings();
             },
           },
-          [el('span', { class: 'theme-picker__icon' }, [opt.icon]), opt.label],
+          [iconEl, opt.label],
         ),
       );
     }
@@ -143,21 +148,13 @@ function renderInstallSection(container: HTMLElement): () => void {
       body.appendChild(el('p', { class: 'form-hint' }, ['این اپلیکیشن روی دستگاه شما نصب شده است. ✅']));
     } else if (deferredInstallPrompt) {
       body.appendChild(
-        el(
-          'button',
-          {
-            type: 'button',
-            class: 'btn btn-primary',
-            onclick: async () => {
-              if (!deferredInstallPrompt) return;
-              await deferredInstallPrompt.prompt();
-              await deferredInstallPrompt.userChoice;
-              deferredInstallPrompt = null;
-              render();
-            },
-          },
-          ['📲 نصب منوبان روی دستگاه'],
-        ),
+        iconTextBtn('smartphone', 'نصب منوبان روی دستگاه', 'btn btn-primary', async () => {
+          if (!deferredInstallPrompt) return;
+          await deferredInstallPrompt.prompt();
+          await deferredInstallPrompt.userChoice;
+          deferredInstallPrompt = null;
+          render();
+        }),
       );
     } else {
       body.appendChild(
@@ -267,10 +264,38 @@ function renderDataSection(container: HTMLElement): () => void {
     settingsCard(
       'پشتیبان‌گیری و بازگردانی',
       el('div', { class: 'settings-actions' }, [
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: handleExport }, ['⬇️ خروجی پشتیبان (JSON)']),
-        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => fileInput.click() }, ['⬆️ بازگردانی از فایل']),
-        el('button', { type: 'button', class: 'btn btn-danger', onclick: handleReset }, ['🗑️ بازنشانی کامل']),
+        iconTextBtn('download', 'خروجی پشتیبان (JSON)', 'btn btn-secondary', handleExport),
+        iconTextBtn('upload', 'بازگردانی از فایل', 'btn btn-secondary', () => fileInput.click()),
+        iconTextBtn('trash', 'بازنشانی کامل', 'btn btn-danger', handleReset),
         fileInput,
+      ]),
+    ),
+  );
+
+  return () => {};
+}
+
+// ---------- Sample data ----------
+
+function renderSampleDataSection(container: HTMLElement): () => void {
+  async function handleLoadSampleData(): Promise<void> {
+    const confirmed = await confirmModal({
+      title: 'بارگذاری داده‌های نمونه',
+      message: 'مواد اولیه، دستور پخت، فروش، هزینه و کارمند نمونه به داده‌های فعلی شما اضافه می‌شود. این کار را فقط برای آشنایی با امکانات برنامه انجام دهید.',
+      confirmLabel: 'بارگذاری',
+    });
+    if (!confirmed) return;
+    await seedDatabase();
+    await refreshAll();
+    showToast('داده‌های نمونه بارگذاری شد', 'success');
+  }
+
+  container.appendChild(
+    settingsCard(
+      'داده‌های نمونه',
+      el('div', { class: 'settings-actions' }, [
+        el('p', { class: 'form-hint' }, ['برای آشنایی با امکانات برنامه می‌توانید داده‌های نمونه (مواد اولیه، منو، فروش و...) بارگذاری کنید.']),
+        el('button', { type: 'button', class: 'btn btn-secondary', onclick: handleLoadSampleData }, ['بارگذاری داده‌های نمونه']),
       ]),
     ),
   );
@@ -296,6 +321,7 @@ export async function renderSettings(container: HTMLElement): Promise<RouteClean
     renderInstallSection(grid),
     renderStorageSection(grid),
     renderDataSection(grid),
+    renderSampleDataSection(grid),
   ];
 
   return () => {

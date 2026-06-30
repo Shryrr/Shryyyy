@@ -6,6 +6,7 @@ import type {
   WasteReason,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
+import { generateSalt, hashPassword, verifyPassword } from './utils/password';
 
 interface Schema extends DBSchema {
   ingredients: { key: string; value: Ingredient; indexes: { byCategory: string } };
@@ -1179,7 +1180,7 @@ export async function recordAutomationRun(id: string, success: boolean): Promise
 // ---------- Settings ----------
 
 export const DEFAULT_SYNC_SERVER_URL = 'http://91.107.249.240/sync';
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 7;
 
 const DEFAULT_SETTINGS: Settings = {
   id: 'global',
@@ -1277,11 +1278,16 @@ export interface RegisterBusinessInput {
   businessName: string;
   businessType: BusinessType;
   managerName: string;
-  managerPin: string;
+  managerUsername: string;
   managerEmail: string;
   managerPassword: string;
   managerPhone?: string;
   plan: SubscriptionPlan;
+}
+
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  const config = await getAuthConfig();
+  return config.users.some((u) => u.username.toLowerCase() === username.toLowerCase());
 }
 
 /**
@@ -1295,15 +1301,18 @@ export async function registerBusiness(input: RegisterBusinessInput): Promise<Ap
   if (config.users.some((u) => u.role === 'superadmin')) {
     throw new Error('کسب‌وکار از قبل ثبت شده است');
   }
+  const passwordSalt = generateSalt();
+  const passwordHash = await hashPassword(input.managerPassword, passwordSalt);
   const user: AppUser = {
     id: uuid(),
     name: input.managerName,
-    pin: input.managerPin,
+    username: input.managerUsername,
+    passwordHash,
+    passwordSalt,
     role: 'superadmin',
     isActive: true,
     email: input.managerEmail,
     phone: input.managerPhone,
-    password: input.managerPassword,
     createdAt: nowISO(),
   };
   await db.put('auth', { id: 'auth', isSetup: true, users: [user] });
@@ -1323,9 +1332,41 @@ export async function registerBusiness(input: RegisterBusinessInput): Promise<Ap
   return user;
 }
 
-export async function findUserByPin(pin: string): Promise<AppUser | undefined> {
+export async function findUserByUsername(username: string): Promise<AppUser | undefined> {
   const config = await getAuthConfig();
-  return config.users.find((u) => u.pin === pin && u.isActive);
+  return config.users.find((u) => u.username.toLowerCase() === username.toLowerCase() && u.isActive);
+}
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+
+/** Persisted lockout (survives page reload) — call on every failed password check in attemptLogin. */
+export async function recordFailedLoginAttempt(id: string): Promise<AppUser | undefined> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.id === id);
+  if (idx === -1) return undefined;
+  const existing = config.users[idx];
+  const attempts = (existing.failedLoginAttempts ?? 0) + 1;
+  const updated: AppUser = {
+    ...existing,
+    failedLoginAttempts: attempts,
+    lockedUntil: attempts >= MAX_LOGIN_ATTEMPTS ? new Date(Date.now() + LOGIN_LOCKOUT_MS).toISOString() : existing.lockedUntil,
+  };
+  const users = [...config.users];
+  users[idx] = updated;
+  await db.put('auth', { ...config, users });
+  return updated;
+}
+
+export async function resetLoginAttempts(id: string): Promise<void> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const idx = config.users.findIndex((u) => u.id === id);
+  if (idx === -1) return;
+  const users = [...config.users];
+  users[idx] = { ...users[idx], failedLoginAttempts: 0, lockedUntil: undefined };
+  await db.put('auth', { ...config, users });
 }
 
 export async function getUser(id: string): Promise<AppUser | undefined> {
@@ -1350,7 +1391,8 @@ export async function recordLogin(id: string): Promise<void> {
 
 export interface NewUserInput {
   name: string;
-  pin: string;
+  username: string;
+  password: string;
   role: UserRole;
   phone?: string;
 }
@@ -1360,10 +1402,17 @@ export async function createUser(input: NewUserInput): Promise<AppUser> {
   if (input.role === 'superadmin') throw new Error('امکان ایجاد مدیر اصلی دوم وجود ندارد');
   const db = await getDB();
   const config = await getAuthConfig();
+  if (config.users.some((u) => u.username.toLowerCase() === input.username.toLowerCase())) {
+    throw new Error('این نام کاربری قبلاً استفاده شده است');
+  }
+  const passwordSalt = generateSalt();
+  const passwordHash = await hashPassword(input.password, passwordSalt);
   const user: AppUser = {
     id: uuid(),
     name: input.name,
-    pin: input.pin,
+    username: input.username,
+    passwordHash,
+    passwordSalt,
     role: input.role,
     isActive: true,
     phone: input.phone,
@@ -1373,7 +1422,17 @@ export async function createUser(input: NewUserInput): Promise<AppUser> {
   return user;
 }
 
-export async function updateUser(id: string, patch: Partial<Omit<AppUser, 'id'>>): Promise<AppUser> {
+export interface UpdateUserInput {
+  name?: string;
+  username?: string;
+  /** Plaintext — hashed before storage; omit to leave the password unchanged. */
+  password?: string;
+  role?: UserRole;
+  isActive?: boolean;
+  phone?: string;
+}
+
+export async function updateUser(id: string, patch: UpdateUserInput): Promise<AppUser> {
   const db = await getDB();
   const config = await getAuthConfig();
   const idx = config.users.findIndex((u) => u.id === id);
@@ -1385,7 +1444,23 @@ export async function updateUser(id: string, patch: Partial<Omit<AppUser, 'id'>>
   } else if (patch.role === 'superadmin') {
     throw new Error('امکان تغییر نقش به مدیر اصلی وجود ندارد');
   }
-  const updated: AppUser = { ...existing, ...patch };
+  if (patch.username && config.users.some((u) => u.id !== id && u.username.toLowerCase() === patch.username!.toLowerCase())) {
+    throw new Error('این نام کاربری قبلاً استفاده شده است');
+  }
+  let passwordFields: Pick<AppUser, 'passwordHash' | 'passwordSalt'> | undefined;
+  if (patch.password) {
+    const passwordSalt = generateSalt();
+    passwordFields = { passwordHash: await hashPassword(patch.password, passwordSalt), passwordSalt };
+  }
+  const updated: AppUser = {
+    ...existing,
+    name: patch.name ?? existing.name,
+    username: patch.username ?? existing.username,
+    role: patch.role ?? existing.role,
+    isActive: patch.isActive ?? existing.isActive,
+    phone: patch.phone ?? existing.phone,
+    ...passwordFields,
+  };
   const users = [...config.users];
   users[idx] = updated;
   await db.put('auth', { ...config, users });
@@ -1407,13 +1482,18 @@ export async function replaceAuthUsers(users: AppUser[]): Promise<void> {
   await db.put('auth', { ...config, isSetup: true, users });
 }
 
-export async function changeSuperadminPin(currentPin: string, newPin: string): Promise<AppUser> {
+export async function changeSuperadminPassword(currentPassword: string, newPassword: string): Promise<AppUser> {
   const db = await getDB();
   const config = await getAuthConfig();
   const idx = config.users.findIndex((u) => u.role === 'superadmin');
   if (idx === -1) throw new Error('مدیر اصلی یافت نشد');
-  if (config.users[idx].pin !== currentPin) throw new Error('پین فعلی نادرست است');
-  const updated: AppUser = { ...config.users[idx], pin: newPin };
+  const existing = config.users[idx];
+  if (!(await verifyPassword(currentPassword, existing.passwordSalt, existing.passwordHash))) {
+    throw new Error('رمز عبور فعلی نادرست است');
+  }
+  const passwordSalt = generateSalt();
+  const passwordHash = await hashPassword(newPassword, passwordSalt);
+  const updated: AppUser = { ...existing, passwordHash, passwordSalt };
   const users = [...config.users];
   users[idx] = updated;
   await db.put('auth', { ...config, users });

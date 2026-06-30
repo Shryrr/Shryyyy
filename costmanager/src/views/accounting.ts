@@ -1,7 +1,7 @@
 import { destroyChart, palette, renderChart } from '../components/chart';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, field, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
+import { el, emptyState, field, iconBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { formatDateShort, formatIngredientCategory, formatMoney, formatMoneyShort, formatPct, formatUnit, toPersian } from '../utils/format';
 import { downloadCSV, downloadJSON } from '../utils/export';
 import type { RouteCleanup } from '../router';
@@ -109,7 +109,7 @@ function sourceBreakdownPanel(rows: SourceBreakdownEntry[], canvas: HTMLCanvasEl
   if (!rows.length) {
     return el('div', { class: 'chart-card' }, [
       el('h3', { class: 'chart-card__title' }, ['گزارش تفکیک فروش بر اساس منبع']),
-      emptyState({ icon: '📊', title: 'فروشی در این دوره ثبت نشده است' }),
+      emptyState({ icon: 'bar-chart', title: 'فروشی در این دوره ثبت نشده است' }),
     ]);
   }
 
@@ -194,10 +194,10 @@ function renderFinancialDashboardTab(container: HTMLElement, onNavigateTab: (tab
     kpiContainer.innerHTML = '';
     kpiContainer.appendChild(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('💰', 'درآمد فروش دوره', formatMoneyShort(pl.revenue), undefined, () => onNavigateTab('sales-log')),
-        kpiCard('📉', 'هزینه‌های متغیر دوره', formatMoneyShort(pl.cogs), undefined, () => onNavigateTab('sales-log')),
-        kpiCard('🏢', 'هزینه‌های ثابت (نسبت به دوره)', formatMoneyShort(pl.fixedProrated), undefined, () => onNavigateTab('expenses')),
-        kpiCard('📈', 'سود خالص دوره', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => onNavigateTab('reports')),
+        kpiCard('wallet', 'درآمد فروش دوره', formatMoneyShort(pl.revenue), undefined, () => onNavigateTab('sales-log')),
+        kpiCard('trending-down', 'هزینه‌های متغیر دوره', formatMoneyShort(pl.cogs), undefined, () => onNavigateTab('sales-log')),
+        kpiCard('building', 'هزینه‌های ثابت (نسبت به دوره)', formatMoneyShort(pl.fixedProrated), undefined, () => onNavigateTab('expenses')),
+        kpiCard('trending-up', 'سود خالص دوره', formatMoneyShort(pl.netProfit), pl.netProfit >= 0 ? 'positive' : 'negative', () => onNavigateTab('reports')),
       ]),
     );
 
@@ -404,8 +404,8 @@ function renderSupplierRow(supplier: Supplier, ingredientNames: string): HTMLEle
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openSupplierFormModal(supplier) }, ['✏️']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteSupplier(supplier) }, ['🗑️']),
+      iconBtn('edit', 'ویرایش', () => openSupplierFormModal(supplier)),
+      iconBtn('trash', 'حذف', () => handleDeleteSupplier(supplier)),
     ]),
   ]);
 }
@@ -499,18 +499,13 @@ function renderSupplierPaymentRow(payment: SupplierPayment, supplierName: string
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      el(
-        'button',
-        {
-          class: 'icon-btn',
-          type: 'button',
-          title: payment.isPaid ? 'علامت‌گذاری به‌عنوان پرداخت‌نشده' : 'علامت‌گذاری به‌عنوان پرداخت‌شده',
-          onclick: () => toggleSupplierPaymentPaid(payment),
-        },
-        [payment.isPaid ? '↩️' : '✅'],
+      iconBtn(
+        payment.isPaid ? 'undo' : 'check',
+        payment.isPaid ? 'علامت‌گذاری به‌عنوان پرداخت‌نشده' : 'علامت‌گذاری به‌عنوان پرداخت‌شده',
+        () => toggleSupplierPaymentPaid(payment),
       ),
-      el('button', { class: 'icon-btn', type: 'button', title: 'ویرایش', onclick: () => openSupplierPaymentFormModal(payment) }, ['✏️']),
-      el('button', { class: 'icon-btn', type: 'button', title: 'حذف', onclick: () => handleDeleteSupplierPayment(payment) }, ['🗑️']),
+      iconBtn('edit', 'ویرایش', () => openSupplierPaymentFormModal(payment)),
+      iconBtn('trash', 'حذف', () => handleDeleteSupplierPayment(payment)),
     ]),
   ]);
 }
@@ -568,9 +563,9 @@ function renderSuppliersSubTab(container: HTMLElement): () => void {
     kpiContainer.innerHTML = '';
     kpiContainer.appendChild(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('🚚', 'تامین‌کنندگان', toPersian(supplierList.length)),
-        kpiCard('💳', 'مانده پرداخت‌نشده', formatMoneyShort(totalOutstanding), outstanding.length ? 'warning' : undefined),
-        kpiCard('⏰', 'سررسید گذشته', toPersian(overdueCount), overdueCount ? 'negative' : undefined),
+        kpiCard('truck', 'تامین‌کنندگان', toPersian(supplierList.length)),
+        kpiCard('credit-card', 'مانده پرداخت‌نشده', formatMoneyShort(totalOutstanding), outstanding.length ? 'warning' : undefined),
+        kpiCard('clock', 'سررسید گذشته', toPersian(overdueCount), overdueCount ? 'negative' : undefined),
       ]),
     );
 
@@ -578,7 +573,7 @@ function renderSuppliersSubTab(container: HTMLElement): () => void {
     if (!supplierList.length) {
       supplierListEl.appendChild(
         emptyState({
-          icon: '🚚',
+          icon: 'truck',
           title: 'هنوز تامین‌کننده‌ای ثبت نشده است',
           message: 'برای پیگیری حساب‌های پرداختی، تامین‌کنندگان را اضافه کنید.',
           ctaLabel: 'افزودن تامین‌کننده',
@@ -597,7 +592,7 @@ function renderSuppliersSubTab(container: HTMLElement): () => void {
 
     paymentListEl.innerHTML = '';
     if (!paymentList.length) {
-      paymentListEl.appendChild(emptyState({ icon: '💳', title: 'هنوز پرداختی ثبت نشده است' }));
+      paymentListEl.appendChild(emptyState({ icon: 'credit-card', title: 'هنوز پرداختی ثبت نشده است' }));
     } else {
       const sorted = [...paymentList].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       for (const payment of sorted) {
@@ -678,9 +673,9 @@ function renderVatSubTab(container: HTMLElement): () => void {
     kpiContainer.innerHTML = '';
     kpiContainer.appendChild(
       el('div', { class: 'kpi-grid' }, [
-        kpiCard('🧾', 'مالیات جمع‌آوری‌شده', formatMoneyShort(totalVat)),
-        kpiCard('💰', 'فروش مشمول مالیات', formatMoneyShort(totalTaxable)),
-        kpiCard('📄', 'تعداد فروش مشمول', toPersian(list.length)),
+        kpiCard('receipt', 'مالیات جمع‌آوری‌شده', formatMoneyShort(totalVat)),
+        kpiCard('wallet', 'فروش مشمول مالیات', formatMoneyShort(totalTaxable)),
+        kpiCard('file-text', 'تعداد فروش مشمول', toPersian(list.length)),
       ]),
     );
   }
