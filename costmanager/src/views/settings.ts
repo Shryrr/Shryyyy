@@ -1,15 +1,17 @@
 import * as db from '../db';
+import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, field, iconTextBtn, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { svgIcon } from '../utils/icons';
 import type { IconName } from '../utils/icons';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
-import { formatBusinessType, formatDateTime, toPersian } from '../utils/format';
+import { formatBusinessType, formatDate, formatDateTime, formatMoney, toPersian } from '../utils/format';
+import { api } from '../utils/api';
 import type { RouteCleanup } from '../router';
-import { refreshAll, refreshSettings, settings } from '../store';
+import { isOnline, refreshAll, refreshSettings, settings } from '../store';
 import { seedDatabase } from '../seed';
-import type { BusinessType, FullBackup, Theme } from '../types';
+import type { BusinessType, FullBackup, PaidSubscriptionPlan, Settings, SubscriptionPaymentRecord, SubscriptionPlan, Theme } from '../types';
 
 const BUSINESS_TYPE_OPTIONS: BusinessType[] = ['cafe', 'restaurant', 'fast_food', 'bakery', 'other'];
 const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
@@ -134,6 +136,233 @@ function renderNotificationsSection(container: HTMLElement): () => void {
 
   container.appendChild(settingsCard('اعلان‌ها', body));
   return () => {};
+}
+
+// ---------- Subscription ----------
+
+const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
+  { value: '1m', label: '۱ ماهه' },
+  { value: '3m', label: '۳ ماهه' },
+  { value: '6m', label: '۶ ماهه' },
+  { value: '12m', label: '۱۲ ماهه' },
+];
+const PLAN_TOTAL_DAYS: Record<PaidSubscriptionPlan, number> = { '1m': 30, '3m': 90, '6m': 180, '12m': 365 };
+
+function planLabel(plan: SubscriptionPlan): string {
+  if (plan === 'unlimited') return 'نامحدود';
+  return PLAN_OPTIONS.find((p) => p.value === plan)?.label ?? plan;
+}
+
+function subscriptionStatusLabel(status: Settings['subscriptionStatus']): string {
+  if (status === 'trial') return 'دوره آزمایشی';
+  if (status === 'pending_payment') return 'در انتظار پرداخت';
+  if (status === 'expired') return 'منقضی‌شده';
+  return 'فعال';
+}
+
+function paymentStatusLabel(status: SubscriptionPaymentRecord['status']): string {
+  if (status === 'pending') return 'در انتظار بررسی';
+  if (status === 'approved') return 'تایید شد';
+  return 'رد شد';
+}
+
+function toCacheRecord(p: {
+  id: string;
+  plan: PaidSubscriptionPlan;
+  amount: number;
+  transfer_ref: string | null;
+  description: string | null;
+  status: SubscriptionPaymentRecord['status'];
+  submitted_at: string;
+  reviewed_at: string | null;
+  note: string | null;
+}): SubscriptionPaymentRecord {
+  return {
+    id: p.id,
+    plan: p.plan,
+    amount: p.amount,
+    transferRef: p.transfer_ref ?? undefined,
+    description: p.description ?? undefined,
+    status: p.status,
+    submittedAt: p.submitted_at,
+    reviewedAt: p.reviewed_at ?? undefined,
+    note: p.note ?? undefined,
+  };
+}
+
+async function openSubmitPaymentModal(onDone: () => void): Promise<void> {
+  let pricing: Record<PaidSubscriptionPlan, number>;
+  try {
+    const rows = await api.getSubscriptionPricing();
+    pricing = { '1m': 0, '3m': 0, '6m': 0, '12m': 0 };
+    for (const row of rows) pricing[row.plan] = row.amount;
+  } catch {
+    showToast('خطا در دریافت قیمت اشتراک', 'error');
+    return;
+  }
+
+  const planSelect = selectEl(
+    PLAN_OPTIONS.map((p) => ({ value: p.value, label: `${p.label} — ${formatMoney(pricing[p.value])}` })),
+    '1m',
+  );
+  const amountInput = el('input', { type: 'text', class: 'input', value: formatMoney(pricing['1m']), disabled: true });
+  const transferRefInput = el('input', { type: 'text', class: 'input', dir: 'ltr', placeholder: 'شماره پیگیری تراکنش' });
+  const descInput = el('input', { type: 'text', class: 'input' });
+
+  planSelect.addEventListener('change', () => {
+    (amountInput as HTMLInputElement).value = formatMoney(pricing[planSelect.value as PaidSubscriptionPlan] ?? 0);
+  });
+
+  const body = el('form', { class: 'form' }, [
+    el('p', { class: 'form-hint' }, ['پس از واریز مبلغ، اطلاعات تراکنش را ثبت کنید تا مدیر پلتفرم اشتراک شما را تایید و تمدید کند.']),
+    field('پلن', planSelect),
+    field('مبلغ (تومان)', amountInput),
+    field('شماره پیگیری تراکنش (اختیاری)', transferRefInput),
+    field('توضیحات (اختیاری)', descInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت پرداخت']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const plan = planSelect.value as PaidSubscriptionPlan;
+    const amount = pricing[plan] ?? 0;
+    if (amount <= 0) {
+      showToast('قیمت این پلن هنوز توسط مدیر پلتفرم تنظیم نشده است', 'error');
+      return;
+    }
+    try {
+      const payment = await api.submitSubscriptionPayment({
+        plan,
+        amount,
+        transferRef: transferRefInput.value.trim() || undefined,
+        description: descInput.value.trim() || undefined,
+      });
+      await db.upsertSubscriptionPaymentCache(toCacheRecord(payment));
+      showToast('درخواست پرداخت ثبت شد. پس از تایید مدیر پلتفرم، اشتراک شما تمدید می‌شود.', 'success');
+      modal.close();
+      onDone();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'خطا در ثبت پرداخت', 'error');
+    }
+  });
+
+  const modal = openModal({ title: 'ثبت پرداخت اشتراک', body });
+}
+
+function renderSubscriptionSection(container: HTMLElement): () => void {
+  const cardHost = el('div', { class: 'settings-card' });
+  container.appendChild(cardHost);
+
+  async function render(): Promise<void> {
+    cardHost.innerHTML = '';
+    const s = settings.get();
+    if (!s) return;
+
+    cardHost.appendChild(el('h3', { class: 'settings-card__title' }, ['اشتراک کسب‌وکار']));
+
+    const expired = isBusinessExpired(s);
+    const soon = !expired && isBusinessExpiringSoon(s);
+    const days = daysUntilBusinessExpiry(s);
+    const isUnlimited = s.subscriptionPlan === 'unlimited';
+
+    cardHost.append(
+      el('div', { class: 'subscription-status-row' }, [
+        el('span', {}, [`${subscriptionStatusLabel(s.subscriptionStatus)} · ${planLabel(s.subscriptionPlan)}`]),
+        el('span', {}, [isUnlimited ? 'بدون انقضا' : `انقضا: ${formatDate(s.subscriptionExpiry)}`]),
+      ]),
+    );
+
+    if (!isUnlimited) {
+      const totalDays = PLAN_TOTAL_DAYS[s.subscriptionPlan as PaidSubscriptionPlan] ?? db.TRIAL_DAYS;
+      const remainingRatio = Math.max(0, Math.min(1, days / totalDays));
+      const fillTone = expired ? 'danger' : soon ? 'warning' : '';
+      cardHost.append(
+        el('div', { class: 'subscription-progress' }, [
+          el('div', {
+            class: `subscription-progress__fill${fillTone ? ` subscription-progress__fill--${fillTone}` : ''}`,
+            style: `width: ${remainingRatio * 100}%`,
+          }),
+        ]),
+      );
+
+      if (expired) {
+        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
+        iconEl.appendChild(svgIcon('alert-circle', 18));
+        cardHost.appendChild(
+          el('div', { class: 'alert-banner alert-banner--danger' }, [
+            iconEl,
+            el('span', { class: 'alert-banner__text' }, ['اشتراک کسب‌وکار منقضی شده است. برای ادامه کار، اشتراک را تمدید کنید.']),
+          ]),
+        );
+      } else if (soon) {
+        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
+        iconEl.appendChild(svgIcon('alert-triangle', 18));
+        cardHost.appendChild(
+          el('div', { class: `alert-banner alert-banner--${days <= 3 ? 'danger' : 'warning'}` }, [
+            iconEl,
+            el('span', { class: 'alert-banner__text' }, [`اشتراک کسب‌وکار تا ${toPersian(days)} روز دیگر منقضی می‌شود.`]),
+          ]),
+        );
+      }
+    }
+
+    let pendingPayment: SubscriptionPaymentRecord | null = null;
+    if (isOnline.get()) {
+      try {
+        const status = await api.getSubscriptionStatus();
+        if (status.pendingPayment) pendingPayment = toCacheRecord(status.pendingPayment);
+        if (pendingPayment) await db.upsertSubscriptionPaymentCache(pendingPayment);
+      } catch {
+        // offline/unreachable — fall back to local cache below
+      }
+    }
+    if (!pendingPayment) {
+      const cached = await db.listSubscriptionPaymentsCache();
+      pendingPayment =
+        cached.filter((p) => p.status === 'pending').sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0] ??
+        null;
+    }
+
+    if (pendingPayment) {
+      const iconEl = el('span', { class: 'alert-banner__icon' }, []);
+      iconEl.appendChild(svgIcon('clock', 18));
+      cardHost.appendChild(
+        el('div', { class: 'alert-banner alert-banner--info' }, [
+          iconEl,
+          el('span', { class: 'alert-banner__text' }, [
+            `پرداخت ${formatMoney(pendingPayment.amount)} تومانی (${planLabel(pendingPayment.plan)}) ${paymentStatusLabel(pendingPayment.status)} — ثبت‌شده در ${formatDate(pendingPayment.submittedAt)}`,
+          ]),
+        ]),
+      );
+    } else {
+      cardHost.appendChild(
+        el(
+          'button',
+          {
+            type: 'button',
+            class: 'btn btn-primary',
+            disabled: !isOnline.get(),
+            onclick: () => openSubmitPaymentModal(() => render()),
+          },
+          ['ثبت پرداخت و تمدید اشتراک'],
+        ),
+      );
+      if (!isOnline.get()) {
+        cardHost.appendChild(el('p', { class: 'form-hint' }, ['برای ثبت پرداخت به اتصال اینترنت نیاز است.']));
+      }
+    }
+  }
+
+  void render();
+  const unsubSettings = settings.subscribe(() => void render());
+  const unsubOnline = isOnline.subscribe(() => void render());
+  return () => {
+    unsubSettings();
+    unsubOnline();
+  };
 }
 
 // ---------- PWA install ----------
@@ -316,6 +545,7 @@ export async function renderSettings(container: HTMLElement): Promise<RouteClean
 
   const cleanups = [
     renderProfileSection(grid),
+    renderSubscriptionSection(grid),
     renderThemeSection(grid),
     renderNotificationsSection(grid),
     renderInstallSection(grid),

@@ -1,19 +1,17 @@
 import * as db from '../db';
-import { daysUntilBusinessExpiry, isBusinessExpired, isBusinessExpiringSoon } from '../auth';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
 import { el, emptyState, field, iconBtn, iconTextBtn, selectEl } from '../utils/dom';
 import { svgIcon } from '../utils/icons';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
-import { formatBusinessType, formatDate, formatDateTime, formatMoney, toPersian } from '../utils/format';
+import { formatBusinessType, formatDateTime } from '../utils/format';
 import { pullFromServer, pushToServer } from '../utils/sync';
-import { getPlatformPaymentCard, getPlatformPricing } from '../platform-owner';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
-import type { AppUser, BusinessType, FullBackup, PaidSubscriptionPlan, Settings, SubscriptionPlan, UserRole } from '../types';
+import type { AppUser, BusinessType, FullBackup, UserRole } from '../types';
 
-type Tab = 'users' | 'subscriptions' | 'system';
+type Tab = 'users' | 'system';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   superadmin: 'مدیر اصلی',
@@ -28,30 +26,12 @@ const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'buyer', label: ROLE_LABELS.buyer },
 ];
 
-const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
-  { value: '1m', label: '۱ ماهه' },
-  { value: '3m', label: '۳ ماهه' },
-  { value: '6m', label: '۶ ماهه' },
-  { value: '12m', label: '۱۲ ماهه' },
-];
-
-const EXTEND_OPTIONS: { months: number; plan: PaidSubscriptionPlan; label: string }[] = [
-  { months: 1, plan: '1m', label: '+۱ ماه' },
-  { months: 3, plan: '3m', label: '+۳ ماه' },
-  { months: 6, plan: '6m', label: '+۶ ماه' },
-  { months: 12, plan: '12m', label: '+۱۲ ماه' },
-];
-
 const BUSINESS_TYPE_OPTIONS: BusinessType[] = ['cafe', 'restaurant', 'fast_food', 'bakery', 'other'];
 
 const RESET_PHRASE = 'حذف همه';
 
 function roleLabel(role: UserRole): string {
   return ROLE_LABELS[role];
-}
-function planLabel(plan: SubscriptionPlan): string {
-  if (plan === 'unlimited') return 'نامحدود';
-  return PLAN_OPTIONS.find((p) => p.value === plan)?.label ?? plan;
 }
 
 function settingsCard(title: string, body: HTMLElement): HTMLElement {
@@ -214,116 +194,6 @@ function renderUsersTab(container: HTMLElement): () => void {
 
   render();
   return () => {};
-}
-
-// ---------- Business subscription tab ----------
-
-const PLAN_TOTAL_DAYS: Record<PaidSubscriptionPlan, number> = { '1m': 30, '3m': 90, '6m': 180, '12m': 365 };
-
-function statusLabel(status: Settings['subscriptionStatus']): string {
-  if (status === 'trial') return 'دوره آزمایشی';
-  if (status === 'pending_payment') return 'در انتظار پرداخت';
-  if (status === 'expired') return 'منقضی‌شده';
-  return 'فعال';
-}
-
-function renderRenewalSection(container: HTMLElement): () => void {
-  const cardHost = el('div', { class: 'settings-card' });
-  container.appendChild(cardHost);
-
-  function render(): void {
-    cardHost.innerHTML = '';
-    const s = settings.get();
-    if (!s) return;
-
-    const expired = isBusinessExpired(s);
-    const soon = !expired && isBusinessExpiringSoon(s);
-    const days = daysUntilBusinessExpiry(s);
-    const isUnlimited = s.subscriptionPlan === 'unlimited';
-
-    cardHost.appendChild(el('h3', { class: 'settings-card__title' }, ['وضعیت اشتراک کسب‌وکار']));
-
-    cardHost.append(
-      el('div', { class: 'subscription-status-row' }, [
-        el('span', {}, [`${statusLabel(s.subscriptionStatus)} · ${planLabel(s.subscriptionPlan)}`]),
-        el('span', {}, [isUnlimited ? 'بدون انقضا' : `انقضا: ${formatDate(s.subscriptionExpiry)}`]),
-      ]),
-    );
-
-    if (!isUnlimited) {
-      const totalDays = PLAN_TOTAL_DAYS[s.subscriptionPlan as PaidSubscriptionPlan] ?? db.TRIAL_DAYS;
-      const remainingRatio = Math.max(0, Math.min(1, days / totalDays));
-      const fillTone = expired ? 'danger' : soon ? 'warning' : '';
-      cardHost.append(
-        el('div', { class: 'subscription-progress' }, [
-          el('div', {
-            class: `subscription-progress__fill${fillTone ? ` subscription-progress__fill--${fillTone}` : ''}`,
-            style: `width: ${remainingRatio * 100}%`,
-          }),
-        ]),
-      );
-
-      if (expired) {
-        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
-        iconEl.appendChild(svgIcon('alert-circle', 18));
-        cardHost.appendChild(
-          el('div', { class: 'alert-banner alert-banner--danger' }, [
-            iconEl,
-            el('span', { class: 'alert-banner__text' }, ['اشتراک کسب‌وکار منقضی شده است. برای ادامه کار، اشتراک را تمدید کنید.']),
-          ]),
-        );
-      } else if (soon) {
-        const iconEl = el('span', { class: 'alert-banner__icon' }, []);
-        iconEl.appendChild(svgIcon('alert-triangle', 18));
-        cardHost.appendChild(
-          el('div', { class: `alert-banner alert-banner--${days <= 3 ? 'danger' : 'warning'}` }, [
-            iconEl,
-            el('span', { class: 'alert-banner__text' }, [`اشتراک کسب‌وکار تا ${toPersian(days)} روز دیگر منقضی می‌شود.`]),
-          ]),
-        );
-      }
-    }
-
-    const pricing = getPlatformPricing();
-    const card = getPlatformPaymentCard();
-
-    cardHost.append(
-      el('div', { class: 'admin-extend-grid' }, [
-        ...EXTEND_OPTIONS.map((opt) =>
-          el(
-            'button',
-            {
-              type: 'button',
-              class: 'btn btn-secondary btn-sm',
-              onclick: async () => {
-                await db.extendBusinessSubscription(opt.months, opt.plan);
-                await refreshSettings();
-                showToast('اشتراک کسب‌وکار تمدید شد', 'success');
-                render();
-              },
-            },
-            [`${opt.label} (${formatMoney(pricing[opt.plan] ?? 0)})`],
-          ),
-        ),
-      ]),
-    );
-
-    if (card) {
-      cardHost.appendChild(
-        el('p', { class: 'form-hint' }, [`برای تمدید، مبلغ را به شماره کارت `, el('strong', { dir: 'ltr' }, [card]), ' واریز کنید.']),
-      );
-    }
-  }
-
-  render();
-  return () => {};
-}
-
-function renderSubscriptionsTab(container: HTMLElement): () => void {
-  const cleanups = [renderRenewalSection(container)];
-  return () => {
-    for (const c of cleanups) c();
-  };
 }
 
 // ---------- System settings tab ----------
@@ -575,7 +445,6 @@ export async function renderAdmin(container: HTMLElement): Promise<RouteCleanup>
 
   const tabs: { id: Tab; label: string; render: (c: HTMLElement) => () => void }[] = [
     { id: 'users', label: 'کاربران', render: renderUsersTab },
-    { id: 'subscriptions', label: 'قیمت اشتراک‌ها', render: renderSubscriptionsTab },
     { id: 'system', label: 'تنظیمات سیستم', render: renderSystemTab },
   ];
 
