@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "src/auth.ts": {
-    "mtime": 1782781711.674726,
-    "ast_hash": "10907782fec3e364abe8877ee996ec24",
+    "mtime": 1782801580.164777,
+    "ast_hash": "4e6447b08c5d6186f0bfa6634299d293",
     "semantic_hash": ""
   },
   "src/components/alert-banner.ts": {
@@ -60,18 +60,18 @@
     "semantic_hash": ""
   },
   "src/db.ts": {
-    "mtime": 1782782427.9067106,
-    "ast_hash": "049dd0b8c17baf3c0b7e50828233b8cb",
+    "mtime": 1782801537.152778,
+    "ast_hash": "b195b3c647795ad3589d720ed05034a3",
     "semantic_hash": ""
   },
   "src/main.ts": {
-    "mtime": 1782783813.9226813,
-    "ast_hash": "d48d720fac979affdf6c6e155f5243a9",
+    "mtime": 1782801757.336773,
+    "ast_hash": "4a4b3f0be8ac5e5b823c2169da202638",
     "semantic_hash": ""
   },
   "src/platform-owner.ts": {
-    "mtime": 1782782125.222717,
-    "ast_hash": "55abdf19ef81817568b44a93c5564f05",
+    "mtime": 1782801733.7407734,
+    "ast_hash": "1f682df4f4c25d01d0831ee51a5e906a",
     "semantic_hash": ""
   },
   "src/router.ts": {
@@ -95,8 +95,8 @@
     "semantic_hash": ""
   },
   "src/types.ts": {
-    "mtime": 1782781582.5747287,
-    "ast_hash": "9d3ab3d702d9fc21ca837eb322fbf1bf",
+    "mtime": 1782800216.3328083,
+    "ast_hash": "36bf2e283451601f3479d3c424e095d4",
     "semantic_hash": ""
   },
   "src/utils/ai.ts": {
@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "src/utils/sync.ts": {
-    "mtime": 1782766648.0698812,
-    "ast_hash": "d5b9d3ffbf3881d88c4c121b232a8b53",
+    "mtime": 1782801185.360786,
+    "ast_hash": "9451ac304e5a76dd40e8f8ecf5f84bba",
     "semantic_hash": ""
   },
   "src/views/accounting.ts": {
@@ -175,8 +175,8 @@
     "semantic_hash": ""
   },
   "src/views/admin.ts": {
-    "mtime": 1782785231.6986513,
-    "ast_hash": "3dfec467960c374b3a72242a9d69286d",
+    "mtime": 1782802202.8527627,
+    "ast_hash": "a34b30c62968df44d87dc204cf5b1e4f",
     "semantic_hash": ""
   },
   "src/views/crm.ts": {
@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "src/views/platform-admin.ts": {
-    "mtime": 1782785138.0866532,
-    "ast_hash": "77d3d79eb238ab7e6e0ca3299170a1ac",
+    "mtime": 1782802124.3887646,
+    "ast_hash": "12cf727c1f804cd451407e9a00418f50",
     "semantic_hash": ""
   },
   "src/views/recipes.ts": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "src/views/setup.ts": {
-    "mtime": 1782782298.2107134,
-    "ast_hash": "42af5981d6a30f8d9ef831f74fa00a39",
+    "mtime": 1782801627.228776,
+    "ast_hash": "f4c29d942ce61678502bd1b27e91e6a3",
     "semantic_hash": ""
   },
   "src/views/shopping.ts": {
@@ -297,6 +297,11 @@
   "src/utils/icons.ts": {
     "mtime": 1782784716.9946623,
     "ast_hash": "18232992dcb8aa8add1c0f7b6c5dca79",
+    "semantic_hash": ""
+  },
+  "src/utils/api.ts": {
+    "mtime": 1782800603.0527992,
+    "ast_hash": "5b02f56c804f7481926ac392f56056ea",
     "semantic_hash": ""
   }
 }
