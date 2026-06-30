@@ -175,8 +175,8 @@
     "semantic_hash": ""
   },
   "src/views/admin.ts": {
-    "mtime": 1782802202.8527627,
-    "ast_hash": "a34b30c62968df44d87dc204cf5b1e4f",
+    "mtime": 1782803993.6207218,
+    "ast_hash": "7ca976d4f98923ac8c16dffec5c57c0a",
     "semantic_hash": ""
   },
   "src/views/crm.ts": {
@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "src/views/settings.ts": {
-    "mtime": 1782785727.0026407,
-    "ast_hash": "fa6ee0efba5f1ecb24a1ab9f7a056a89",
+    "mtime": 1782803937.404723,
+    "ast_hash": "188a0841ac184982561fc743a41688ed",
     "semantic_hash": ""
   },
   "src/views/setup.ts": {
