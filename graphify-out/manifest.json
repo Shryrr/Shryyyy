@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "costmanager-api/server.js": {
-    "mtime": 1782799699.74882,
-    "ast_hash": "f8ab0cc0aacdd05317f4e085f808d626",
+    "mtime": 1782847605.3121107,
+    "ast_hash": "686de9d24a1bcc06e52f04e499a6b8a0",
     "semantic_hash": ""
   },
   "costmanager-api/setup.sh": {
@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "costmanager/sw.js": {
-    "mtime": 1782821581.8581274,
-    "ast_hash": "5baa9a8bb56ee604e45f85f483785db9",
+    "mtime": 1782847612.580111,
+    "ast_hash": "fc27424e0bba9f4eef7b459e54e48985",
     "semantic_hash": ""
   },
   "costmanager/tsconfig.json": {

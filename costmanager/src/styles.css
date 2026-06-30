@@ -838,6 +838,8 @@ canvas {
   border-radius: var(--radius-sm);
   background: transparent;
   font-size: 18px;
+  cursor: pointer;
+  touch-action: manipulation;
   transition: background 0.15s;
 }
 
@@ -1075,11 +1077,13 @@ canvas {
   z-index: var(--z-modal);
   background: rgba(20, 21, 40, 0.4);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
 .sidebar-overlay--visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .sidebar {

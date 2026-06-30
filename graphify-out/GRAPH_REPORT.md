@@ -1,16 +1,16 @@
 # Graph Report - Shryyyy  (2026-06-30)
 
 ## Corpus Check
-- 70 files · ~71,970 words
+- 70 files · ~71,987 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1158 nodes · 3555 edges · 53 communities (50 shown, 3 thin omitted)
+- 1159 nodes · 3556 edges · 54 communities (52 shown, 2 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `84142caf`
+- Built from commit: `23159597`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -67,6 +67,7 @@
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
 - [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 53|Community 53]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `el()` - 183 edges
@@ -85,41 +86,41 @@
   costmanager/src/views/admin.ts → costmanager/scripts/gen-icons.js
 - `renderInstallSection()` --calls--> `render()`  [INFERRED]
   costmanager/src/views/settings.ts → costmanager/scripts/gen-icons.js
+- `renderSubscriptionSection()` --calls--> `render()`  [INFERRED]
+  costmanager/src/views/settings.ts → costmanager/scripts/gen-icons.js
 - `askClaude()` --calls--> `fetch()`  [INFERRED]
   costmanager/src/utils/ai.ts → costmanager/sw.js
 - `renderFixedVariableTab()` --calls--> `el()`  [EXTRACTED]
-  costmanager/src/views/accounting.ts → costmanager/src/utils/dom.ts
-- `renderSuppliersVatTab()` --calls--> `el()`  [EXTRACTED]
   costmanager/src/views/accounting.ts → costmanager/src/utils/dom.ts
 
 ## Import Cycles
 - 3-file cycle: `costmanager/src/db.ts -> costmanager/src/utils/api.ts -> costmanager/src/store.ts -> costmanager/src/db.ts`
 
-## Communities (53 total, 3 thin omitted)
+## Communities (54 total, 2 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (97): currentUser, hasFullAccess(), hasRole(), isSuperadmin(), renderAccessDenied(), ingredientsById(), refreshIngredients(), refreshSales() (+89 more)
+Cohesion: 0.09
+Nodes (34): MenuItem, buildCashierRows(), buildCustomerRows(), buildSnappfoodRows(), CASHIER_FIELD_LABELS, CASHIER_KEYWORDS, CashierField, CashierImportRow (+26 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.07
 Nodes (44): activate(), addToCacheList(), _awaitComplete(), B(), cacheMatch(), cachePut(), cacheWillUpdate(), constructor() (+36 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.05
-Nodes (52): buildSalesPlan(), computeConsumption(), INGREDIENTS, MENU_ITEMS, PlannedSale, roundQty(), seedDatabase(), seedExpensesAndPayroll() (+44 more)
+Cohesion: 0.07
+Nodes (34): buildSalesPlan(), computeConsumption(), INGREDIENTS, MENU_ITEMS, PlannedSale, roundQty(), seedDatabase(), seedExpensesAndPayroll() (+26 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
 Nodes (50): BACKUP_STORE_NAMES, cacheApiUser(), changeSuperadminPassword(), createUser(), DEFAULT_SETTINGS, deleteUser(), findUserByUsername(), getAuthConfig() (+42 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.08
-Nodes (45): refreshMenuItems(), Employee, Expense, RecipeIngredient, askClaude(), ClaudeApiResponse, ClaudeResult, avgFoodCostPct() (+37 more)
+Cohesion: 0.15
+Nodes (17): askClaude(), ClaudeApiResponse, ClaudeResult, foodCostStatus, classifyMenuItems(), MenuEngineeringItem, MenuEngineeringResult, MenuQuadrant (+9 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.07
-Nodes (46): applyChartTheme(), cssVar(), destroyChart(), instances, palette, renderChart(), refreshSupplierPayments(), refreshSuppliers() (+38 more)
+Cohesion: 0.12
+Nodes (19): renderChart(), SaleSource, AccountingTab, bySourceBreakdown(), effectiveSource(), ExpenseSubTab, PERIOD_OPTIONS, PETTY_CASH_STATUS_LABELS (+11 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.09
@@ -130,48 +131,48 @@ Cohesion: 0.05
 Nodes (39): adjustLoyaltyPoints(), adjustWalletBalance(), applySyncedRecord(), finalizePayroll(), getAllForSync(), getAllSupplierBalances(), getCustomer(), getDB() (+31 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (30): NOTIFICATION_ROUTE, StoreName, automationTriggers, customers, employees, expenses, isOnline, lowStockCount() (+22 more)
+Cohesion: 0.06
+Nodes (50): StoreName, automationTriggers, customers, employees, expenses, ingredients, initThemeWatcher(), isOnline (+42 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
-Nodes (32): takeSessionExpiredReason(), AlertBannerOptions, createAlertBanner(), dismissedThisSession, createAppNav(), createNotificationBell(), ALL_ROUTES, bootstrap() (+24 more)
+Nodes (29): takeSessionExpiredReason(), AlertBannerOptions, createAlertBanner(), dismissedThisSession, createAppNav(), ALL_ROUTES, bootstrap(), createBreadcrumb() (+21 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.07
-Nodes (29): refreshAutomationTriggers(), refreshSmsLogs(), buildCustomerRows(), CUSTOMER_FIELD_LABELS, CustomerField, CustomerImportRow, AUTOMATION_DEFAULT_TEMPLATES, AUTOMATION_DESCRIPTIONS (+21 more)
+Nodes (56): renderAccessDenied(), refreshAutomationTriggers(), AutomationTriggerType, el(), emptyState(), kpiCard(), CUSTOMER_FIELD_LABELS, CustomerField (+48 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.17
-Nodes (31): openModal(), refreshCustomers(), refreshEmployees(), field(), numberInput(), parseNumberInput(), selectEl(), openPettyCashFormModal() (+23 more)
+Cohesion: 0.18
+Nodes (36): openModal(), refreshCustomers(), refreshSettings(), field(), numberInput(), parseNumberInput(), selectEl(), formatBusinessType() (+28 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.09
-Nodes (30): Schema, AppNotification, AppNotificationType, AttendanceRecord, AuthConfig, AutomationTriggerType, BulkSaleBreakdownEntry, BusinessSubscriptionStatus (+22 more)
+Nodes (31): Schema, AppNotification, AppNotificationType, AttendanceRecord, AuthConfig, BulkSaleBreakdownEntry, BusinessSubscriptionStatus, CampaignRecord (+23 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.13
-Nodes (25): openPlatformOwnerOverlay(), addPlatformInvoice(), DEFAULT_PLATFORM_PRICING, deletePlatformInvoice(), getPlatformPaymentCard(), getPlatformPricing(), listPlatformBroadcasts(), listPlatformInvoices() (+17 more)
+Cohesion: 0.14
+Nodes (25): addPlatformInvoice(), DEFAULT_PLATFORM_PRICING, deletePlatformInvoice(), getPlatformPaymentCard(), listPlatformBroadcasts(), listPlatformInvoices(), PlatformBroadcastMessage, platformLockedUntil() (+17 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.12
-Nodes (28): formatDate(), activeEmployees(), ADVANCE_STATUS_LABELS, ADVANCE_STATUS_TONE, ATTENDANCE_STATUS_LABELS, ATTENDANCE_STATUS_OPTIONS, ATTENDANCE_STATUS_TONE, badge() (+20 more)
+Cohesion: 0.09
+Nodes (38): refreshEmployees(), PayrollStatus, SalaryAdvanceStatus, iconBtn(), formatMoney(), formatPayType(), renderPettyCashRow(), renderSupplierPaymentRow() (+30 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.16
-Nodes (23): refreshSettings(), Theme, el(), iconTextBtn(), renderVatSubTab(), renderRecipes(), BeforeInstallPromptEvent, BUSINESS_TYPE_OPTIONS (+15 more)
+Cohesion: 0.15
+Nodes (19): daysUntilBusinessExpiry(), isBusinessExpired(), isBusinessExpiringSoon(), Theme, BeforeInstallPromptEvent, BUSINESS_TYPE_OPTIONS, formatBytes(), PLAN_OPTIONS (+11 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.13
-Nodes (25): refreshAll(), FullBackup, formatBusinessType(), formatDateTime(), pullFromServer(), pushToServer(), syncNow(), BUSINESS_TYPE_OPTIONS (+17 more)
+Cohesion: 0.14
+Nodes (34): currentUser, ingredientsById(), refreshIngredients(), refreshSales(), refreshShoppingList(), IngredientCategory, scheduleAutomationRun(), iconTextBtn() (+26 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.12
-Nodes (20): NavItem, createSidebar(), navButton(), ROLE_LABELS, Sidebar, SIDEBAR_LINKS, SidebarLink, showBootError() (+12 more)
+Cohesion: 0.10
+Nodes (16): SessionUser, NavItem, SidebarLink, NewUserInput, UpdateUserInput, UserRole, ApiUser, Child (+8 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.16
-Nodes (20): attemptLogin(), checkInactivityTimeout(), login(), LoginResult, logout(), logoutWithReason(), readSession(), recordActivity() (+12 more)
+Cohesion: 0.13
+Nodes (24): attemptLogin(), checkInactivityTimeout(), login(), LoginResult, logout(), logoutWithReason(), readSession(), recordActivity() (+16 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.12
@@ -186,8 +187,8 @@ Cohesion: 0.10
 Nodes (20): dependencies, bcrypt, better-sqlite3, cors, dotenv, express, express-rate-limit, helmet (+12 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.19
-Nodes (17): confirmModal(), ensureContainer(), showToast(), ToastType, handleLogoutClick(), handleDeletePettyCash(), handleDeleteSupplierTransaction(), handleReviewPettyCash() (+9 more)
+Cohesion: 0.16
+Nodes (19): confirmModal(), ConfirmOptions, ModalHandle, ModalOptions, showToast(), handleLogoutClick(), handleDeletePettyCash(), handleDeleteSupplier() (+11 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.12
@@ -206,12 +207,12 @@ Cohesion: 0.21
 Nodes (13): AutomationTrigger, Settings, applyTemplate(), isEligible(), recencyDaysFor(), runAutomationTriggers(), withinCooldown(), fetchWithTimeout() (+5 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.15
-Nodes (13): SubscriptionPaymentStatus, ApiBroadcast, ApiBusiness, ApiPlatformBusiness, ApiPlatformMetrics, ApiSubscriptionPayment, AuthResult, getAccessToken() (+5 more)
+Cohesion: 0.12
+Nodes (16): PlatformInvoice, PaidSubscriptionPlan, SubscriptionPaymentStatus, ApiBroadcast, ApiBusiness, ApiPlatformBusiness, ApiPlatformMetrics, ApiPricingRow (+8 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.15
-Nodes (12): Database, fs, migrate(), path, apiLimiter, app, authLimiter, cors (+4 more)
+Cohesion: 0.20
+Nodes (9): apiLimiter, app, authLimiter, cors, express, helmet, { migrate }, platformAuthLimiter (+1 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.21
@@ -222,8 +223,8 @@ Cohesion: 0.15
 Nodes (12): background_color, description, dir, display, icons, lang, name, orientation (+4 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.22
-Nodes (11): NAV_ITEMS, currentPath, getHashPath(), navigate(), renderCurrent(), Route, RouteCleanup, RouteRender (+3 more)
+Cohesion: 0.13
+Nodes (24): NAV_ITEMS, createNotificationBell(), NOTIFICATION_ROUTE, createSidebar(), navButton(), ROLE_LABELS, Sidebar, SIDEBAR_LINKS (+16 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.26
@@ -234,16 +235,16 @@ Cohesion: 0.15
 Nodes (12): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, lib, module, moduleResolution, noEmit (+4 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.21
-Nodes (10): { chromium }, fs, OUT_DIR, path, render(), daysUntilBusinessExpiry(), isBusinessExpired(), isBusinessExpiringSoon() (+2 more)
+Cohesion: 0.25
+Nodes (6): { chromium }, fs, OUT_DIR, path, render(), renderSetupWizard()
 
 ### Community 35 - "Community 35"
 Cohesion: 0.25
 Nodes (10): buildManifest(), crypto, entry(), esbuild, fs, hashFile(), main(), minify (+2 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.25
-Nodes (10): NewIngredientInput, refreshNotifications(), Ingredient, ALERT_ROLES, checkStockAlertsAndNotify(), lowStockMessage(), notifiedLowStock, notifiedStockout (+2 more)
+Cohesion: 0.22
+Nodes (12): NewIngredientInput, refreshNotifications(), Ingredient, formatDate(), ALERT_ROLES, checkStockAlertsAndNotify(), lowStockMessage(), notifiedLowStock (+4 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.20
@@ -270,48 +271,56 @@ Cohesion: 0.32
 Nodes (6): Customer, RFMScore, RFMSegment, assignSegment(), quintileScores(), recalculateAllRfm()
 
 ### Community 43 - "Community 43"
-Cohesion: 0.29
-Nodes (6): db, { db }, express, { requireAuth }, router, { v4: uuid }
+Cohesion: 0.18
+Nodes (10): Database, db, fs, migrate(), path, { db }, express, { requireAuth } (+2 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.29
-Nodes (5): SessionUser, NewUserInput, UpdateUserInput, UserRole, ApiUser
+Cohesion: 0.13
+Nodes (23): avgGrossMarginRatio(), DailyAggregate, dailyBreakEven(), dailySeries(), expenseMonthlyEquivalent(), inventoryValue(), ItemRecipeCostFn, lowStockIngredients() (+15 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.29
-Nodes (5): PlatformInvoice, BusinessType, PaidSubscriptionPlan, ApiPricingRow, WizardState
+Cohesion: 0.11
+Nodes (20): applyChartTheme(), cssVar(), destroyChart(), instances, palette, ensureContainer(), ToastType, refreshExpenses() (+12 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.33
 Nodes (5): DEST_DIR, fs, path, SRC_DIR, WEIGHTS
 
+### Community 47 - "Community 47"
+Cohesion: 0.26
+Nodes (15): RouteCleanup, refreshMenuItems(), avgFoodCostPct(), foodCostPct(), grossProfit(), recipeCost(), suggestedPriceForTarget(), formatPct() (+7 more)
+
 ### Community 48 - "Community 48"
-Cohesion: 0.50
-Nodes (3): ConfirmOptions, ModalHandle, ModalOptions
+Cohesion: 0.36
+Nodes (6): downloadBlob(), downloadCSV(), downloadJSON(), readFileAsJSON(), shareOrCopyText(), toCSV()
 
 ### Community 49 - "Community 49"
 Cohesion: 0.67
 Nodes (4): RecordImportedSaleInput, RecordSaleInput, DeliveryInfo, OrderType
 
+### Community 53 - "Community 53"
+Cohesion: 0.47
+Nodes (6): hasFullAccess(), hasRole(), isSuperadmin(), takeNavigationIntent(), renderIngredients(), renderRecipes()
+
 ## Knowledge Gaps
-- **295 isolated node(s):** `jwt`, `path`, `fs`, `Database`, `name` (+290 more)
+- **296 isolated node(s):** `jwt`, `path`, `fs`, `Database`, `name` (+291 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `el()` connect `Community 15` to `Community 0`, `Community 2`, `Community 34`, `Community 4`, `Community 5`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 18`, `Community 22`, `Community 31`?**
-  _High betweenness centrality (0.069) - this node is a cross-community bridge._
+- **Why does `el()` connect `Community 10` to `Community 0`, `Community 4`, `Community 5`, `Community 8`, `Community 9`, `Community 11`, `Community 44`, `Community 45`, `Community 14`, `Community 13`, `Community 16`, `Community 17`, `Community 18`, `Community 47`, `Community 15`, `Community 53`, `Community 31`?**
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **Why does `fetch()` connect `Community 1` to `Community 26`, `Community 4`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
-- **Why does `askClaude()` connect `Community 4` to `Community 1`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+- **Why does `askClaude()` connect `Community 4` to `Community 1`, `Community 11`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
 - **What connects `jwt`, `path`, `fs` to the rest of the system?**
-  _295 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _296 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05406434418427565 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09009009009009009 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.07130333138515488 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.0512987012987013 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06606606606606606 - nodes in this community are weakly interconnected._
