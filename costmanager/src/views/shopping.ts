@@ -2,11 +2,12 @@ import * as db from '../db';
 import { currentUser } from '../auth';
 import { openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { el, emptyState, iconTextBtn, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
-import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian } from '../utils/format';
+import { el, emptyState, field, iconBtn, iconTextBtn, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
+import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian, todayISO } from '../utils/format';
 import { shareOrCopyText } from '../utils/export';
 import type { RouteCleanup } from '../router';
-import { ingredientsById, refreshNotifications, refreshShoppingList, settings, shoppingList } from '../store';
+import { ingredientsById, refreshIngredients, refreshNotifications, refreshShoppingList, settings, shoppingList } from '../store';
+import { scheduleRecalculation } from '../utils/inventory-engine';
 import type { AppUser, Ingredient, IngredientCategory, ShoppingListItem } from '../types';
 
 function buildShareText(items: ShoppingListItem[]): string {
@@ -61,7 +62,55 @@ function renderBudgetSection(container: HTMLElement, items: ShoppingListItem[]):
   );
 }
 
+function openRecordPurchaseModal(item: ShoppingListItem, onDone: () => void): void {
+  const qtyInput = numberInput(item.suggestedQty);
+  const priceInput = numberInput(ingredientsById().get(item.ingredientId)?.pricePerUnit ?? 0);
+  const dateInput = el('input', { type: 'date', class: 'input', value: todayISO().slice(0, 10) });
+  const supplierInput = el('input', { type: 'text', class: 'input' });
+  const noteInput = el('input', { type: 'text', class: 'input', value: item.note ?? '' });
+
+  const body = el('form', { class: 'form' }, [
+    field(`مقدار خرید (${formatUnit(item.unit)})`, qtyInput),
+    field('قیمت خرید (هر واحد، تومان)', priceInput),
+    field('تاریخ خرید', dateInput),
+    field('تامین‌کننده (اختیاری)', supplierInput),
+    field('یادداشت (اختیاری)', noteInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت خرید']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const quantity = parseNumberInput(qtyInput);
+    const pricePerUnit = parseNumberInput(priceInput);
+    if (quantity <= 0 || pricePerUnit <= 0) {
+      showToast('مقدار و قیمت باید بیشتر از صفر باشد', 'error');
+      return;
+    }
+    await db.recordPurchase(item.ingredientId, {
+      quantity,
+      pricePerUnit,
+      date: dateInput.value ? new Date(dateInput.value).toISOString() : todayISO(),
+      supplier: supplierInput.value.trim() || undefined,
+      note: noteInput.value.trim() || undefined,
+    });
+    if (!item.checked) await db.toggleShoppingItemChecked(item.id);
+    await refreshIngredients();
+    await refreshShoppingList();
+    scheduleRecalculation();
+    showToast('خرید ثبت شد', 'success');
+    modal.close();
+    onDone();
+  });
+
+  const modal = openModal({ title: `ثبت خرید — ${item.ingredientName}`, body });
+}
+
 function renderShoppingRow(item: ShoppingListItem, ingredient?: Ingredient): HTMLElement {
+  const purchaseBtn = iconBtn('cart', 'ثبت خرید', () => openRecordPurchaseModal(item, () => {}));
+
   const checkbox = el('input', { type: 'checkbox', checked: item.checked });
   checkbox.addEventListener('change', async () => {
     await db.toggleShoppingItemChecked(item.id);
@@ -100,6 +149,7 @@ function renderShoppingRow(item: ShoppingListItem, ingredient?: Ingredient): HTM
       el('div', { class: 'shopping-row__controls' }, [qtyInput, el('span', { class: 'shopping-row__unit' }, [formatUnit(item.unit)]), noteInput]),
     ]),
     el('span', { class: 'shopping-row__cost' }, [formatMoney(item.estimatedCost)]),
+    purchaseBtn,
   ]);
 }
 
