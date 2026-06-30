@@ -1,32 +1,25 @@
-import { confirmModal } from '../components/modal';
+import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { settings } from '../store';
 import { el, emptyState, field, iconBtn, iconTextBtn, kpiCard, numberInput, parseNumberInput, selectEl } from '../utils/dom';
 import { svgIcon } from '../utils/icons';
-import { formatDateTime, formatMoney, toPersian } from '../utils/format';
+import { formatBusinessType, formatDateTime, formatMoney, toPersian } from '../utils/format';
 import {
-  DEFAULT_PLATFORM_USERNAME,
   addPlatformInvoice,
   deletePlatformInvoice,
-  fetchPlatformBusinesses,
   getPlatformPaymentCard,
-  getPlatformPricing,
-  isDefaultPlatformCredentials,
   listPlatformBroadcasts,
   listPlatformInvoices,
   platformLockedUntil,
+  recordPlatformBroadcast,
   recordPlatformFailedAttempt,
   resetPlatformLoginAttempts,
-  sendPlatformBroadcast,
-  setPlatformCredentials,
   setPlatformOwnerSession,
   setPlatformPaymentCard,
   setPlatformPricing,
-  verifyPlatformCredentials,
-  type PlatformPricing,
 } from '../platform-owner';
-import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
-import type { PaidSubscriptionPlan } from '../types';
+import { api, ApiError } from '../utils/api';
+import type { ApiPlatformBusiness, ApiSubscriptionPayment } from '../utils/api';
+import type { BusinessType, PaidSubscriptionPlan } from '../types';
 
 const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
   { value: '1m', label: '۱ ماهه' },
@@ -35,14 +28,17 @@ const PLAN_OPTIONS: { value: PaidSubscriptionPlan; label: string }[] = [
   { value: '12m', label: '۱۲ ماهه' },
 ];
 
-type Tab = 'businesses' | 'pricing' | 'broadcast' | 'revenue';
-
-function serverUrl(): string {
-  return settings.get()?.syncServerUrl ?? '';
-}
+type Tab = 'businesses' | 'pending' | 'pricing' | 'broadcast' | 'revenue';
 
 function planLabel(plan: PaidSubscriptionPlan): string {
   return PLAN_OPTIONS.find((p) => p.value === plan)?.label ?? plan;
+}
+
+function subscriptionStatusLabel(status: string): string {
+  if (status === 'trial') return 'دوره آزمایشی';
+  if (status === 'pending_payment') return 'در انتظار پرداخت';
+  if (status === 'expired') return 'منقضی‌شده';
+  return 'فعال';
 }
 
 function settingsCard(title: string, body: HTMLElement): HTMLElement {
@@ -108,24 +104,22 @@ function renderLoginScreen(container: HTMLElement): void {
       showError('نام کاربری و رمز عبور را وارد کنید');
       return;
     }
-    const valid = await verifyPlatformCredentials(username, password);
-    if (!valid) {
+    try {
+      await api.platformLogin(username, password);
+    } catch (err) {
       const until = recordPlatformFailedAttempt();
       if (until) {
         tickLock();
         lockTimer = setInterval(tickLock, 1000);
       } else {
-        showError('نام کاربری یا رمز عبور اشتباه است');
+        showError(err instanceof ApiError ? err.message || 'نام کاربری یا رمز عبور اشتباه است' : 'نام کاربری یا رمز عبور اشتباه است');
       }
       return;
     }
     resetPlatformLoginAttempts();
     if (lockTimer) clearInterval(lockTimer);
-    if (isDefaultPlatformCredentials()) renderForceChangeScreen(container);
-    else {
-      setPlatformOwnerSession(true);
-      renderPlatformAdminPanel(container, () => { location.hash = ''; location.reload(); });
-    }
+    setPlatformOwnerSession(true);
+    renderPlatformAdminPanel(container, () => { location.hash = ''; location.reload(); });
   }
 
   const form = el('form', { class: 'auth-form', onsubmit: submit }, [
@@ -149,65 +143,6 @@ function renderLoginScreen(container: HTMLElement): void {
   );
 
   setTimeout(() => usernameInput.focus(), 50);
-}
-
-function renderForceChangeScreen(container: HTMLElement): void {
-  container.innerHTML = '';
-
-  const usernameInput = el('input', { type: 'text', class: 'input', autocomplete: 'username', dir: 'ltr', value: DEFAULT_PLATFORM_USERNAME }) as HTMLInputElement;
-  const passwordInput = el('input', { type: 'password', class: 'input', autocomplete: 'new-password', dir: 'ltr' }) as HTMLInputElement;
-  const confirmInput = el('input', { type: 'password', class: 'input', autocomplete: 'new-password', dir: 'ltr' }) as HTMLInputElement;
-  const strengthEl = el('p', { class: 'auth-hint' }, ['']);
-
-  passwordInput.addEventListener('input', () => {
-    const { label } = passwordStrength(passwordInput.value);
-    strengthEl.textContent = passwordInput.value ? `قدرت رمز عبور: ${label}` : '';
-  });
-
-  const form = el('form', { class: 'auth-form' }, [
-    field('نام کاربری جدید', usernameInput),
-    field('رمز عبور جدید', passwordInput),
-    strengthEl,
-    field('تکرار رمز عبور جدید', confirmInput),
-    el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['تنظیم اطلاعات ورود و ادامه']),
-  ]);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-    const confirm = confirmInput.value;
-    const usernameError = validateUsername(username);
-    if (usernameError) {
-      showToast(usernameError, 'error');
-      return;
-    }
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      showToast(passwordError, 'error');
-      return;
-    }
-    if (password !== confirm) {
-      showToast('رمز عبور و تکرار آن یکسان نیستند', 'error');
-      return;
-    }
-    await setPlatformCredentials(username, password);
-    setPlatformOwnerSession(true);
-    showToast('اطلاعات ورود پلتفرم تغییر کرد', 'success');
-    renderPlatformAdminPanel(container, () => { location.hash = ''; location.reload(); });
-  });
-
-  container.appendChild(
-    el('div', { class: 'auth-screen' }, [
-      el('div', { class: 'auth-card' }, [
-        el('div', { class: 'boot-logo auth-logo' }, ['م']),
-        el('span', { class: 'auth-brand' }, ['پنل پلتفرم']),
-        el('h2', { class: 'auth-title' }, ['تغییر اطلاعات ورود پیش‌فرض']),
-        el('p', { class: 'auth-subtitle' }, ['برای امنیت بیشتر، نام کاربری و رمز عبور پیش‌فرض را تغییر دهید']),
-        form,
-      ]),
-    ]),
-  );
 }
 
 let statsHostRef: HTMLElement | null = null;
@@ -244,6 +179,7 @@ function renderPlatformAdminPanel(container: HTMLElement, onExit: () => void): v
 
   const tabs: { id: Tab; label: string; render: (c: HTMLElement) => void }[] = [
     { id: 'businesses', label: 'کسب‌وکارها', render: renderBusinessesTab },
+    { id: 'pending', label: 'پرداخت‌های در انتظار', render: renderPendingPaymentsTab },
     { id: 'pricing', label: 'تعرفه‌های اشتراک', render: renderPricingTab },
     { id: 'broadcast', label: 'پیام‌رسانی', render: renderBroadcastTab },
     { id: 'revenue', label: 'گزارش درآمد', render: renderRevenueTab },
@@ -276,22 +212,24 @@ function renderPlatformAdminPanel(container: HTMLElement, onExit: () => void): v
 
 function renderStats(host: HTMLElement): void {
   host.innerHTML = '';
-  const invoices = listPlatformInvoices();
-  const totalRevenue = invoices.reduce((sum, i) => sum + i.amount, 0);
   const broadcasts = listPlatformBroadcasts();
 
   const businessesCard = kpiCard('building', 'کسب‌وکارها', '…');
-  host.append(
-    businessesCard,
-    kpiCard('wallet', 'درآمد کل پلتفرم', `${formatMoney(totalRevenue)} ت`),
-    kpiCard('receipt', 'تعداد فاکتورها', toPersian(invoices.length)),
-    kpiCard('mail', 'پیام‌های ارسالی', toPersian(broadcasts.length)),
-  );
+  const activeCard = kpiCard('check', 'فعال', '…');
+  const trialCard = kpiCard('clock', 'دوره آزمایشی', '…');
+  const revenueCard = kpiCard('wallet', 'درآمد کل پلتفرم', '…');
+  host.append(businessesCard, activeCard, trialCard, revenueCard, kpiCard('mail', 'پیام‌های ارسالی', toPersian(broadcasts.length)));
 
-  void fetchPlatformBusinesses(serverUrl()).then((list) => {
-    const valueEl = businessesCard.querySelector('.kpi-card__value');
-    if (valueEl) valueEl.textContent = toPersian(list.length);
-  });
+  void api.platformMetrics().then((metrics) => {
+    const set = (card: HTMLElement, text: string) => {
+      const valueEl = card.querySelector('.kpi-card__value');
+      if (valueEl) valueEl.textContent = text;
+    };
+    set(businessesCard, toPersian(metrics.total));
+    set(activeCard, toPersian(metrics.active));
+    set(trialCard, toPersian(metrics.trial));
+    set(revenueCard, `${formatMoney(metrics.totalRevenue)} ت`);
+  }).catch(() => {});
 }
 
 function renderBusinessesTab(container: HTMLElement): void {
@@ -300,34 +238,149 @@ function renderBusinessesTab(container: HTMLElement): void {
 
   container.append(el('div', { class: 'settings-actions' }, [refreshBtn]), listHost);
 
+  function editSubscription(b: ApiPlatformBusiness): void {
+    const planSelect = selectEl(PLAN_OPTIONS, (b.subscriptionPlan as PaidSubscriptionPlan) ?? '1m');
+    const statusSelect = selectEl(
+      [
+        { value: 'trial', label: 'دوره آزمایشی' },
+        { value: 'pending_payment', label: 'در انتظار پرداخت' },
+        { value: 'active', label: 'فعال' },
+        { value: 'expired', label: 'منقضی‌شده' },
+      ],
+      b.subscriptionStatus,
+    );
+    const expiryInput = el('input', { type: 'date', class: 'input', value: b.subscriptionExpires.slice(0, 10) }) as HTMLInputElement;
+
+    const body = el('form', { class: 'form' }, [
+      field('پلن اشتراک', planSelect),
+      field('وضعیت', statusSelect),
+      field('تاریخ انقضا', expiryInput),
+      el('div', { class: 'modal-actions' }, [
+        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+        el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره']),
+      ]),
+    ]);
+
+    body.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api.updateBusinessSubscription(b.id, {
+          plan: planSelect.value,
+          status: statusSelect.value,
+          expiresAt: expiryInput.value ? new Date(expiryInput.value).toISOString() : undefined,
+        });
+        showToast('اشتراک بروزرسانی شد', 'success');
+        modal.close();
+        refreshStats();
+        void load();
+      } catch (err) {
+        showToast(err instanceof ApiError ? err.message || 'خطا در بروزرسانی اشتراک' : 'خطا در بروزرسانی اشتراک', 'error');
+      }
+    });
+
+    const modal = openModal({ title: `ویرایش اشتراک — ${b.name}`, body });
+  }
+
   async function load(): Promise<void> {
     listHost.innerHTML = '';
     listHost.appendChild(el('p', { class: 'form-hint' }, ['در حال دریافت فهرست کسب‌وکارها…']));
-    const businesses = await fetchPlatformBusinesses(serverUrl());
+    let businesses: ApiPlatformBusiness[];
+    try {
+      businesses = await api.listBusinesses();
+    } catch (err) {
+      listHost.innerHTML = '';
+      showToast(err instanceof ApiError ? err.message || 'خطا در دریافت فهرست کسب‌وکارها' : 'خطا در دریافت فهرست کسب‌وکارها', 'error');
+      return;
+    }
     listHost.innerHTML = '';
     if (!businesses.length) {
-      listHost.appendChild(
-        emptyState({
-          icon: 'building',
-          title: 'کسب‌وکاری یافت نشد',
-          message: 'فهرست کسب‌وکارها از سرور همگام‌سازی دریافت می‌شود؛ اگر سرور در دسترس نباشد یا این قابلیت را هنوز نداشته باشد، این فهرست خالی نمایش داده می‌شود.',
-        }),
-      );
+      listHost.appendChild(emptyState({ icon: 'building', title: 'کسب‌وکاری یافت نشد' }));
       return;
     }
     for (const b of businesses) {
       listHost.appendChild(
         el('div', { class: 'platform-row' }, [
           el('div', { class: 'platform-row__main' }, [
-            el('span', { class: 'platform-row__name' }, [b.businessName]),
+            el('span', { class: 'platform-row__name' }, [b.name]),
             el('span', { class: 'platform-row__meta' }, [
               [
+                formatBusinessType(b.type as BusinessType),
+                `${subscriptionStatusLabel(b.subscriptionStatus)} · ${planLabel(b.subscriptionPlan as PaidSubscriptionPlan)}`,
+                `انقضا: ${formatDateTime(b.subscriptionExpires)}`,
+                `${toPersian(b.userCount)} کاربر`,
                 b.lastSyncAt ? `آخرین همگام‌سازی: ${formatDateTime(b.lastSyncAt)}` : 'هنوز همگام‌سازی نشده',
-                b.userCount != null ? `${toPersian(b.userCount)} کاربر` : null,
+              ].join(' · '),
+            ]),
+          ]),
+          iconBtn('edit', 'ویرایش اشتراک', () => void editSubscription(b)),
+        ]),
+      );
+    }
+  }
+
+  void load();
+}
+
+function renderPendingPaymentsTab(container: HTMLElement): void {
+  const listHost = el('div', { class: 'platform-list' });
+  const refreshBtn = iconTextBtn('refresh-cw', 'بروزرسانی', 'btn btn-secondary', () => void load());
+  container.append(el('div', { class: 'settings-actions' }, [refreshBtn]), listHost);
+
+  async function decide(payment: ApiSubscriptionPayment, approve: boolean): Promise<void> {
+    const confirmed = await confirmModal({
+      title: approve ? 'تایید پرداخت' : 'رد پرداخت',
+      message: approve
+        ? `پرداخت ${formatMoney(payment.amount)} تومانی برای «${payment.business_name ?? payment.business_id}» تایید و اشتراک تمدید شود؟`
+        : `پرداخت «${payment.business_name ?? payment.business_id}» رد شود؟`,
+      confirmLabel: approve ? 'تایید' : 'رد کردن',
+      danger: !approve,
+    });
+    if (!confirmed) return;
+    try {
+      if (approve) await api.approvePayment(payment.id);
+      else await api.rejectPayment(payment.id);
+      showToast(approve ? 'پرداخت تایید و اشتراک تمدید شد' : 'پرداخت رد شد', 'success');
+      refreshStats();
+      void load();
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message || 'خطایی رخ داد' : 'خطایی رخ داد', 'error');
+    }
+  }
+
+  async function load(): Promise<void> {
+    listHost.innerHTML = '';
+    listHost.appendChild(el('p', { class: 'form-hint' }, ['در حال دریافت پرداخت‌های در انتظار…']));
+    let payments: ApiSubscriptionPayment[];
+    try {
+      payments = await api.listPendingPayments();
+    } catch (err) {
+      listHost.innerHTML = '';
+      showToast(err instanceof ApiError ? err.message || 'خطا در دریافت پرداخت‌ها' : 'خطا در دریافت پرداخت‌ها', 'error');
+      return;
+    }
+    listHost.innerHTML = '';
+    if (!payments.length) {
+      listHost.appendChild(emptyState({ icon: 'receipt', title: 'پرداخت در انتظاری وجود ندارد' }));
+      return;
+    }
+    for (const p of payments) {
+      listHost.appendChild(
+        el('div', { class: 'platform-row' }, [
+          el('div', { class: 'platform-row__main' }, [
+            el('span', { class: 'platform-row__name' }, [p.business_name ?? p.business_id]),
+            el('span', { class: 'platform-row__meta' }, [
+              [
+                `${planLabel(p.plan)} · ${formatMoney(p.amount)} تومان`,
+                p.transfer_ref ? `پیگیری: ${p.transfer_ref}` : null,
+                formatDateTime(p.submitted_at),
               ]
                 .filter(Boolean)
                 .join(' · '),
             ]),
+          ]),
+          el('div', { class: 'settings-actions' }, [
+            iconBtn('check', 'تایید', () => void decide(p, true)),
+            iconBtn('x', 'رد', () => void decide(p, false)),
           ]),
         ]),
       );
@@ -338,10 +391,9 @@ function renderBusinessesTab(container: HTMLElement): void {
 }
 
 function renderPricingTab(container: HTMLElement): void {
-  const pricing = getPlatformPricing();
   const inputs = new Map<PaidSubscriptionPlan, HTMLInputElement>();
   const rows = PLAN_OPTIONS.map((p) => {
-    const input = numberInput(pricing[p.value] ?? 0);
+    const input = numberInput(0);
     inputs.set(p.value, input);
     return field(`قیمت اشتراک ${p.label} (تومان)`, input);
   });
@@ -352,14 +404,24 @@ function renderPricingTab(container: HTMLElement): void {
     el('div', { class: 'modal-actions' }, [el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره تعرفه‌ها'])]),
   ]);
 
-  form.addEventListener('submit', (e) => {
+  void api.getPlatformPricing().then((rows) => {
+    for (const row of rows) inputs.get(row.plan)!.value = String(row.amount);
+  }).catch(() => {});
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const next = PLAN_OPTIONS.reduce(
-      (acc, p) => ({ ...acc, [p.value]: parseNumberInput(inputs.get(p.value)!) }),
-      {} as PlatformPricing,
-    );
-    setPlatformPricing(next);
-    showToast('تعرفه‌های پلتفرم ذخیره شد', 'success');
+    try {
+      const local = {} as Record<PaidSubscriptionPlan, number>;
+      for (const p of PLAN_OPTIONS) {
+        const amount = parseNumberInput(inputs.get(p.value)!);
+        await api.setPlatformPricing(p.value, amount);
+        local[p.value] = amount;
+      }
+      setPlatformPricing(local);
+      showToast('تعرفه‌های پلتفرم ذخیره شد', 'success');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message || 'خطا در ذخیره تعرفه‌ها' : 'خطا در ذخیره تعرفه‌ها', 'error');
+    }
   });
 
   container.appendChild(settingsCard('تعرفه‌های اشتراک پلتفرم', form));
@@ -414,11 +476,16 @@ function renderBroadcastTab(container: HTMLElement): void {
       confirmLabel: 'ارسال',
     });
     if (!confirmed) return;
-    const result = await sendPlatformBroadcast(serverUrl(), message);
-    messageInput.value = '';
-    renderHistory();
-    refreshStats();
-    showToast(result.ok ? 'پیام ارسال شد' : 'پیام به‌صورت محلی ثبت شد؛ ارسال به سرور ناموفق بود', result.ok ? 'success' : 'info');
+    try {
+      await api.sendBroadcast(message);
+      recordPlatformBroadcast(message);
+      messageInput.value = '';
+      renderHistory();
+      refreshStats();
+      showToast('پیام ارسال شد', 'success');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message || 'ارسال پیام ناموفق بود' : 'ارسال پیام ناموفق بود', 'error');
+    }
   });
 
   container.append(

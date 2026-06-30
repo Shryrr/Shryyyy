@@ -1,302 +1,120 @@
 import * as db from '../db';
-import { confirmModal } from '../components/modal';
+import type { StoreName } from '../db';
 import { showToast } from '../components/toast';
 import {
-  customers, employees, expenses, ingredients, isOnline, menuItems, refreshAll, sales, settings, shoppingList, smsLogs, syncStatus,
+  automationTriggers, customers, employees, expenses, ingredients, isOnline, menuItems, notifications, refreshAll, sales, settings,
+  shoppingList, smsLogs, suppliers, supplierPayments, syncStatus,
 } from '../store';
-import type { AppUser, FullBackup } from '../types';
-
-const FETCH_TIMEOUT_MS = 6000;
-const SYNC_CODE_PREFIX = 'synccode:';
+import { api, ApiError, hasStoredSession } from './api';
+import type { SyncRecord } from './api';
 
 export const ERR_NETWORK = 'اتصال به سرور همگام‌سازی برقرار نشد';
-export const ERR_NOT_FOUND = 'کد یافت نشد یا منقضی شده است';
 
-interface SyncPayload {
-  exportedAt: string;
-  version: '1.0';
-  businessId: string;
-  businessName: string;
-  backup: FullBackup;
-  users: AppUser[];
-}
-
-async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function buildPayload(): Promise<SyncPayload> {
-  const s = await db.getSettings();
-  const backup = await db.exportAllData();
-  const users = await db.listUsers();
-  return {
-    exportedAt: backup.exportedAt,
-    version: '1.0',
-    businessId: s.businessId,
-    businessName: s.businessName,
-    backup,
-    users,
-  };
-}
-
-/** Applies a remote payload locally, preserving this device's own connection setting (server URL). */
-async function applyPayload(payload: SyncPayload): Promise<void> {
-  const local = await db.getSettings();
-  const backup: FullBackup = {
-    ...payload.backup,
-    data: {
-      ...payload.backup.data,
-      settings: payload.backup.data.settings.map((s) => ({ ...s, syncServerUrl: local.syncServerUrl })),
-    },
-  };
-  await db.importAllData(backup, 'replace');
-  await db.replaceAuthUsers(payload.users);
-  await db.regenerateShoppingList();
-  await db.updateSettings({ businessId: payload.businessId, lastSyncAt: new Date().toISOString() });
-  await refreshAll();
-}
-
-function normalizeBase(url: string): string {
-  return url.trim().replace(/\/+$/, '');
-}
-
-function serverBase(): string {
-  return normalizeBase(settings.get()?.syncServerUrl ?? '');
-}
-
-interface RegistryEntry {
-  businessId: string;
-  businessName: string;
-  lastSyncAt: string;
-  userCount: number;
-}
-
-interface Registry {
-  businesses: RegistryEntry[];
-}
+const DEVICE_ID_KEY = 'syncDeviceId';
+const EPOCH = '1970-01-01T00:00:00.000Z';
 
 /**
- * There is no listing endpoint on a static WebDAV directory, so the platform admin panel can't
- * just ask the server "what businesses exist". Instead every successful push upserts this
- * business's summary into a shared `_registry.json` file via a best-effort GET-merge-PUT.
- * Failures here must never affect the result of the business-data push itself.
+ * Business-data stores synced record-level with the backend via /api/sync/{pull,push}.
+ * Excludes 'settings' (per-device config, e.g. theme/apiBaseUrl) and 'subscription_payments_cache'
+ * (a read-only local mirror of server-managed subscription_payments — never pushed back up).
  */
-async function updateRegistry(payload: SyncPayload, base: string): Promise<void> {
-  const registryUrl = `${base}/_registry.json`;
-  let registry: Registry = { businesses: [] };
-  try {
-    const res = await fetchWithTimeout(registryUrl);
-    if (res.ok) {
-      const data = (await res.json()) as Registry;
-      if (Array.isArray(data?.businesses)) registry = data;
-    }
-  } catch {
-    // Registry missing or unreachable — start fresh.
-  }
+const SYNC_STORES: StoreName[] = [
+  'ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list',
+  'customers', 'sms_logs', 'notifications', 'waste', 'suppliers', 'supplier_payments',
+  'automation_triggers', 'supplier_transactions', 'attendance', 'payroll_records',
+  'salary_advances', 'petty_cash',
+];
 
-  const entry: RegistryEntry = {
-    businessId: payload.businessId,
-    businessName: payload.businessName,
-    lastSyncAt: payload.exportedAt,
-    userCount: payload.users.length,
-  };
-  const idx = registry.businesses.findIndex((b) => b.businessId === entry.businessId);
-  if (idx >= 0) registry.businesses[idx] = entry;
-  else registry.businesses.push(entry);
-
-  try {
-    await fetchWithTimeout(registryUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registry),
-    });
-  } catch {
-    // Best-effort: the business data push itself already succeeded.
-  }
+function isSyncStore(store: string): store is StoreName {
+  return (SYNC_STORES as string[]).includes(store);
 }
 
-/**
- * The sync "server" is just a plain WebDAV directory (e.g. Nginx with `dav_methods PUT`) —
- * each business's data lives at `{base}/{businessId}.json` as a static file, written with PUT
- * and read with GET. There is no application backend on the other end.
- */
-export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
-  const base = serverBase();
-  if (!base || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
+function deviceId(): string {
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+/** Pulls every record changed on the server since the last successful pull and applies it locally. */
+export async function pullFromServer(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; applied?: boolean; error?: string }> {
+  if (!hasStoredSession() || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
   syncStatus.set('syncing');
   try {
-    const payload = await buildPayload();
-    const res = await fetchWithTimeout(`${base}/${encodeURIComponent(payload.businessId)}.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    // The round trip reached the server at all — proves real connectivity regardless of
-    // the HTTP outcome, which navigator.onLine alone can't tell us.
-    isOnline.set(true);
-    if (!res.ok) {
-      syncStatus.set('error');
-      if (!opts.silent) showToast('ارسال داده به سرور ناموفق بود', 'error');
-      return { ok: false, error: ERR_NETWORK };
+    const since = settings.get()?.lastSyncPulledAt || EPOCH;
+    const { records, serverTime } = await api.syncPull(since, SYNC_STORES);
+    for (const record of records) {
+      if (!isSyncStore(record.store)) continue;
+      await db.applySyncedRecord(record.store, record.id, record.isDeleted ? null : record.data);
     }
-    await updateRegistry(payload, base);
-    await db.updateSettings({ lastSyncAt: new Date().toISOString() });
+    await db.updateSettings({ lastSyncPulledAt: serverTime, lastSyncAt: new Date().toISOString() });
+    if (records.length) await refreshAll();
+    isOnline.set(true);
+    syncStatus.set('synced');
+    if (!opts.silent && records.length) showToast('داده‌ها از سرور دریافت شد', 'success');
+    return { ok: true, applied: records.length > 0 };
+  } catch (err) {
+    syncStatus.set('error');
+    if (err instanceof ApiError && err.status === 0) isOnline.set(false);
+    if (!opts.silent) showToast(ERR_NETWORK, 'error');
+    return { ok: false, error: ERR_NETWORK };
+  }
+}
+
+/** Pushes a full snapshot of every syncable store plus any pending deletion tombstones. */
+export async function pushToServer(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
+  if (!hasStoredSession() || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
+  syncStatus.set('syncing');
+  const tombstones = db.consumeTombstones();
+  try {
+    const now = new Date().toISOString();
+    const records: SyncRecord[] = [];
+    for (const store of SYNC_STORES) {
+      const rows = await db.getAllForSync(store);
+      for (const row of rows) {
+        records.push({ store, id: (row as { id: string }).id, data: row, updatedAt: now, isDeleted: false });
+      }
+    }
+    for (const t of tombstones) {
+      records.push({ store: t.store, id: t.id, data: null, updatedAt: t.deletedAt, isDeleted: true });
+    }
+    await api.syncPush(deviceId(), records);
+    await db.updateSettings({ lastSyncAt: now });
+    isOnline.set(true);
     syncStatus.set('synced');
     if (!opts.silent) showToast('داده‌ها با سرور همگام شد', 'success');
     return { ok: true };
-  } catch {
+  } catch (err) {
+    db.requeueTombstones(tombstones);
     syncStatus.set('error');
-    isOnline.set(false);
+    if (err instanceof ApiError && err.status === 0) isOnline.set(false);
     if (!opts.silent) showToast(ERR_NETWORK, 'error');
     return { ok: false, error: ERR_NETWORK };
   }
 }
 
-export async function pullFromServer(
-  opts: { silent?: boolean; skipConfirm?: boolean } = {},
-): Promise<{ ok: boolean; applied?: boolean; error?: string }> {
-  const base = serverBase();
-  const businessId = settings.get()?.businessId;
-  if (!base || !businessId || !navigator.onLine) return { ok: false, error: ERR_NETWORK };
-  syncStatus.set('syncing');
-  try {
-    const res = await fetchWithTimeout(`${base}/${encodeURIComponent(businessId)}.json`);
-    isOnline.set(true);
-    if (res.status === 404) {
-      // Nothing has ever been pushed for this business yet — not an error.
-      syncStatus.set('synced');
-      return { ok: true, applied: false };
-    }
-    if (!res.ok) {
-      syncStatus.set('error');
-      return { ok: false, error: ERR_NETWORK };
-    }
-    const payload = (await res.json()) as SyncPayload;
-    const cur = settings.get();
-    if (cur?.lastSyncAt && payload.exportedAt <= cur.lastSyncAt) {
-      syncStatus.set('synced');
-      return { ok: true, applied: false };
-    }
-    if (!opts.skipConfirm) {
-      const confirmed = await confirmModal({
-        title: 'دریافت داده از سرور',
-        message: 'نسخهٔ جدیدتری از داده‌های این کسب‌وکار روی سرور موجود است. داده‌های فعلی این دستگاه با آن جایگزین شود؟',
-        confirmLabel: 'دریافت و جایگزینی',
-      });
-      if (!confirmed) {
-        syncStatus.set('idle');
-        return { ok: true, applied: false };
-      }
-    }
-    await applyPayload(payload);
-    syncStatus.set('synced');
-    if (!opts.silent) showToast('داده‌ها از سرور دریافت شد', 'success');
-    return { ok: true, applied: true };
-  } catch {
-    syncStatus.set('error');
-    isOnline.set(false);
-    if (!opts.silent) showToast(ERR_NETWORK, 'error');
-    return { ok: false, error: ERR_NETWORK };
+/** Pull-before-push: fold in remote changes first, then ship local changes (including tombstones). */
+export async function syncNow(opts: { silent?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
+  const pullResult = await pullFromServer({ silent: true });
+  const pushResult = await pushToServer({ silent: true });
+  const ok = pullResult.ok && pushResult.ok;
+  if (!opts.silent) {
+    if (ok) showToast('داده‌ها با سرور همگام شد', 'success');
+    else showToast(pushResult.error ?? pullResult.error ?? ERR_NETWORK, 'error');
   }
-}
-
-/** There's no `/ping` route on a static file server — any HTTP response (even 403/404) means the address is reachable. */
-export async function testSyncConnection(serverUrl: string): Promise<{ ok: boolean; error?: string }> {
-  const base = normalizeBase(serverUrl);
-  if (!base) return { ok: false, error: 'آدرس سرور را وارد کنید' };
-  try {
-    await fetchWithTimeout(`${base}/`);
-    isOnline.set(true);
-    return { ok: true };
-  } catch {
-    isOnline.set(false);
-    return { ok: false, error: ERR_NETWORK };
-  }
-}
-
-function randomSixDigitCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-/** Exports current data to a short shareable code: stored locally and best-effort pushed to the server. */
-export async function generateSyncCode(): Promise<string> {
-  const payload = await buildPayload();
-  const code = randomSixDigitCode();
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  localStorage.setItem(`${SYNC_CODE_PREFIX}${code}`, encoded);
-
-  const base = serverBase();
-  if (base && navigator.onLine) {
-    try {
-      await fetchWithTimeout(`${base}/codes/${code}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // Silent fallback: the code still works locally; cross-device pickup just needs the server reachable.
-    }
-  }
-  return code;
-}
-
-/** Imports data from a 6-digit sync code: checks local storage first, then falls back to the server. */
-export async function importFromSyncCode(code: string, opts: { skipConfirm?: boolean } = {}): Promise<{ ok: boolean; error?: string }> {
-  const trimmed = code.trim();
-  let payload: SyncPayload | null = null;
-
-  const local = localStorage.getItem(`${SYNC_CODE_PREFIX}${trimmed}`);
-  if (local) {
-    try {
-      payload = JSON.parse(decodeURIComponent(escape(atob(local)))) as SyncPayload;
-    } catch {
-      payload = null;
-    }
-  }
-
-  if (!payload) {
-    const base = serverBase();
-    if (!base || !navigator.onLine) return { ok: false, error: ERR_NOT_FOUND };
-    try {
-      const res = await fetchWithTimeout(`${base}/codes/${trimmed}.json`);
-      if (!res.ok) return { ok: false, error: ERR_NOT_FOUND };
-      payload = (await res.json()) as SyncPayload;
-    } catch {
-      return { ok: false, error: ERR_NETWORK };
-    }
-  }
-
-  if (!opts.skipConfirm) {
-    const confirmed = await confirmModal({
-      title: 'دریافت داده با کد همگام‌سازی',
-      message: `داده‌های کسب‌وکار «${payload.businessName}» جایگزین داده‌های فعلی این دستگاه می‌شود. ادامه می‌دهید؟`,
-      confirmLabel: 'جایگزینی',
-      danger: true,
-    });
-    if (!confirmed) return { ok: false };
-  }
-
-  await applyPayload(payload);
-  showToast('داده‌ها با موفقیت دریافت شد', 'success');
-  return { ok: true };
+  return { ok, error: ok ? undefined : (pushResult.error ?? pullResult.error) };
 }
 
 let autoSyncWired = false;
 
-/** Pulls the latest data on load, then silently pushes whenever local data changes (debounced). Safe to call multiple times. */
+/** Syncs on load (if logged in), then debounced-pushes on local changes, pulls on reconnect, and polls periodically. Safe to call multiple times. */
 export function setupAutoSync(): void {
   if (autoSyncWired) return;
   autoSyncWired = true;
 
-  if (navigator.onLine) {
-    void pullFromServer({ silent: true, skipConfirm: true });
-  }
+  if (navigator.onLine && hasStoredSession()) void syncNow({ silent: true });
 
   let pushTimer: ReturnType<typeof setTimeout> | null = null;
   function schedulePush(): void {
@@ -304,7 +122,10 @@ export function setupAutoSync(): void {
     pushTimer = setTimeout(() => void pushToServer({ silent: true }), 1500);
   }
 
-  for (const sig of [ingredients, menuItems, expenses, employees, sales, shoppingList, customers, smsLogs]) {
+  for (const sig of [
+    ingredients, menuItems, expenses, employees, sales, shoppingList, customers, smsLogs, automationTriggers, suppliers, supplierPayments,
+    notifications,
+  ]) {
     let first = true;
     sig.subscribe(() => {
       if (first) {
@@ -316,17 +137,14 @@ export function setupAutoSync(): void {
   }
 
   window.addEventListener('online', () => {
-    void pullFromServer({ silent: true, skipConfirm: true });
+    isOnline.set(true);
+    void syncNow({ silent: true });
   });
+  window.addEventListener('offline', () => isOnline.set(false));
 
-  // navigator.onLine only reflects whether the device has a network interface up — a device
-  // can be "online" on that signal while the configured sync server itself is unreachable
-  // (wrong WiFi, firewall, server down). Correct the indicator with a real probe.
-  function checkReachability(): void {
-    const base = serverBase();
-    if (!base || !navigator.onLine) return;
-    void testSyncConnection(base);
-  }
-  checkReachability();
-  setInterval(checkReachability, 20000);
+  // Periodic pull doubles as a reachability probe: a successful round trip proves the API is
+  // actually reachable, which navigator.onLine alone can't tell us (wrong WiFi, server down, etc.).
+  setInterval(() => {
+    if (navigator.onLine && hasStoredSession()) void pullFromServer({ silent: true });
+  }, 20000);
 }

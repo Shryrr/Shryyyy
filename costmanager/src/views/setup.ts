@@ -1,7 +1,7 @@
 import * as db from '../db';
-import { login as setSession } from '../auth';
+import { attemptLogin, login as setSession } from '../auth';
 import { getPlatformPricing } from '../platform-owner';
-import { importFromSyncCode } from '../utils/sync';
+import { api, ApiError } from '../utils/api';
 import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
 import { el, field, selectEl } from '../utils/dom';
 import { formatBusinessType, formatMoney, toPersian } from '../utils/format';
@@ -68,9 +68,8 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
   }
 
   function renderJoinStep(): HTMLElement {
-    const codeInput = el('input', {
-      type: 'text', inputmode: 'numeric', autocomplete: 'off', maxlength: 6, class: 'input', dir: 'ltr', placeholder: '۶ رقمی',
-    });
+    const usernameInput = el('input', { type: 'text', class: 'input', autocomplete: 'username', dir: 'ltr' });
+    const passwordInput = el('input', { type: 'password', class: 'input', dir: 'ltr', autocomplete: 'current-password' }) as HTMLInputElement;
     const errorEl = el('p', { class: 'auth-error', hidden: true }, []);
 
     function showError(msg: string): void {
@@ -80,22 +79,24 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
 
     async function submit(): Promise<void> {
       errorEl.hidden = true;
-      const code = codeInput.value.trim();
-      if (!/^\d{6}$/.test(code)) return showError('کد باید ۶ رقم باشد');
-      const result = await importFromSyncCode(code, { skipConfirm: true });
-      if (!result.ok) return showError(result.error ?? 'کد نامعتبر است');
-      callbacks.onJoined();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      if (!username || !password) return showError('نام کاربری و رمز عبور الزامی است');
+      const result = await attemptLogin(username, password);
+      if (!result.ok || !result.user) return showError(result.error ?? 'ورود ناموفق بود');
+      callbacks.onDone(result.user);
     }
 
     return shell([
       el('button', { type: 'button', class: 'auth-back-btn', onclick: callbacks.onBack }, ['→ بازگشت']),
       el('div', { class: 'boot-logo auth-logo' }, ['م']),
       el('h2', { class: 'auth-title' }, ['پیوستن به کسب‌وکار موجود']),
-      el('p', { class: 'auth-subtitle' }, ['کدی که از مدیر اصلی کسب‌وکار دریافت کرده‌اید را وارد کنید']),
-      el('form', { class: 'auth-form', onsubmit: (e: Event) => { e.preventDefault(); submit(); } }, [
-        field('کد همگام‌سازی', codeInput),
+      el('p', { class: 'auth-subtitle' }, ['با نام کاربری و رمز عبوری که از مدیر اصلی کسب‌وکار دریافت کرده‌اید وارد شوید']),
+      el('form', { class: 'auth-form', onsubmit: (e: Event) => { e.preventDefault(); void submit(); } }, [
+        field('نام کاربری', usernameInput),
+        field('رمز عبور', passwordInput),
         errorEl,
-        el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['پیوستن']),
+        el('button', { type: 'submit', class: 'btn btn-primary auth-submit' }, ['ورود']),
       ]),
     ]);
   }
@@ -212,20 +213,22 @@ export function renderSetupWizard(container: HTMLElement, callbacks: SetupWizard
       errorEl.hidden = true;
       state.plan = planSelect.value as PaidSubscriptionPlan;
       try {
-        const user = await db.registerBusiness({
+        const result = await api.register({
           businessName: state.businessName,
           businessType: state.businessType,
           managerName: state.managerName,
-          managerUsername: state.managerUsername,
-          managerEmail: state.managerEmail,
-          managerPassword: state.managerPassword,
-          managerPhone: state.managerPhone || undefined,
+          username: state.managerUsername,
+          password: state.managerPassword,
+          email: state.managerEmail || undefined,
+          phone: state.managerPhone || undefined,
           plan: state.plan,
         });
+        const user = await db.cacheApiUser(result.user, state.managerPassword);
+        await db.syncBusinessIdentity(result.business);
         await setSession(user);
         callbacks.onDone(user);
       } catch (err) {
-        errorEl.textContent = err instanceof Error ? err.message : 'خطایی رخ داد';
+        errorEl.textContent = err instanceof ApiError ? (err.message || 'خطایی رخ داد') : err instanceof Error ? err.message : 'خطایی رخ داد';
         errorEl.hidden = false;
       }
     }

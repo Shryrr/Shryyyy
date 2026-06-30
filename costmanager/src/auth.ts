@@ -1,6 +1,7 @@
 import * as db from './db';
 import { signal } from './store';
 import type { AppUser, Settings, UserRole } from './types';
+import { api, ApiError } from './utils/api';
 import { verifyPassword } from './utils/password';
 
 const SESSION_KEY = 'currentUser';
@@ -65,8 +66,29 @@ export interface LoginResult {
   error?: string;
 }
 
-/** Username+password login with persisted lockout: 5 failed attempts locks the account for 15 minutes. */
+/**
+ * Username+password login. When online, the server is authoritative: a successful login caches the
+ * user/business locally (so the next login can succeed offline too) and a real rejection (wrong
+ * password, inactive user) is surfaced directly. Only a network failure or being offline falls back
+ * to the local-only path below, which also enforces a persisted lockout: 5 failed attempts locks the
+ * account for 15 minutes.
+ */
 export async function attemptLogin(username: string, password: string): Promise<LoginResult> {
+  if (navigator.onLine) {
+    try {
+      const result = await api.login(username, password);
+      const cached = await db.cacheApiUser(result.user, password);
+      await db.syncBusinessIdentity(result.business);
+      await login(cached);
+      return { ok: true, user: cached };
+    } catch (err) {
+      if (err instanceof ApiError && err.status !== 0) {
+        return { ok: false, error: err.message || 'نام کاربری یا رمز عبور اشتباه است' };
+      }
+      // network failure — fall through to the local/offline login path below
+    }
+  }
+
   const user = await db.findUserByUsername(username);
   if (!user) return { ok: false, error: 'نام کاربری یا رمز عبور اشتباه است' };
 
@@ -91,6 +113,7 @@ export async function attemptLogin(username: string, password: string): Promise<
 
 /** Full reload, deliberately: router.ts has no route-clear mechanism, so a reload is the simplest way to reset all module state for whichever role logs in next. */
 export function logout(): void {
+  void api.logout(); // best-effort server-side token revoke; always clears local tokens itself
   writeSession(null);
   sessionStorage.removeItem(LAST_ACTIVITY_KEY);
   location.reload();

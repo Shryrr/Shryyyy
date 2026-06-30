@@ -7,7 +7,7 @@ import { el, emptyState, field, iconBtn, iconTextBtn, selectEl } from '../utils/
 import { svgIcon } from '../utils/icons';
 import { downloadJSON, readFileAsJSON } from '../utils/export';
 import { formatBusinessType, formatDate, formatDateTime, formatMoney, toPersian } from '../utils/format';
-import { generateSyncCode, importFromSyncCode, pullFromServer, pushToServer, testSyncConnection } from '../utils/sync';
+import { pullFromServer, pushToServer } from '../utils/sync';
 import { getPlatformPaymentCard, getPlatformPricing } from '../platform-owner';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
@@ -406,9 +406,6 @@ function renderBusinessSection(container: HTMLElement): () => void {
 
 function renderSyncSection(container: HTMLElement): () => void {
   const s = settings.get();
-  const serverInput = el('input', {
-    type: 'text', class: 'input', autocomplete: 'off', value: s?.syncServerUrl ?? '', placeholder: 'http://91.107.249.240/sync', dir: 'ltr',
-  });
   const businessIdInput = el('input', { type: 'text', class: 'input', value: s?.businessId ?? '', disabled: true, dir: 'ltr' });
   const statusEl = el('p', { class: 'form-hint' }, []);
 
@@ -418,87 +415,29 @@ function renderSyncSection(container: HTMLElement): () => void {
   }
   refreshStatus();
 
-  const form = el('form', { class: 'form' }, [
-    el('p', { class: 'form-hint' }, ['داده‌ها بین دستگاه‌های این کسب‌وکار از طریق سرور خود برنامه همگام می‌شوند، نه سرویس‌های خارجی.']),
-    field('آدرس سرور همگام‌سازی', serverInput),
-    field('شناسه کسب‌وکار (خودکار)', businessIdInput),
-    statusEl,
-    el('div', { class: 'settings-actions' }, [
-      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ذخیره و تست اتصال']),
-      iconTextBtn('refresh-cw', 'ارسال به سرور', 'btn btn-secondary', async () => {
-        const result = await pushToServer();
-        if (result.ok) refreshStatus();
-      }),
-      iconTextBtn('cloud', 'دریافت از سرور', 'btn btn-secondary', async () => {
-        const result = await pullFromServer();
-        if (result.ok) refreshStatus();
-      }),
-    ]),
-  ]);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const url = serverInput.value.trim();
-    if (!url) {
-      showToast('آدرس سرور را وارد کنید', 'error');
-      return;
-    }
-    await db.updateSettings({ syncServerUrl: url });
-    await refreshSettings();
-    const result = await testSyncConnection(url);
-    if (result.ok) {
-      showToast('اتصال به سرور موفق بود', 'success');
-    } else {
-      showToast('آدرس ذخیره شد، اما اتصال به سرور برقرار نشد (همگام‌سازی به‌صورت آفلاین ادامه می‌یابد)', 'info');
-    }
-    refreshStatus();
-  });
-
-  container.appendChild(settingsCard('همگام‌سازی با سرور', form));
-
-  // ---- Sync code: quick one-time transfer between two devices ----
-  const codeDisplay = el('div', { class: 'sync-code-display', hidden: true });
-  const generateBtn = iconTextBtn('hash', 'ساخت کد همگام‌سازی', 'btn btn-secondary', async () => {
-    const code = await generateSyncCode();
-    codeDisplay.hidden = false;
-    codeDisplay.textContent = toPersian(code);
-  });
-
-  const importInput = el('input', {
-    type: 'text', inputmode: 'numeric', class: 'input', placeholder: '۶ رقمی', dir: 'ltr', maxlength: 6,
-  });
-  const importBtn = el(
-    'button',
-    {
-      type: 'button',
-      class: 'btn btn-primary',
-      onclick: async () => {
-        const code = importInput.value.trim();
-        if (!code) {
-          showToast('کد را وارد کنید', 'error');
-          return;
-        }
-        const result = await importFromSyncCode(code);
-        if (!result.ok && result.error) showToast(result.error, 'error');
-        if (result.ok) {
-          await refreshAll();
-          refreshStatus();
-        }
-      },
-    },
-    ['دریافت با کد'],
-  );
-
   container.appendChild(
     settingsCard(
-      'انتقال سریع با کد همگام‌سازی',
+      'همگام‌سازی با سرور',
       el('div', { class: 'form' }, [
-        el('p', { class: 'form-hint' }, [
-          'برای انتقال داده به دستگاه دیگر، یک کد بساز و در دستگاه مقصد وارد کن. این روش حتی بدون اتصال دائمی به سرور هم روی همان دستگاه کار می‌کند.',
+        el('p', { class: 'form-hint' }, ['داده‌های این کسب‌وکار بین دستگاه‌های متصل به همان حساب کاربری، از طریق سرور برنامه همگام می‌شوند.']),
+        field('شناسه کسب‌وکار (خودکار)', businessIdInput),
+        statusEl,
+        el('div', { class: 'settings-actions' }, [
+          iconTextBtn('refresh-cw', 'ارسال به سرور', 'btn btn-secondary', async () => {
+            const result = await pushToServer();
+            if (result.ok) refreshStatus();
+            else if (result.error) showToast(result.error, 'error');
+          }),
+          iconTextBtn('cloud', 'دریافت از سرور', 'btn btn-secondary', async () => {
+            const result = await pullFromServer();
+            if (result.ok) {
+              await refreshAll();
+              refreshStatus();
+            } else if (result.error) {
+              showToast(result.error, 'error');
+            }
+          }),
         ]),
-        el('div', { class: 'settings-actions' }, [generateBtn]),
-        codeDisplay,
-        el('div', { class: 'settings-actions' }, [importInput, importBtn]),
       ]),
     ),
   );

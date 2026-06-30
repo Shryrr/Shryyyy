@@ -107,6 +107,91 @@ export interface Employee {
   amount: number;
   isActive: boolean;
   startDate?: string;
+  /** Annual paid-leave entitlement in days, used by the HR leave-balance view. Absent on legacy records means 0. */
+  annualLeaveDays?: number;
+}
+
+// ---------- HR & payroll ----------
+
+export type AttendanceStatus = 'present' | 'absent' | 'leave' | 'half_day';
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  /** YYYY-MM-DD */
+  date: string;
+  status: AttendanceStatus;
+  overtimeHours?: number;
+  note?: string;
+  createdAt: string;
+}
+
+export interface PayrollAdjustment {
+  label: string;
+  /** Positive = bonus, negative = penalty. */
+  amount: number;
+}
+
+export type PayrollStatus = 'draft' | 'finalized' | 'paid';
+
+export interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  /** YYYY-MM */
+  periodMonth: string;
+  baseAmount: number;
+  presentDays: number;
+  absentDays: number;
+  leaveDays: number;
+  overtimeHours: number;
+  overtimeAmount: number;
+  adjustments: PayrollAdjustment[];
+  advanceDeduction: number;
+  /** Base + overtime + adjustments, before insurance and advance deduction. */
+  grossPay: number;
+  /** 7% employee share, deducted from grossPay. */
+  insuranceEmployeeShare: number;
+  /** 23% employer share, informational only — not deducted from net pay. */
+  insuranceEmployerShare: number;
+  /** grossPay - insuranceEmployeeShare - advanceDeduction. */
+  netPay: number;
+  status: PayrollStatus;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export type SalaryAdvanceStatus = 'pending' | 'approved' | 'rejected' | 'deducted';
+
+export interface SalaryAdvance {
+  id: string;
+  employeeId: string;
+  amount: number;
+  requestedAt: string;
+  status: SalaryAdvanceStatus;
+  approvedBy?: string;
+  approvedAt?: string;
+  deductedInPayrollId?: string;
+  note?: string;
+}
+
+// ---------- Petty cash ----------
+
+export type PettyCashTxType = 'deposit' | 'withdrawal' | 'expense';
+export type PettyCashRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface PettyCashTransaction {
+  id: string;
+  type: PettyCashTxType;
+  amount: number;
+  reason: string;
+  requestedBy: string;
+  requestedByName: string;
+  status: PettyCashRequestStatus;
+  approvedBy?: string;
+  approvedAt?: string;
+  date: string;
+  createdAt: string;
 }
 
 export type SaleType = 'itemized' | 'bulk';
@@ -314,6 +399,35 @@ export interface SupplierPayment {
   note?: string;
 }
 
+export type SupplierTransactionType = 'credit_purchase' | 'cash_purchase';
+
+/** A goods-received event from a supplier. credit_purchase increases the outstanding payable balance; cash_purchase settles immediately and never affects it. */
+export interface SupplierTransaction {
+  id: string;
+  supplierId: string;
+  type: SupplierTransactionType;
+  amount: number;
+  date: string;
+  ingredientId?: string;
+  description?: string;
+  createdAt: string;
+}
+
+export type SubscriptionPaymentStatus = 'pending' | 'approved' | 'rejected';
+
+/** Local cache of a payment the business submitted for platform-owner review — server (subscription_payments table) is the source of truth. */
+export interface SubscriptionPaymentRecord {
+  id: string;
+  plan: PaidSubscriptionPlan;
+  amount: number;
+  transferRef?: string;
+  description?: string;
+  status: SubscriptionPaymentStatus;
+  submittedAt: string;
+  reviewedAt?: string;
+  note?: string;
+}
+
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -362,6 +476,10 @@ export interface Settings {
   businessId: string;
   syncServerUrl: string;
   lastSyncAt?: string;
+  /** Cursor for /api/sync/pull?since= — separate from lastSyncAt (push time) since pull and push can succeed independently. */
+  lastSyncPulledAt?: string;
+  /** Base URL of the costmanager-api backend, e.g. http://91.107.249.240/api. Falls back to a hardcoded default when unset. */
+  apiBaseUrl?: string;
   kavenegarApiKey?: string;
   kavenegarSenderLine?: string;
   vatEnabled: boolean;
@@ -391,5 +509,11 @@ export interface FullBackup {
     suppliers: Supplier[];
     supplier_payments: SupplierPayment[];
     automation_triggers: AutomationTrigger[];
+    supplier_transactions: SupplierTransaction[];
+    attendance: AttendanceRecord[];
+    payroll_records: PayrollRecord[];
+    salary_advances: SalaryAdvance[];
+    petty_cash: PettyCashTransaction[];
+    subscription_payments_cache: SubscriptionPaymentRecord[];
   };
 }

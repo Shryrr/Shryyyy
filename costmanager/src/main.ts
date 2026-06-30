@@ -18,7 +18,7 @@ import { recalculateAllTheoreticalStock } from './utils/inventory-engine';
 import { recalculateAllRfm } from './utils/rfm';
 import { runAutomationTriggers } from './utils/automation';
 import { setupAutoSync } from './utils/sync';
-import { fetchLatestBroadcast } from './platform-owner';
+import { api, hasStoredSession } from './utils/api';
 import { renderAuthGate } from './views/login';
 import { openPlatformOwnerGate, openPlatformOwnerPanel } from './views/platform-admin';
 import { renderAccounting } from './views/accounting';
@@ -237,9 +237,9 @@ const LAST_SEEN_BROADCAST_KEY = 'lastSeenBroadcastId';
 
 /** Shows the latest platform broadcast in the banner host, once per business, if not already seen on this device. */
 async function maybeShowPlatformBroadcast(bannerHost: HTMLElement): Promise<void> {
+  if (!navigator.onLine || !hasStoredSession()) return;
   try {
-    const serverUrl = settings.get()?.syncServerUrl ?? '';
-    const entry = await fetchLatestBroadcast(serverUrl);
+    const entry = await api.getLatestBroadcast();
     if (!entry || entry.id === localStorage.getItem(LAST_SEEN_BROADCAST_KEY)) return;
     const banner = createAlertBanner({ id: `broadcast-${entry.id}`, message: entry.message, tone: 'info' });
     if (banner) {

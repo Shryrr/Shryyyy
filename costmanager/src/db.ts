@@ -1,12 +1,15 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
-  AppNotification, AppUser, AuthConfig, AutomationTrigger, BulkSaleBreakdownEntry, BusinessType, CampaignRecord, Customer, DeliveryInfo,
-  Employee, Expense, FullBackup, Ingredient, MenuItem, OrderType, PaidSubscriptionPlan, PurchaseRecord, RFMScore, RFMSegment, Sale,
-  SaleSource, Settings, ShoppingListItem, SmsLog, Supplier, SupplierPayment, SubscriptionPlan, SurveyResponse, UserRole, WasteEntry,
-  WasteReason,
+  AppNotification, AppUser, AttendanceRecord, AttendanceStatus, AuthConfig, AutomationTrigger, BulkSaleBreakdownEntry,
+  BusinessSubscriptionStatus, BusinessType,
+  CampaignRecord, Customer, DeliveryInfo, Employee, Expense, FullBackup, Ingredient, MenuItem, OrderType, PaidSubscriptionPlan,
+  PayrollAdjustment, PayrollRecord, PettyCashRequestStatus, PettyCashTransaction, PettyCashTxType, PurchaseRecord, RFMScore, RFMSegment,
+  SalaryAdvance, Sale, SaleSource, Settings, ShoppingListItem, SmsLog, SubscriptionPaymentRecord, Supplier,
+  SupplierPayment, SupplierTransaction, SupplierTransactionType, SubscriptionPlan, SurveyResponse, UserRole, WasteEntry, WasteReason,
 } from './types';
 import { generateShoppingSuggestions, recipeCost, weightedAvgPrice } from './utils/calc';
 import { generateSalt, hashPassword, verifyPassword } from './utils/password';
+import type { ApiBusiness, ApiUser } from './utils/api';
 
 interface Schema extends DBSchema {
   ingredients: { key: string; value: Ingredient; indexes: { byCategory: string } };
@@ -24,6 +27,12 @@ interface Schema extends DBSchema {
   suppliers: { key: string; value: Supplier };
   supplier_payments: { key: string; value: SupplierPayment; indexes: { bySupplier: string } };
   automation_triggers: { key: string; value: AutomationTrigger };
+  supplier_transactions: { key: string; value: SupplierTransaction; indexes: { bySupplier: string } };
+  attendance: { key: string; value: AttendanceRecord; indexes: { byEmployee: string; byDate: string } };
+  payroll_records: { key: string; value: PayrollRecord; indexes: { byEmployee: string; byPeriod: string } };
+  salary_advances: { key: string; value: SalaryAdvance; indexes: { byEmployee: string } };
+  petty_cash: { key: string; value: PettyCashTransaction };
+  subscription_payments_cache: { key: string; value: SubscriptionPaymentRecord };
 }
 
 /**
@@ -31,12 +40,13 @@ interface Schema extends DBSchema {
  * 'auth' is deliberately excluded from this list: it backs exportAllData/importAllData/resetAllData, and PINs
  * must never leak into a shared JSON backup, nor get wiped by a "reset all data" action that would lock out admins.
  */
-type StoreName =
+export type StoreName =
   | 'ingredients' | 'menu_items' | 'expenses' | 'employees' | 'sales' | 'shopping_list' | 'settings'
-  | 'customers' | 'sms_logs' | 'notifications' | 'waste' | 'suppliers' | 'supplier_payments' | 'automation_triggers';
+  | 'customers' | 'sms_logs' | 'notifications' | 'waste' | 'suppliers' | 'supplier_payments' | 'automation_triggers'
+  | 'supplier_transactions' | 'attendance' | 'payroll_records' | 'salary_advances' | 'petty_cash' | 'subscription_payments_cache';
 
 const DB_NAME = 'costmanager_db';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const MAX_PURCHASE_HISTORY = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UNLIMITED_EXPIRY = '2099-12-31T00:00:00.000Z';
@@ -170,6 +180,24 @@ function getDB(): Promise<IDBPDatabase<Schema>> {
             }
           });
         }
+        if (oldVersion < 7) {
+          const supplierTransactions = db.createObjectStore('supplier_transactions', { keyPath: 'id' });
+          supplierTransactions.createIndex('bySupplier', 'supplierId');
+
+          const attendance = db.createObjectStore('attendance', { keyPath: 'id' });
+          attendance.createIndex('byEmployee', 'employeeId');
+          attendance.createIndex('byDate', 'date');
+
+          const payrollRecords = db.createObjectStore('payroll_records', { keyPath: 'id' });
+          payrollRecords.createIndex('byEmployee', 'employeeId');
+          payrollRecords.createIndex('byPeriod', 'periodMonth');
+
+          const salaryAdvances = db.createObjectStore('salary_advances', { keyPath: 'id' });
+          salaryAdvances.createIndex('byEmployee', 'employeeId');
+
+          db.createObjectStore('petty_cash', { keyPath: 'id' });
+          db.createObjectStore('subscription_payments_cache', { keyPath: 'id' });
+        }
       },
     });
   }
@@ -189,6 +217,69 @@ export function uuid(): string {
 
 function nowISO(): string {
   return new Date().toISOString();
+}
+
+// ---------- Sync support ----------
+// Record-level push/pull against the costmanager-api backend (see utils/sync.ts) needs to know
+// which IDs were deleted locally so it can ship tombstones — IndexedDB itself has no delete log.
+// Kept in localStorage (not a new object store) since it's transient wire state, cleared once pushed.
+
+const TOMBSTONE_KEY = 'pendingSyncTombstones';
+
+export interface SyncTombstone {
+  store: StoreName;
+  id: string;
+  deletedAt: string;
+}
+
+function recordTombstone(store: StoreName, id: string): void {
+  let list: SyncTombstone[] = [];
+  try {
+    list = JSON.parse(localStorage.getItem(TOMBSTONE_KEY) || '[]');
+  } catch {
+    list = [];
+  }
+  list.push({ store, id, deletedAt: nowISO() });
+  localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(list));
+}
+
+/** Reads and clears the pending tombstone queue — call once per push attempt and re-queue on failure. */
+export function consumeTombstones(): SyncTombstone[] {
+  let list: SyncTombstone[] = [];
+  try {
+    list = JSON.parse(localStorage.getItem(TOMBSTONE_KEY) || '[]');
+  } catch {
+    list = [];
+  }
+  localStorage.removeItem(TOMBSTONE_KEY);
+  return list;
+}
+
+/** Re-queues tombstones after a failed push so the next attempt still ships them. */
+export function requeueTombstones(tombstones: SyncTombstone[]): void {
+  if (!tombstones.length) return;
+  let list: SyncTombstone[] = [];
+  try {
+    list = JSON.parse(localStorage.getItem(TOMBSTONE_KEY) || '[]');
+  } catch {
+    list = [];
+  }
+  localStorage.setItem(TOMBSTONE_KEY, JSON.stringify([...tombstones, ...list]));
+}
+
+/** All records currently in a syncable store, for a full-snapshot push. */
+export async function getAllForSync(store: StoreName): Promise<unknown[]> {
+  return (await getDB()).getAll(store as never);
+}
+
+/** Applies a pulled record (upsert) or tombstone (delete) into the local store, bypassing app-level validation — sync is the source of truth here. */
+export async function applySyncedRecord(store: StoreName, id: string, data: unknown | null): Promise<void> {
+  const db = await getDB();
+  if (data === null) {
+    await db.delete(store as never, id);
+  } else {
+    await db.put(store as never, data as never);
+  }
 }
 
 export class IngredientInUseError extends Error {
@@ -309,6 +400,7 @@ export async function deleteIngredient(id: string, force = false): Promise<void>
     throw new IngredientInUseError(affected);
   }
   const db = await getDB();
+  recordTombstone('ingredients', id);
   if (affected.length) {
     const tx = db.transaction('menu_items', 'readwrite');
     for (const item of affected) {
@@ -445,6 +537,7 @@ export async function updateMenuItem(id: string, patch: Partial<Omit<MenuItem, '
 }
 
 export async function deleteMenuItem(id: string): Promise<void> {
+  recordTombstone('menu_items', id);
   await (await getDB()).delete('menu_items', id);
 }
 
@@ -494,6 +587,7 @@ export async function updateExpense(id: string, patch: Partial<NewExpenseInput>)
 }
 
 export async function deleteExpense(id: string): Promise<void> {
+  recordTombstone('expenses', id);
   await (await getDB()).delete('expenses', id);
 }
 
@@ -521,6 +615,7 @@ export async function updateEmployee(id: string, patch: Partial<NewEmployeeInput
 }
 
 export async function deleteEmployee(id: string): Promise<void> {
+  recordTombstone('employees', id);
   await (await getDB()).delete('employees', id);
 }
 
@@ -743,6 +838,7 @@ export async function deleteSale(id: string): Promise<void> {
   const db = await getDB();
   const sale = await db.get('sales', id);
   if (!sale) return;
+  recordTombstone('sales', id);
   const menuItem = sale.type === 'bulk' ? undefined : await db.get('menu_items', sale.menuItemId);
 
   const tx = db.transaction(['sales', 'ingredients'], 'readwrite');
@@ -890,6 +986,7 @@ export async function updateCustomer(id: string, patch: Partial<Omit<Customer, '
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
+  recordTombstone('customers', id);
   await (await getDB()).delete('customers', id);
 }
 
@@ -1029,6 +1126,7 @@ export async function deleteWaste(id: string): Promise<void> {
   const db = await getDB();
   const entry = await db.get('waste', id);
   if (!entry) return;
+  recordTombstone('waste', id);
   const ingredient = await db.get('ingredients', entry.ingredientId);
   const tx = db.transaction(['waste', 'ingredients'], 'readwrite');
   if (ingredient) {
@@ -1063,6 +1161,7 @@ export async function updateSupplier(id: string, patch: Partial<NewSupplierInput
 }
 
 export async function deleteSupplier(id: string): Promise<void> {
+  recordTombstone('suppliers', id);
   await (await getDB()).delete('suppliers', id);
 }
 
@@ -1090,7 +1189,310 @@ export async function updateSupplierPayment(id: string, patch: Partial<NewSuppli
 }
 
 export async function deleteSupplierPayment(id: string): Promise<void> {
+  recordTombstone('supplier_payments', id);
   await (await getDB()).delete('supplier_payments', id);
+}
+
+// ---------- Supplier transactions (accounts payable) ----------
+
+export async function listSupplierTransactions(): Promise<SupplierTransaction[]> {
+  return (await getDB()).getAll('supplier_transactions');
+}
+
+export interface RecordSupplierTransactionInput {
+  supplierId: string;
+  type: SupplierTransactionType;
+  amount: number;
+  date: string;
+  ingredientId?: string;
+  description?: string;
+}
+
+export async function recordSupplierTransaction(input: RecordSupplierTransactionInput): Promise<SupplierTransaction> {
+  const tx: SupplierTransaction = { ...input, id: uuid(), createdAt: nowISO() };
+  await (await getDB()).put('supplier_transactions', tx);
+  return tx;
+}
+
+export async function deleteSupplierTransaction(id: string): Promise<void> {
+  recordTombstone('supplier_transactions', id);
+  await (await getDB()).delete('supplier_transactions', id);
+}
+
+/** Outstanding payable = sum of unsettled credit purchases minus payments made toward the supplier. cash_purchase never affects it. */
+export async function getSupplierBalance(supplierId: string): Promise<number> {
+  const db = await getDB();
+  const [transactions, payments] = await Promise.all([
+    db.getAllFromIndex('supplier_transactions', 'bySupplier', supplierId),
+    db.getAllFromIndex('supplier_payments', 'bySupplier', supplierId),
+  ]);
+  const owed = transactions.filter((t) => t.type === 'credit_purchase').reduce((sum, t) => sum + t.amount, 0);
+  const paid = payments.filter((p) => p.isPaid).reduce((sum, p) => sum + p.amount, 0);
+  return Math.max(0, owed - paid);
+}
+
+export async function getAllSupplierBalances(): Promise<Map<string, number>> {
+  const db = await getDB();
+  const [suppliers, transactions, payments] = await Promise.all([
+    db.getAll('suppliers'),
+    db.getAll('supplier_transactions'),
+    db.getAll('supplier_payments'),
+  ]);
+  const owedBySupplier = new Map<string, number>();
+  for (const t of transactions) {
+    if (t.type !== 'credit_purchase') continue;
+    owedBySupplier.set(t.supplierId, (owedBySupplier.get(t.supplierId) ?? 0) + t.amount);
+  }
+  const paidBySupplier = new Map<string, number>();
+  for (const p of payments) {
+    if (!p.isPaid) continue;
+    paidBySupplier.set(p.supplierId, (paidBySupplier.get(p.supplierId) ?? 0) + p.amount);
+  }
+  const result = new Map<string, number>();
+  for (const s of suppliers) {
+    result.set(s.id, Math.max(0, (owedBySupplier.get(s.id) ?? 0) - (paidBySupplier.get(s.id) ?? 0)));
+  }
+  return result;
+}
+
+// ---------- Petty cash ----------
+
+export async function listPettyCash(): Promise<PettyCashTransaction[]> {
+  return (await getDB()).getAll('petty_cash');
+}
+
+/** deposit/withdrawal post immediately (cashier-recorded); expense requests need approval before they affect the balance. */
+export interface NewPettyCashInput {
+  type: PettyCashTxType;
+  amount: number;
+  reason: string;
+  requestedBy: string;
+  requestedByName: string;
+  date: string;
+}
+
+export async function requestPettyCash(input: NewPettyCashInput): Promise<PettyCashTransaction> {
+  const tx: PettyCashTransaction = {
+    ...input,
+    id: uuid(),
+    status: input.type === 'expense' ? 'pending' : 'approved',
+    createdAt: nowISO(),
+  };
+  await (await getDB()).put('petty_cash', tx);
+  return tx;
+}
+
+export async function reviewPettyCashRequest(id: string, status: PettyCashRequestStatus, approvedBy: string): Promise<PettyCashTransaction> {
+  const db = await getDB();
+  const existing = await db.get('petty_cash', id);
+  if (!existing) throw new Error('petty cash request not found');
+  const updated: PettyCashTransaction = { ...existing, status, approvedBy, approvedAt: nowISO() };
+  await db.put('petty_cash', updated);
+  return updated;
+}
+
+export async function deletePettyCash(id: string): Promise<void> {
+  recordTombstone('petty_cash', id);
+  await (await getDB()).delete('petty_cash', id);
+}
+
+/** deposit and withdrawal increase/decrease the float directly; an expense only counts once approved. */
+export async function getPettyCashBalance(): Promise<number> {
+  const transactions = await listPettyCash();
+  let balance = 0;
+  for (const t of transactions) {
+    if (t.type === 'deposit' && t.status === 'approved') balance += t.amount;
+    else if (t.type === 'withdrawal' && t.status === 'approved') balance -= t.amount;
+    else if (t.type === 'expense' && t.status === 'approved') balance -= t.amount;
+  }
+  return balance;
+}
+
+// ---------- HR & payroll ----------
+
+export async function listAttendance(): Promise<AttendanceRecord[]> {
+  return (await getDB()).getAll('attendance');
+}
+
+export async function listAttendanceForEmployee(employeeId: string): Promise<AttendanceRecord[]> {
+  return (await getDB()).getAllFromIndex('attendance', 'byEmployee', employeeId);
+}
+
+export interface MarkAttendanceInput {
+  employeeId: string;
+  date: string;
+  status: AttendanceStatus;
+  overtimeHours?: number;
+  note?: string;
+}
+
+/** One record per (employee, date): re-marking the same day overwrites the prior entry instead of duplicating it. */
+export async function markAttendance(input: MarkAttendanceInput): Promise<AttendanceRecord> {
+  const db = await getDB();
+  const existing = await db.getAllFromIndex('attendance', 'byEmployee', input.employeeId);
+  const prior = existing.find((a) => a.date === input.date);
+  const record: AttendanceRecord = {
+    id: prior?.id ?? uuid(),
+    employeeId: input.employeeId,
+    date: input.date,
+    status: input.status,
+    overtimeHours: input.overtimeHours,
+    note: input.note,
+    createdAt: prior?.createdAt ?? nowISO(),
+  };
+  await db.put('attendance', record);
+  return record;
+}
+
+export async function deleteAttendance(id: string): Promise<void> {
+  recordTombstone('attendance', id);
+  await (await getDB()).delete('attendance', id);
+}
+
+export async function listPayrollRecords(): Promise<PayrollRecord[]> {
+  return (await getDB()).getAll('payroll_records');
+}
+
+export async function listSalaryAdvances(): Promise<SalaryAdvance[]> {
+  return (await getDB()).getAll('salary_advances');
+}
+
+export interface RequestSalaryAdvanceInput {
+  employeeId: string;
+  amount: number;
+  note?: string;
+}
+
+export async function requestSalaryAdvance(input: RequestSalaryAdvanceInput): Promise<SalaryAdvance> {
+  const advance: SalaryAdvance = { ...input, id: uuid(), requestedAt: nowISO(), status: 'pending' };
+  await (await getDB()).put('salary_advances', advance);
+  return advance;
+}
+
+export async function reviewSalaryAdvance(id: string, status: 'approved' | 'rejected', approvedBy: string): Promise<SalaryAdvance> {
+  const db = await getDB();
+  const existing = await db.get('salary_advances', id);
+  if (!existing) throw new Error('salary advance not found');
+  const updated: SalaryAdvance = { ...existing, status, approvedBy, approvedAt: nowISO() };
+  await db.put('salary_advances', updated);
+  return updated;
+}
+
+const INSURANCE_EMPLOYEE_RATE = 0.07;
+const INSURANCE_EMPLOYER_RATE = 0.23;
+const WORK_HOURS_PER_DAY = 8;
+const OVERTIME_MULTIPLIER = 1.4;
+
+export interface RunPayrollInput {
+  employeeId: string;
+  periodMonth: string;
+  adjustments?: PayrollAdjustment[];
+}
+
+/**
+ * Computes a draft payroll for one employee/month from their attendance records and pay type, applies
+ * the 7%/23% employee/employer insurance split, and auto-deducts any of their approved-but-undeducted
+ * salary advances. Daily-rate employees are paid per present/half day; monthly-rate employees get the
+ * full base regardless of present-day count (absences are informational only, matching typical payroll
+ * practice for salaried staff).
+ */
+export async function runPayroll(input: RunPayrollInput): Promise<PayrollRecord> {
+  const db = await getDB();
+  const employee = await db.get('employees', input.employeeId);
+  if (!employee) throw new Error('employee not found');
+
+  const allAttendance = await db.getAllFromIndex('attendance', 'byEmployee', input.employeeId);
+  const periodAttendance = allAttendance.filter((a) => a.date.startsWith(input.periodMonth));
+  const presentDays = periodAttendance.filter((a) => a.status === 'present').length + 0.5 * periodAttendance.filter((a) => a.status === 'half_day').length;
+  const absentDays = periodAttendance.filter((a) => a.status === 'absent').length;
+  const leaveDays = periodAttendance.filter((a) => a.status === 'leave').length;
+  const overtimeHours = periodAttendance.reduce((sum, a) => sum + (a.overtimeHours ?? 0), 0);
+
+  let baseAmount: number;
+  if (employee.payType === 'monthly') {
+    baseAmount = employee.amount;
+  } else if (employee.payType === 'daily') {
+    baseAmount = employee.amount * presentDays;
+  } else {
+    baseAmount = employee.amount * presentDays * WORK_HOURS_PER_DAY;
+  }
+
+  const hourlyRate = employee.payType === 'hourly' ? employee.amount : baseAmount / (presentDays * WORK_HOURS_PER_DAY || WORK_HOURS_PER_DAY);
+  const overtimeAmount = overtimeHours * hourlyRate * OVERTIME_MULTIPLIER;
+
+  const adjustments = input.adjustments ?? [];
+  const adjustmentsTotal = adjustments.reduce((sum, a) => sum + a.amount, 0);
+
+  const allAdvances = await db.getAllFromIndex('salary_advances', 'byEmployee', input.employeeId);
+  const dueAdvances = allAdvances.filter((a) => a.status === 'approved');
+  const advanceDeduction = dueAdvances.reduce((sum, a) => sum + a.amount, 0);
+
+  const grossPay = baseAmount + overtimeAmount + adjustmentsTotal;
+  const insuranceEmployeeShare = grossPay * INSURANCE_EMPLOYEE_RATE;
+  const insuranceEmployerShare = grossPay * INSURANCE_EMPLOYER_RATE;
+  const netPay = grossPay - insuranceEmployeeShare - advanceDeduction;
+
+  const record: PayrollRecord = {
+    id: uuid(),
+    employeeId: employee.id,
+    employeeName: employee.name,
+    periodMonth: input.periodMonth,
+    baseAmount,
+    presentDays,
+    absentDays,
+    leaveDays,
+    overtimeHours,
+    overtimeAmount,
+    adjustments,
+    advanceDeduction,
+    grossPay,
+    insuranceEmployeeShare,
+    insuranceEmployerShare,
+    netPay,
+    status: 'draft',
+    createdAt: nowISO(),
+  };
+
+  const tx = db.transaction(['payroll_records', 'salary_advances'], 'readwrite');
+  await tx.objectStore('payroll_records').put(record);
+  for (const advance of dueAdvances) {
+    await tx.objectStore('salary_advances').put({ ...advance, status: 'deducted', deductedInPayrollId: record.id });
+  }
+  await tx.done;
+  return record;
+}
+
+export async function finalizePayroll(id: string): Promise<PayrollRecord> {
+  const db = await getDB();
+  const existing = await db.get('payroll_records', id);
+  if (!existing) throw new Error('payroll record not found');
+  const updated: PayrollRecord = { ...existing, status: 'finalized' };
+  await db.put('payroll_records', updated);
+  return updated;
+}
+
+export async function markPayrollPaid(id: string): Promise<PayrollRecord> {
+  const db = await getDB();
+  const existing = await db.get('payroll_records', id);
+  if (!existing) throw new Error('payroll record not found');
+  const updated: PayrollRecord = { ...existing, status: 'paid', paidAt: nowISO() };
+  await db.put('payroll_records', updated);
+  return updated;
+}
+
+export async function deletePayrollRecord(id: string): Promise<void> {
+  recordTombstone('payroll_records', id);
+  await (await getDB()).delete('payroll_records', id);
+}
+
+/** annualLeaveDays (set on the employee) minus days marked 'leave' in attendance this calendar year. */
+export async function getLeaveBalance(employeeId: string, year: number): Promise<{ total: number; used: number; remaining: number }> {
+  const db = await getDB();
+  const employee = await db.get('employees', employeeId);
+  const total = employee?.annualLeaveDays ?? 0;
+  const allAttendance = await db.getAllFromIndex('attendance', 'byEmployee', employeeId);
+  const used = allAttendance.filter((a) => a.status === 'leave' && a.date.startsWith(String(year))).length;
+  return { total, used, remaining: Math.max(0, total - used) };
 }
 
 // ---------- SMS logs (CRM) ----------
@@ -1106,6 +1508,7 @@ export async function recordSmsLog(input: Omit<SmsLog, 'id'>): Promise<SmsLog> {
 }
 
 export async function deleteSmsLog(id: string): Promise<void> {
+  recordTombstone('sms_logs', id);
   await (await getDB()).delete('sms_logs', id);
 }
 
@@ -1162,6 +1565,7 @@ export async function updateAutomationTrigger(id: string, patch: Partial<Omit<Au
 }
 
 export async function deleteAutomationTrigger(id: string): Promise<void> {
+  recordTombstone('automation_triggers', id);
   await (await getDB()).delete('automation_triggers', id);
 }
 
@@ -1252,6 +1656,18 @@ export async function updateSettings(patch: Partial<Omit<Settings, 'id'>>): Prom
   return updated;
 }
 
+/** Mirrors server-owned business/subscription fields into local Settings; device-local fields (theme, apiBaseUrl, etc.) are untouched. */
+export async function syncBusinessIdentity(business: ApiBusiness): Promise<Settings> {
+  return updateSettings({
+    businessId: business.id,
+    businessName: business.name,
+    businessType: business.type as BusinessType,
+    subscriptionPlan: business.subscriptionPlan as SubscriptionPlan,
+    subscriptionStatus: business.subscriptionStatus as BusinessSubscriptionStatus,
+    subscriptionExpiry: business.subscriptionExpires,
+  });
+}
+
 // ---------- Auth ----------
 
 function addMonthsISO(iso: string, months: number): string {
@@ -1335,6 +1751,38 @@ export async function registerBusiness(input: RegisterBusinessInput): Promise<Ap
 export async function findUserByUsername(username: string): Promise<AppUser | undefined> {
   const config = await getAuthConfig();
   return config.users.find((u) => u.username.toLowerCase() === username.toLowerCase() && u.isActive);
+}
+
+/**
+ * Mirrors a server-authenticated user into the local auth store, hashing the plaintext password
+ * (only available at this exact moment) so the next login can succeed entirely offline.
+ * Drops any stale local entry sharing the username under a different (pre-sync) id to avoid collisions.
+ */
+export async function cacheApiUser(apiUser: ApiUser, plainPassword: string): Promise<AppUser> {
+  const db = await getDB();
+  const config = await getAuthConfig();
+  const passwordSalt = generateSalt();
+  const passwordHash = await hashPassword(plainPassword, passwordSalt);
+  const existing = config.users.find((u) => u.id === apiUser.id);
+  const user: AppUser = {
+    id: apiUser.id,
+    name: apiUser.fullName,
+    username: apiUser.username,
+    passwordHash,
+    passwordSalt,
+    role: apiUser.role,
+    isActive: apiUser.isActive,
+    email: apiUser.email ?? undefined,
+    phone: apiUser.phone ?? undefined,
+    createdAt: existing?.createdAt ?? nowISO(),
+    lastLogin: apiUser.lastLogin ?? existing?.lastLogin,
+  };
+  const users = [
+    ...config.users.filter((u) => u.id !== apiUser.id && u.username.toLowerCase() !== apiUser.username.toLowerCase()),
+    user,
+  ];
+  await db.put('auth', { id: 'auth', isSetup: true, users });
+  return user;
 }
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -1512,18 +1960,38 @@ export async function extendBusinessSubscription(months: number, plan?: PaidSubs
   });
 }
 
+// ---------- Subscription payments (local cache of server-side review state) ----------
+
+export async function listSubscriptionPaymentsCache(): Promise<SubscriptionPaymentRecord[]> {
+  return (await getDB()).getAll('subscription_payments_cache');
+}
+
+export async function upsertSubscriptionPaymentCache(record: SubscriptionPaymentRecord): Promise<void> {
+  await (await getDB()).put('subscription_payments_cache', record);
+}
+
+export async function replaceSubscriptionPaymentsCache(records: SubscriptionPaymentRecord[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('subscription_payments_cache', 'readwrite');
+  await tx.store.clear();
+  for (const r of records) await tx.store.put(r);
+  await tx.done;
+}
+
 // ---------- Backup / restore ----------
 
 const BACKUP_STORE_NAMES: StoreName[] = [
   'ingredients', 'menu_items', 'expenses', 'employees', 'sales', 'shopping_list', 'settings', 'customers', 'sms_logs',
-  'notifications', 'waste', 'suppliers', 'supplier_payments', 'automation_triggers',
+  'notifications', 'waste', 'suppliers', 'supplier_payments', 'automation_triggers', 'supplier_transactions', 'attendance',
+  'payroll_records', 'salary_advances', 'petty_cash', 'subscription_payments_cache',
 ];
 
 export async function exportAllData(): Promise<FullBackup> {
   const db = await getDB();
   const [
     ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications,
-    waste, suppliers, supplier_payments, automation_triggers,
+    waste, suppliers, supplier_payments, automation_triggers, supplier_transactions, attendance, payroll_records,
+    salary_advances, petty_cash, subscription_payments_cache,
   ] = await Promise.all([
     db.getAll('ingredients'),
     db.getAll('menu_items'),
@@ -1539,13 +2007,20 @@ export async function exportAllData(): Promise<FullBackup> {
     db.getAll('suppliers'),
     db.getAll('supplier_payments'),
     db.getAll('automation_triggers'),
+    db.getAll('supplier_transactions'),
+    db.getAll('attendance'),
+    db.getAll('payroll_records'),
+    db.getAll('salary_advances'),
+    db.getAll('petty_cash'),
+    db.getAll('subscription_payments_cache'),
   ]);
   return {
     exportedAt: nowISO(),
     version: 1,
     data: {
       ingredients, menu_items, expenses, employees, sales, shopping_list, settings, customers, sms_logs, notifications,
-      waste, suppliers, supplier_payments, automation_triggers,
+      waste, suppliers, supplier_payments, automation_triggers, supplier_transactions, attendance, payroll_records,
+      salary_advances, petty_cash, subscription_payments_cache,
     },
   };
 }
