@@ -600,7 +600,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "scripts_gen_icons_render",
-      "community": 43,
+      "community": 20,
       "norm_label": "render()"
     },
     {
@@ -620,7 +620,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_auth_sessionuser",
-      "community": 32,
+      "community": 12,
       "norm_label": "sessionuser"
     },
     {
@@ -630,7 +630,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_auth_currentuser",
-      "community": 26,
+      "community": 20,
       "norm_label": "currentuser"
     },
     {
@@ -720,7 +720,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_auth_takesessionexpiredreason",
-      "community": 31,
+      "community": 20,
       "norm_label": "takesessionexpiredreason()"
     },
     {
@@ -760,7 +760,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "src_auth_hasrole",
-      "community": 20,
+      "community": 26,
       "norm_label": "hasrole()"
     },
     {
@@ -770,7 +770,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "src_auth_issuperadmin",
-      "community": 20,
+      "community": 26,
       "norm_label": "issuperadmin()"
     },
     {
@@ -950,7 +950,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_chart_renderchart",
-      "community": 41,
+      "community": 16,
       "norm_label": "renderchart()"
     },
     {
@@ -960,7 +960,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_chart_destroychart",
-      "community": 41,
+      "community": 7,
       "norm_label": "destroychart()"
     },
     {
@@ -970,7 +970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_modal",
-      "community": 46,
+      "community": 10,
       "norm_label": "modal.ts"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_modal_modalhandle",
-      "community": 46,
+      "community": 10,
       "norm_label": "modalhandle"
     },
     {
@@ -990,7 +990,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_modal_modaloptions",
-      "community": 46,
+      "community": 10,
       "norm_label": "modaloptions"
     },
     {
@@ -1010,7 +1010,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_components_modal_confirmoptions",
-      "community": 46,
+      "community": 10,
       "norm_label": "confirmoptions"
     },
     {
@@ -1030,7 +1030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_notification_bell",
-      "community": 18,
+      "community": 32,
       "norm_label": "notification-bell.ts"
     },
     {
@@ -1040,7 +1040,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_notification_bell_notification_route",
-      "community": 18,
+      "community": 32,
       "norm_label": "notification_route"
     },
     {
@@ -1050,7 +1050,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_notification_bell_createnotificationbell",
-      "community": 18,
+      "community": 32,
       "norm_label": "createnotificationbell()"
     },
     {
@@ -1070,7 +1070,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_sidebar_sidebarlink",
-      "community": 32,
+      "community": 18,
       "norm_label": "sidebarlink"
     },
     {
@@ -1087,7 +1087,7 @@
       "label": "ROLE_LABELS",
       "file_type": "code",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_sidebar_role_labels",
       "community": 18,
@@ -1097,7 +1097,7 @@
       "label": "Sidebar",
       "file_type": "code",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_sidebar_sidebar",
       "community": 18,
@@ -1107,7 +1107,7 @@
       "label": "navButton()",
       "file_type": "code",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "src_components_sidebar_navbutton",
       "community": 18,
@@ -1117,7 +1117,7 @@
       "label": "createSidebar()",
       "file_type": "code",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L60",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "src_components_sidebar_createsidebar",
       "community": 18,
@@ -1280,7 +1280,7 @@
       "source_location": "L276",
       "_origin": "ast",
       "id": "src_db_applysyncedrecord",
-      "community": 1,
+      "community": 44,
       "norm_label": "applysyncedrecord()"
     },
     {
@@ -1290,7 +1290,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "src_db_ingredientinuseerror",
-      "community": 5,
+      "community": 11,
       "norm_label": "ingredientinuseerror"
     },
     {
@@ -1300,7 +1300,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "src_db_ingredientinuseerror_constructor",
-      "community": 5,
+      "community": 11,
       "norm_label": ".constructor()"
     },
     {
@@ -1330,7 +1330,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "src_db_newingredientinput",
-      "community": 44,
+      "community": 8,
       "norm_label": "newingredientinput"
     },
     {
@@ -1720,7 +1720,7 @@
       "source_location": "L913",
       "_origin": "ast",
       "id": "src_db_toggleshoppingitemchecked",
-      "community": 1,
+      "community": 44,
       "norm_label": "toggleshoppingitemchecked()"
     },
     {
@@ -1740,7 +1740,7 @@
       "source_location": "L936",
       "_origin": "ast",
       "id": "src_db_listcustomers",
-      "community": 1,
+      "community": 44,
       "norm_label": "listcustomers()"
     },
     {
@@ -1750,7 +1750,7 @@
       "source_location": "L940",
       "_origin": "ast",
       "id": "src_db_getcustomer",
-      "community": 44,
+      "community": 1,
       "norm_label": "getcustomer()"
     },
     {
@@ -2000,7 +2000,7 @@
       "source_location": "L1182",
       "_origin": "ast",
       "id": "src_db_updatesupplierpayment",
-      "community": 44,
+      "community": 1,
       "norm_label": "updatesupplierpayment()"
     },
     {
@@ -2200,7 +2200,7 @@
       "source_location": "L1356",
       "_origin": "ast",
       "id": "src_db_listsalaryadvances",
-      "community": 44,
+      "community": 1,
       "norm_label": "listsalaryadvances()"
     },
     {
@@ -2290,7 +2290,7 @@
       "source_location": "L1489",
       "_origin": "ast",
       "id": "src_db_getleavebalance",
-      "community": 1,
+      "community": 44,
       "norm_label": "getleavebalance()"
     },
     {
@@ -2590,7 +2590,7 @@
       "source_location": "L1840",
       "_origin": "ast",
       "id": "src_db_newuserinput",
-      "community": 32,
+      "community": 12,
       "norm_label": "newuserinput"
     },
     {
@@ -2610,7 +2610,7 @@
       "source_location": "L1873",
       "_origin": "ast",
       "id": "src_db_updateuserinput",
-      "community": 32,
+      "community": 12,
       "norm_label": "updateuserinput"
     },
     {
@@ -2740,7 +2740,7 @@
       "source_location": "L2047",
       "_origin": "ast",
       "id": "src_db_isdatabaseempty",
-      "community": 44,
+      "community": 1,
       "norm_label": "isdatabaseempty()"
     },
     {
@@ -2757,7 +2757,7 @@
       "label": "ALL_ROUTES",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "src_main_all_routes",
       "community": 31,
@@ -2767,7 +2767,7 @@
       "label": "renderAccessDenied()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L51",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "src_main_renderaccessdenied",
       "community": 10,
@@ -2777,7 +2777,7 @@
       "label": "SYNC_STATUS_ICON_NAME",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L59",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "src_main_sync_status_icon_name",
       "community": 31,
@@ -2787,7 +2787,7 @@
       "label": "SYNC_STATUS_LABEL",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L60",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "src_main_sync_status_label",
       "community": 31,
@@ -2797,37 +2797,37 @@
       "label": "openPlatformOwnerOverlay()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L67",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "src_main_openplatformowneroverlay",
-      "community": 31,
+      "community": 4,
       "norm_label": "openplatformowneroverlay()"
     },
     {
       "label": "handleLogoutClick()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L73",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "src_main_handlelogoutclick",
-      "community": 31,
+      "community": 20,
       "norm_label": "handlelogoutclick()"
     },
     {
       "label": "createAppHeader()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L84",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "src_main_createappheader",
-      "community": 18,
+      "community": 32,
       "norm_label": "createappheader()"
     },
     {
       "label": "createBreadcrumb()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L116",
+      "source_location": "L118",
       "_origin": "ast",
       "id": "src_main_createbreadcrumb",
       "community": 18,
@@ -2837,17 +2837,17 @@
       "label": "renderExpiredScreen()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L135",
+      "source_location": "L137",
       "_origin": "ast",
       "id": "src_main_renderexpiredscreen",
-      "community": 18,
+      "community": 32,
       "norm_label": "renderexpiredscreen()"
     },
     {
       "label": "bootstrap()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L151",
+      "source_location": "L153",
       "_origin": "ast",
       "id": "src_main_bootstrap",
       "community": 31,
@@ -2857,7 +2857,7 @@
       "label": "maybeShowPlatformBroadcast()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L239",
+      "source_location": "L241",
       "_origin": "ast",
       "id": "src_main_maybeshowplatformbroadcast",
       "community": 31,
@@ -2867,17 +2867,17 @@
       "label": "showBootError()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L254",
+      "source_location": "L256",
       "_origin": "ast",
       "id": "src_main_showbooterror",
-      "community": 18,
+      "community": 32,
       "norm_label": "showbooterror()"
     },
     {
       "label": "watchForUpdates()",
       "file_type": "code",
       "source_file": "src/main.ts",
-      "source_location": "L271",
+      "source_location": "L273",
       "_origin": "ast",
       "id": "src_main_watchforupdates",
       "community": 31,
@@ -2970,7 +2970,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_platform_owner_getplatformpricing",
-      "community": 35,
+      "community": 43,
       "norm_label": "getplatformpricing()"
     },
     {
@@ -3010,7 +3010,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_platform_owner_platforminvoice",
-      "community": 33,
+      "community": 12,
       "norm_label": "platforminvoice"
     },
     {
@@ -3080,7 +3080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_router",
-      "community": 21,
+      "community": 18,
       "norm_label": "router.ts"
     },
     {
@@ -3090,7 +3090,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_router_routecleanup",
-      "community": 26,
+      "community": 18,
       "norm_label": "routecleanup"
     },
     {
@@ -3100,7 +3100,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_router_routerender",
-      "community": 21,
+      "community": 18,
       "norm_label": "routerender"
     },
     {
@@ -3110,7 +3110,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_router_route",
-      "community": 21,
+      "community": 18,
       "norm_label": "route"
     },
     {
@@ -3120,7 +3120,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_router_routes",
-      "community": 21,
+      "community": 18,
       "norm_label": "routes"
     },
     {
@@ -3130,7 +3130,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_router_currentpath",
-      "community": 32,
+      "community": 18,
       "norm_label": "currentpath"
     },
     {
@@ -3140,7 +3140,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_router_registerroutes",
-      "community": 21,
+      "community": 18,
       "norm_label": "registerroutes()"
     },
     {
@@ -3150,7 +3150,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_router_gethashpath",
-      "community": 21,
+      "community": 18,
       "norm_label": "gethashpath()"
     },
     {
@@ -3160,7 +3160,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_router_rendercurrent",
-      "community": 21,
+      "community": 18,
       "norm_label": "rendercurrent()"
     },
     {
@@ -3180,7 +3180,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_router_startrouter",
-      "community": 21,
+      "community": 18,
       "norm_label": "startrouter()"
     },
     {
@@ -3190,7 +3190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_seed",
-      "community": 13,
+      "community": 2,
       "norm_label": "seed.ts"
     },
     {
@@ -3200,7 +3200,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_seed_seedingredientdef",
-      "community": 13,
+      "community": 26,
       "norm_label": "seedingredientdef"
     },
     {
@@ -3210,7 +3210,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_seed_seedmenuitemdef",
-      "community": 13,
+      "community": 2,
       "norm_label": "seedmenuitemdef"
     },
     {
@@ -3220,7 +3220,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_seed_ingredients",
-      "community": 13,
+      "community": 2,
       "norm_label": "ingredients"
     },
     {
@@ -3230,7 +3230,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_seed_menu_items",
-      "community": 13,
+      "community": 2,
       "norm_label": "menu_items"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_seed_plannedsale",
-      "community": 13,
+      "community": 2,
       "norm_label": "plannedsale"
     },
     {
@@ -3250,7 +3250,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_seed_weightedpick",
-      "community": 13,
+      "community": 2,
       "norm_label": "weightedpick()"
     },
     {
@@ -3260,7 +3260,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "src_seed_buildsalesplan",
-      "community": 13,
+      "community": 2,
       "norm_label": "buildsalesplan()"
     },
     {
@@ -3270,7 +3270,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_seed_computeconsumption",
-      "community": 13,
+      "community": 2,
       "norm_label": "computeconsumption()"
     },
     {
@@ -3280,7 +3280,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "src_seed_roundqty",
-      "community": 13,
+      "community": 2,
       "norm_label": "roundqty()"
     },
     {
@@ -3290,7 +3290,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_seed_seedexpensesandpayroll",
-      "community": 13,
+      "community": 2,
       "norm_label": "seedexpensesandpayroll()"
     },
     {
@@ -3300,7 +3300,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "src_seed_seeddatabase",
-      "community": 13,
+      "community": 2,
       "norm_label": "seeddatabase()"
     },
     {
@@ -3320,7 +3320,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_store_listener",
-      "community": 14,
+      "community": 13,
       "norm_label": "listener"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_store_signal",
-      "community": 14,
+      "community": 13,
       "norm_label": "signal"
     },
     {
@@ -3340,7 +3340,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_store_signal_constructor",
-      "community": 14,
+      "community": 13,
       "norm_label": ".constructor()"
     },
     {
@@ -3360,7 +3360,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_store_signal_set",
-      "community": 14,
+      "community": 13,
       "norm_label": ".set()"
     },
     {
@@ -3370,7 +3370,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_store_signal_update",
-      "community": 14,
+      "community": 13,
       "norm_label": ".update()"
     },
     {
@@ -3380,7 +3380,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_store_signal_subscribe",
-      "community": 14,
+      "community": 13,
       "norm_label": ".subscribe()"
     },
     {
@@ -3560,7 +3560,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_store_takenavigationintent",
-      "community": 0,
+      "community": 14,
       "norm_label": "takenavigationintent()"
     },
     {
@@ -3580,7 +3580,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_store_refreshmenuitems",
-      "community": 26,
+      "community": 8,
       "norm_label": "refreshmenuitems()"
     },
     {
@@ -3600,7 +3600,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "src_store_refreshemployees",
-      "community": 2,
+      "community": 10,
       "norm_label": "refreshemployees()"
     },
     {
@@ -3640,7 +3640,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_store_refreshsmslogs",
-      "community": 14,
+      "community": 7,
       "norm_label": "refreshsmslogs()"
     },
     {
@@ -3650,7 +3650,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_store_refreshautomationtriggers",
-      "community": 14,
+      "community": 7,
       "norm_label": "refreshautomationtriggers()"
     },
     {
@@ -3700,7 +3700,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "src_store_refreshall",
-      "community": 14,
+      "community": 3,
       "norm_label": "refreshall()"
     },
     {
@@ -3750,7 +3750,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "src_store_initthemewatcher",
-      "community": 14,
+      "community": 13,
       "norm_label": "initthemewatcher()"
     },
     {
@@ -3800,7 +3800,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_types_unit",
-      "community": 13,
+      "community": 26,
       "norm_label": "unit"
     },
     {
@@ -3810,7 +3810,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_types_purchaserecord",
-      "community": 15,
+      "community": 26,
       "norm_label": "purchaserecord"
     },
     {
@@ -3840,7 +3840,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_types_ingredient",
-      "community": 26,
+      "community": 8,
       "norm_label": "ingredient"
     },
     {
@@ -3880,7 +3880,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_types_menuitem",
-      "community": 5,
+      "community": 11,
       "norm_label": "menuitem"
     },
     {
@@ -3890,7 +3890,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_types_expensecategory",
-      "community": 13,
+      "community": 2,
       "norm_label": "expensecategory"
     },
     {
@@ -3920,7 +3920,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_types_paytype",
-      "community": 13,
+      "community": 2,
       "norm_label": "paytype"
     },
     {
@@ -3970,7 +3970,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "src_types_payrollstatus",
-      "community": 15,
+      "community": 10,
       "norm_label": "payrollstatus"
     },
     {
@@ -3990,7 +3990,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "src_types_salaryadvancestatus",
-      "community": 15,
+      "community": 10,
       "norm_label": "salaryadvancestatus"
     },
     {
@@ -4240,7 +4240,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "src_types_appnotification",
-      "community": 18,
+      "community": 15,
       "norm_label": "appnotification"
     },
     {
@@ -4310,7 +4310,7 @@
       "source_location": "L416",
       "_origin": "ast",
       "id": "src_types_subscriptionpaymentstatus",
-      "community": 33,
+      "community": 12,
       "norm_label": "subscriptionpaymentstatus"
     },
     {
@@ -4350,7 +4350,7 @@
       "source_location": "L434",
       "_origin": "ast",
       "id": "src_types_userrole",
-      "community": 32,
+      "community": 12,
       "norm_label": "userrole"
     },
     {
@@ -4370,7 +4370,7 @@
       "source_location": "L436",
       "_origin": "ast",
       "id": "src_types_paidsubscriptionplan",
-      "community": 33,
+      "community": 12,
       "norm_label": "paidsubscriptionplan"
     },
     {
@@ -4470,7 +4470,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_api",
-      "community": 33,
+      "community": 12,
       "norm_label": "api.ts"
     },
     {
@@ -4480,7 +4480,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_utils_api_apierror",
-      "community": 35,
+      "community": 20,
       "norm_label": "apierror"
     },
     {
@@ -4490,7 +4490,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_utils_api_apierror_constructor",
-      "community": 35,
+      "community": 20,
       "norm_label": ".constructor()"
     },
     {
@@ -4500,7 +4500,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_utils_api_baseurl",
-      "community": 33,
+      "community": 12,
       "norm_label": "baseurl()"
     },
     {
@@ -4520,7 +4520,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_utils_api_getaccesstoken",
-      "community": 33,
+      "community": 12,
       "norm_label": "getaccesstoken()"
     },
     {
@@ -4530,7 +4530,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_api_getrefreshtoken",
-      "community": 33,
+      "community": 12,
       "norm_label": "getrefreshtoken()"
     },
     {
@@ -4540,7 +4540,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_utils_api_hasstoredsession",
-      "community": 14,
+      "community": 31,
       "norm_label": "hasstoredsession()"
     },
     {
@@ -4570,7 +4570,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_utils_api_tryrefresh",
-      "community": 33,
+      "community": 12,
       "norm_label": "tryrefresh()"
     },
     {
@@ -4580,7 +4580,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_utils_api_requestoptions",
-      "community": 33,
+      "community": 12,
       "norm_label": "requestoptions"
     },
     {
@@ -4600,7 +4600,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_utils_api_apiuser",
-      "community": 32,
+      "community": 12,
       "norm_label": "apiuser"
     },
     {
@@ -4610,7 +4610,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "src_utils_api_apibusiness",
-      "community": 33,
+      "community": 12,
       "norm_label": "apibusiness"
     },
     {
@@ -4620,7 +4620,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "src_utils_api_authresult",
-      "community": 33,
+      "community": 12,
       "norm_label": "authresult"
     },
     {
@@ -4630,7 +4630,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "src_utils_api_apiplatformbusiness",
-      "community": 33,
+      "community": 12,
       "norm_label": "apiplatformbusiness"
     },
     {
@@ -4640,7 +4640,7 @@
       "source_location": "L178",
       "_origin": "ast",
       "id": "src_utils_api_apisubscriptionpayment",
-      "community": 33,
+      "community": 12,
       "norm_label": "apisubscriptionpayment"
     },
     {
@@ -4650,7 +4650,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "src_utils_api_apipricingrow",
-      "community": 33,
+      "community": 12,
       "norm_label": "apipricingrow"
     },
     {
@@ -4660,7 +4660,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "src_utils_api_apiplatformmetrics",
-      "community": 33,
+      "community": 12,
       "norm_label": "apiplatformmetrics"
     },
     {
@@ -4670,7 +4670,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "src_utils_api_apibroadcast",
-      "community": 33,
+      "community": 12,
       "norm_label": "apibroadcast"
     },
     {
@@ -4680,7 +4680,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "src_utils_api_syncrecord",
-      "community": 33,
+      "community": 12,
       "norm_label": "syncrecord"
     },
     {
@@ -4690,7 +4690,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_utils_api_syncconflict",
-      "community": 33,
+      "community": 12,
       "norm_label": "syncconflict"
     },
     {
@@ -4840,7 +4840,7 @@
       "source_location": "L320",
       "_origin": "ast",
       "id": "src_utils_api_apiclient_setplatformpricing",
-      "community": 33,
+      "community": 12,
       "norm_label": ".setplatformpricing()"
     },
     {
@@ -4880,7 +4880,7 @@
       "source_location": "L341",
       "_origin": "ast",
       "id": "src_utils_api_apiclient_createuser",
-      "community": 32,
+      "community": 12,
       "norm_label": ".createuser()"
     },
     {
@@ -4890,7 +4890,7 @@
       "source_location": "L346",
       "_origin": "ast",
       "id": "src_utils_api_apiclient_updateuser",
-      "community": 32,
+      "community": 12,
       "norm_label": ".updateuser()"
     },
     {
@@ -4910,7 +4910,7 @@
       "source_location": "L360",
       "_origin": "ast",
       "id": "src_utils_api_apiclient_submitsubscriptionpayment",
-      "community": 33,
+      "community": 12,
       "norm_label": ".submitsubscriptionpayment()"
     },
     {
@@ -4950,7 +4950,7 @@
       "source_location": "L388",
       "_origin": "ast",
       "id": "src_utils_api_api",
-      "community": 35,
+      "community": 20,
       "norm_label": "api"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_utils_calc_foodcoststatus",
-      "community": 26,
+      "community": 8,
       "norm_label": "foodcoststatus"
     },
     {
@@ -5060,7 +5060,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_utils_calc_recipecost",
-      "community": 26,
+      "community": 8,
       "norm_label": "recipecost()"
     },
     {
@@ -5070,7 +5070,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_utils_calc_foodcostpct",
-      "community": 26,
+      "community": 8,
       "norm_label": "foodcostpct()"
     },
     {
@@ -5080,7 +5080,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_utils_calc_grossprofit",
-      "community": 26,
+      "community": 8,
       "norm_label": "grossprofit()"
     },
     {
@@ -5090,7 +5090,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_utils_calc_suggestedpricefortarget",
-      "community": 26,
+      "community": 8,
       "norm_label": "suggestedpricefortarget()"
     },
     {
@@ -5100,7 +5100,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_utils_calc_monthlyfixedcost",
-      "community": 37,
+      "community": 16,
       "norm_label": "monthlyfixedcost()"
     },
     {
@@ -5150,7 +5150,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_utils_calc_avggrossmarginratio",
-      "community": 8,
+      "community": 16,
       "norm_label": "avggrossmarginratio()"
     },
     {
@@ -5160,7 +5160,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_utils_calc_dailybreakeven",
-      "community": 26,
+      "community": 8,
       "norm_label": "dailybreakeven()"
     },
     {
@@ -5180,7 +5180,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_utils_calc_periodprofitloss",
-      "community": 37,
+      "community": 16,
       "norm_label": "periodprofitloss()"
     },
     {
@@ -5190,7 +5190,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "src_utils_calc_salesinperiod",
-      "community": 37,
+      "community": 16,
       "norm_label": "salesinperiod()"
     },
     {
@@ -5210,7 +5210,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "src_utils_calc_dailyseries",
-      "community": 8,
+      "community": 16,
       "norm_label": "dailyseries()"
     },
     {
@@ -5260,7 +5260,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "src_utils_calc_avgfoodcostpct",
-      "community": 26,
+      "community": 8,
       "norm_label": "avgfoodcostpct()"
     },
     {
@@ -5270,7 +5270,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_dom",
-      "community": 26,
+      "community": 32,
       "norm_label": "dom.ts"
     },
     {
@@ -5280,7 +5280,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_utils_dom_child",
-      "community": 26,
+      "community": 32,
       "norm_label": "child"
     },
     {
@@ -5290,7 +5290,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_utils_dom_elprops",
-      "community": 26,
+      "community": 32,
       "norm_label": "elprops"
     },
     {
@@ -5310,7 +5310,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_utils_dom_fragment",
-      "community": 26,
+      "community": 32,
       "norm_label": "fragment()"
     },
     {
@@ -5320,7 +5320,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_utils_dom_clear",
-      "community": 26,
+      "community": 32,
       "norm_label": "clear()"
     },
     {
@@ -5360,7 +5360,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_utils_dom_numberinput",
-      "community": 26,
+      "community": 0,
       "norm_label": "numberinput()"
     },
     {
@@ -5370,7 +5370,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_utils_dom_parsenumberinput",
-      "community": 26,
+      "community": 0,
       "norm_label": "parsenumberinput()"
     },
     {
@@ -5380,7 +5380,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "src_utils_dom_kpitone",
-      "community": 26,
+      "community": 32,
       "norm_label": "kpitone"
     },
     {
@@ -5460,7 +5460,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_utils_excel_import_parsecell",
-      "community": 26,
+      "community": 5,
       "norm_label": "parsecell()"
     },
     {
@@ -5570,7 +5570,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "src_utils_excel_import_customerfield",
-      "community": 7,
+      "community": 5,
       "norm_label": "customerfield"
     },
     {
@@ -5580,7 +5580,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_utils_excel_import_customer_field_labels",
-      "community": 7,
+      "community": 5,
       "norm_label": "customer_field_labels"
     },
     {
@@ -5610,7 +5610,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "src_utils_excel_import_customerimportrow",
-      "community": 7,
+      "community": 5,
       "norm_label": "customerimportrow"
     },
     {
@@ -5620,7 +5620,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "src_utils_excel_import_buildcustomerrows",
-      "community": 7,
+      "community": 5,
       "norm_label": "buildcustomerrows()"
     },
     {
@@ -5670,7 +5670,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "src_utils_excel_import_itemmatch",
-      "community": 5,
+      "community": 11,
       "norm_label": "itemmatch"
     },
     {
@@ -5730,7 +5730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_export",
-      "community": 37,
+      "community": 16,
       "norm_label": "export.ts"
     },
     {
@@ -5740,7 +5740,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_export_downloadblob",
-      "community": 37,
+      "community": 16,
       "norm_label": "downloadblob()"
     },
     {
@@ -5750,7 +5750,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_utils_export_downloadjson",
-      "community": 37,
+      "community": 16,
       "norm_label": "downloadjson()"
     },
     {
@@ -5760,7 +5760,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_utils_export_escapecsvcell",
-      "community": 37,
+      "community": 16,
       "norm_label": "escapecsvcell()"
     },
     {
@@ -5770,7 +5770,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_utils_export_tocsv",
-      "community": 37,
+      "community": 16,
       "norm_label": "tocsv()"
     },
     {
@@ -5780,7 +5780,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_utils_export_downloadcsv",
-      "community": 37,
+      "community": 16,
       "norm_label": "downloadcsv()"
     },
     {
@@ -5790,7 +5790,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_export_readfileasjson",
-      "community": 37,
+      "community": 16,
       "norm_label": "readfileasjson()"
     },
     {
@@ -5800,7 +5800,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_utils_export_shareorcopytext",
-      "community": 37,
+      "community": 16,
       "norm_label": "shareorcopytext()"
     },
     {
@@ -5900,7 +5900,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_utils_format_parsepersiandigits",
-      "community": 26,
+      "community": 5,
       "norm_label": "parsepersiandigits()"
     },
     {
@@ -5980,7 +5980,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_utils_format_formatpct",
-      "community": 26,
+      "community": 8,
       "norm_label": "formatpct()"
     },
     {
@@ -6120,7 +6120,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "src_utils_format_formatrfmsegment",
-      "community": 26,
+      "community": 7,
       "norm_label": "formatrfmsegment()"
     },
     {
@@ -6130,7 +6130,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "src_utils_format_rfmsegmenticon",
-      "community": 26,
+      "community": 7,
       "norm_label": "rfmsegmenticon()"
     },
     {
@@ -6140,7 +6140,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "src_utils_format_rfm_segment_order",
-      "community": 26,
+      "community": 14,
       "norm_label": "rfm_segment_order"
     },
     {
@@ -6190,7 +6190,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_utils_icons_svgicon",
-      "community": 18,
+      "community": 32,
       "norm_label": "svgicon()"
     },
     {
@@ -6730,7 +6730,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_utils_sync_pullfromserver",
-      "community": 14,
+      "community": 28,
       "norm_label": "pullfromserver()"
     },
     {
@@ -6740,7 +6740,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_utils_sync_pushtoserver",
-      "community": 14,
+      "community": 28,
       "norm_label": "pushtoserver()"
     },
     {
@@ -6750,7 +6750,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_utils_sync_syncnow",
-      "community": 14,
+      "community": 28,
       "norm_label": "syncnow()"
     },
     {
@@ -6760,7 +6760,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_utils_sync_setupautosync",
-      "community": 14,
+      "community": 31,
       "norm_label": "setupautosync()"
     },
     {
@@ -6870,7 +6870,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_views_accounting_sourcebreakdownrow",
-      "community": 41,
+      "community": 16,
       "norm_label": "sourcebreakdownrow()"
     },
     {
@@ -6880,7 +6880,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_views_accounting_sourcebreakdownpanel",
-      "community": 41,
+      "community": 16,
       "norm_label": "sourcebreakdownpanel()"
     },
     {
@@ -6890,7 +6890,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "src_views_accounting_breakevenpanel",
-      "community": 26,
+      "community": 8,
       "norm_label": "breakevenpanel()"
     },
     {
@@ -6900,7 +6900,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "src_views_accounting_renderfinancialdashboardtab",
-      "community": 37,
+      "community": 16,
       "norm_label": "renderfinancialdashboardtab()"
     },
     {
@@ -6960,7 +6960,7 @@
       "source_location": "L394",
       "_origin": "ast",
       "id": "src_views_accounting_rendersupplierrow",
-      "community": 16,
+      "community": 26,
       "norm_label": "rendersupplierrow()"
     },
     {
@@ -6980,7 +6980,7 @@
       "source_location": "L467",
       "_origin": "ast",
       "id": "src_views_accounting_handledeletesupplierpayment",
-      "community": 16,
+      "community": 22,
       "norm_label": "handledeletesupplierpayment()"
     },
     {
@@ -7020,7 +7020,7 @@
       "source_location": "L616",
       "_origin": "ast",
       "id": "src_views_accounting_rendervatsubtab",
-      "community": 26,
+      "community": 0,
       "norm_label": "rendervatsubtab()"
     },
     {
@@ -7040,7 +7040,7 @@
       "source_location": "L748",
       "_origin": "ast",
       "id": "src_views_accounting_renderreportstab",
-      "community": 37,
+      "community": 16,
       "norm_label": "renderreportstab()"
     },
     {
@@ -7050,7 +7050,7 @@
       "source_location": "L848",
       "_origin": "ast",
       "id": "src_views_accounting_renderaccounting",
-      "community": 31,
+      "community": 16,
       "norm_label": "renderaccounting()"
     },
     {
@@ -7200,7 +7200,7 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "src_views_admin_renderuserstab",
-      "community": 10,
+      "community": 20,
       "norm_label": "renderuserstab()"
     },
     {
@@ -7440,7 +7440,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "src_views_crm_rfmsegmentbadge",
-      "community": 26,
+      "community": 7,
       "norm_label": "rfmsegmentbadge()"
     },
     {
@@ -7450,7 +7450,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_views_crm_rendercustomerrow",
-      "community": 26,
+      "community": 7,
       "norm_label": "rendercustomerrow()"
     },
     {
@@ -7500,7 +7500,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_views_crm_rendercustomerimportpreview",
-      "community": 7,
+      "community": 26,
       "norm_label": "rendercustomerimportpreview()"
     },
     {
@@ -7560,7 +7560,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "src_views_crm_rendersegmentstab",
-      "community": 26,
+      "community": 7,
       "norm_label": "rendersegmentstab()"
     },
     {
@@ -7670,7 +7670,7 @@
       "source_location": "L826",
       "_origin": "ast",
       "id": "src_views_crm_renderreporttab",
-      "community": 26,
+      "community": 7,
       "norm_label": "renderreporttab()"
     },
     {
@@ -7680,7 +7680,7 @@
       "source_location": "L909",
       "_origin": "ast",
       "id": "src_views_crm_rendercrm",
-      "community": 31,
+      "community": 7,
       "norm_label": "rendercrm()"
     },
     {
@@ -7690,7 +7690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_dashboard",
-      "community": 26,
+      "community": 14,
       "norm_label": "dashboard.ts"
     },
     {
@@ -7700,7 +7700,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_views_dashboard_rfm_segment_colors",
-      "community": 26,
+      "community": 14,
       "norm_label": "rfm_segment_colors"
     },
     {
@@ -7710,7 +7710,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_views_dashboard_status_color",
-      "community": 26,
+      "community": 14,
       "norm_label": "status_color"
     },
     {
@@ -7720,7 +7720,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_views_dashboard_chartcard",
-      "community": 10,
+      "community": 14,
       "norm_label": "chartcard()"
     },
     {
@@ -7730,7 +7730,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_views_dashboard_quickactionbtn",
-      "community": 18,
+      "community": 14,
       "norm_label": "quickactionbtn()"
     },
     {
@@ -7740,7 +7740,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_views_dashboard_quickactions",
-      "community": 18,
+      "community": 14,
       "norm_label": "quickactions()"
     },
     {
@@ -7750,7 +7750,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_views_dashboard_onboardingstep",
-      "community": 26,
+      "community": 14,
       "norm_label": "onboardingstep"
     },
     {
@@ -7770,7 +7770,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "src_views_dashboard_breakevenpanel",
-      "community": 26,
+      "community": 8,
       "norm_label": "breakevenpanel()"
     },
     {
@@ -7780,7 +7780,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "src_views_dashboard_renderdashboard",
-      "community": 31,
+      "community": 14,
       "norm_label": "renderdashboard()"
     },
     {
@@ -7870,7 +7870,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_views_expenses_openexpenseformmodal",
-      "community": 2,
+      "community": 0,
       "norm_label": "openexpenseformmodal()"
     },
     {
@@ -7920,7 +7920,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "src_views_expenses_openemployeeformmodal",
-      "community": 2,
+      "community": 0,
       "norm_label": "openemployeeformmodal()"
     },
     {
@@ -7940,7 +7940,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "src_views_expenses_toggleemployeeactive",
-      "community": 2,
+      "community": 10,
       "norm_label": "toggleemployeeactive()"
     },
     {
@@ -7984,6 +7984,336 @@
       "norm_label": "renderexpenses()"
     },
     {
+      "label": "hr.ts",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_views_hr",
+      "community": 10,
+      "norm_label": "hr.ts"
+    },
+    {
+      "label": "Tab",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "src_views_hr_tab",
+      "community": 10,
+      "norm_label": "tab"
+    },
+    {
+      "label": "ATTENDANCE_STATUS_OPTIONS",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "src_views_hr_attendance_status_options",
+      "community": 10,
+      "norm_label": "attendance_status_options"
+    },
+    {
+      "label": "ATTENDANCE_STATUS_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "src_views_hr_attendance_status_labels",
+      "community": 10,
+      "norm_label": "attendance_status_labels"
+    },
+    {
+      "label": "ATTENDANCE_STATUS_TONE",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "src_views_hr_attendance_status_tone",
+      "community": 10,
+      "norm_label": "attendance_status_tone"
+    },
+    {
+      "label": "PAYROLL_STATUS_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "src_views_hr_payroll_status_labels",
+      "community": 10,
+      "norm_label": "payroll_status_labels"
+    },
+    {
+      "label": "PAYROLL_STATUS_TONE",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "src_views_hr_payroll_status_tone",
+      "community": 10,
+      "norm_label": "payroll_status_tone"
+    },
+    {
+      "label": "ADVANCE_STATUS_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "src_views_hr_advance_status_labels",
+      "community": 10,
+      "norm_label": "advance_status_labels"
+    },
+    {
+      "label": "ADVANCE_STATUS_TONE",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "src_views_hr_advance_status_tone",
+      "community": 10,
+      "norm_label": "advance_status_tone"
+    },
+    {
+      "label": "todayISO()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "src_views_hr_todayiso",
+      "community": 10,
+      "norm_label": "todayiso()"
+    },
+    {
+      "label": "currentPeriodMonth()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "src_views_hr_currentperiodmonth",
+      "community": 10,
+      "norm_label": "currentperiodmonth()"
+    },
+    {
+      "label": "activeEmployees()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "src_views_hr_activeemployees",
+      "community": 0,
+      "norm_label": "activeemployees()"
+    },
+    {
+      "label": "employeeSelect()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "src_views_hr_employeeselect",
+      "community": 0,
+      "norm_label": "employeeselect()"
+    },
+    {
+      "label": "badge()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "src_views_hr_badge",
+      "community": 10,
+      "norm_label": "badge()"
+    },
+    {
+      "label": "openMarkAttendanceModal()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L75",
+      "_origin": "ast",
+      "id": "src_views_hr_openmarkattendancemodal",
+      "community": 0,
+      "norm_label": "openmarkattendancemodal()"
+    },
+    {
+      "label": "handleDeleteAttendance()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L119",
+      "_origin": "ast",
+      "id": "src_views_hr_handledeleteattendance",
+      "community": 22,
+      "norm_label": "handledeleteattendance()"
+    },
+    {
+      "label": "renderAttendanceList()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L134",
+      "_origin": "ast",
+      "id": "src_views_hr_renderattendancelist",
+      "community": 10,
+      "norm_label": "renderattendancelist()"
+    },
+    {
+      "label": "renderAttendanceTab()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L165",
+      "_origin": "ast",
+      "id": "src_views_hr_renderattendancetab",
+      "community": 10,
+      "norm_label": "renderattendancetab()"
+    },
+    {
+      "label": "openRunPayrollModal()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L180",
+      "_origin": "ast",
+      "id": "src_views_hr_openrunpayrollmodal",
+      "community": 0,
+      "norm_label": "openrunpayrollmodal()"
+    },
+    {
+      "label": "payrollDetailBody()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L225",
+      "_origin": "ast",
+      "id": "src_views_hr_payrolldetailbody",
+      "community": 10,
+      "norm_label": "payrolldetailbody()"
+    },
+    {
+      "label": "handleFinalizePayroll()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L249",
+      "_origin": "ast",
+      "id": "src_views_hr_handlefinalizepayroll",
+      "community": 22,
+      "norm_label": "handlefinalizepayroll()"
+    },
+    {
+      "label": "handleMarkPayrollPaid()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L261",
+      "_origin": "ast",
+      "id": "src_views_hr_handlemarkpayrollpaid",
+      "community": 22,
+      "norm_label": "handlemarkpayrollpaid()"
+    },
+    {
+      "label": "handleDeletePayroll()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L273",
+      "_origin": "ast",
+      "id": "src_views_hr_handledeletepayroll",
+      "community": 22,
+      "norm_label": "handledeletepayroll()"
+    },
+    {
+      "label": "openPayrollDetailModal()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L286",
+      "_origin": "ast",
+      "id": "src_views_hr_openpayrolldetailmodal",
+      "community": 10,
+      "norm_label": "openpayrolldetailmodal()"
+    },
+    {
+      "label": "renderPayrollList()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L302",
+      "_origin": "ast",
+      "id": "src_views_hr_renderpayrolllist",
+      "community": 10,
+      "norm_label": "renderpayrolllist()"
+    },
+    {
+      "label": "renderPayrollRunsTab()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L330",
+      "_origin": "ast",
+      "id": "src_views_hr_renderpayrollrunstab",
+      "community": 10,
+      "norm_label": "renderpayrollrunstab()"
+    },
+    {
+      "label": "openRequestAdvanceModal()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L345",
+      "_origin": "ast",
+      "id": "src_views_hr_openrequestadvancemodal",
+      "community": 0,
+      "norm_label": "openrequestadvancemodal()"
+    },
+    {
+      "label": "handleReviewAdvance()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L380",
+      "_origin": "ast",
+      "id": "src_views_hr_handlereviewadvance",
+      "community": 22,
+      "norm_label": "handlereviewadvance()"
+    },
+    {
+      "label": "renderAdvancesList()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L397",
+      "_origin": "ast",
+      "id": "src_views_hr_renderadvanceslist",
+      "community": 10,
+      "norm_label": "renderadvanceslist()"
+    },
+    {
+      "label": "renderAdvancesTab()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L431",
+      "_origin": "ast",
+      "id": "src_views_hr_renderadvancestab",
+      "community": 10,
+      "norm_label": "renderadvancestab()"
+    },
+    {
+      "label": "renderLeaveList()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L448",
+      "_origin": "ast",
+      "id": "src_views_hr_renderleavelist",
+      "community": 10,
+      "norm_label": "renderleavelist()"
+    },
+    {
+      "label": "renderLeaveBalanceTab()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L471",
+      "_origin": "ast",
+      "id": "src_views_hr_renderleavebalancetab",
+      "community": 10,
+      "norm_label": "renderleavebalancetab()"
+    },
+    {
+      "label": "renderHr()",
+      "file_type": "code",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L484",
+      "_origin": "ast",
+      "id": "src_views_hr_renderhr",
+      "community": 10,
+      "norm_label": "renderhr()"
+    },
+    {
       "label": "ingredients.ts",
       "file_type": "code",
       "source_file": "src/views/ingredients.ts",
@@ -8020,7 +8350,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_views_ingredients_openingredientformmodal",
-      "community": 26,
+      "community": 0,
       "norm_label": "openingredientformmodal()"
     },
     {
@@ -8030,7 +8360,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_views_ingredients_openpurchasemodal",
-      "community": 26,
+      "community": 0,
       "norm_label": "openpurchasemodal()"
     },
     {
@@ -8040,7 +8370,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "src_views_ingredients_openphysicalcountmodal",
-      "community": 26,
+      "community": 0,
       "norm_label": "openphysicalcountmodal()"
     },
     {
@@ -8070,7 +8400,7 @@
       "source_location": "L250",
       "_origin": "ast",
       "id": "src_views_ingredients_handledelete",
-      "community": 26,
+      "community": 5,
       "norm_label": "handledelete()"
     },
     {
@@ -8100,7 +8430,7 @@
       "source_location": "L337",
       "_origin": "ast",
       "id": "src_views_ingredients_renderingredients",
-      "community": 0,
+      "community": 26,
       "norm_label": "renderingredients()"
     },
     {
@@ -8110,7 +8440,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_landing",
-      "community": 42,
+      "community": 32,
       "norm_label": "landing.ts"
     },
     {
@@ -8120,7 +8450,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_views_landing_landingcallbacks",
-      "community": 42,
+      "community": 32,
       "norm_label": "landingcallbacks"
     },
     {
@@ -8130,7 +8460,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_views_landing_features",
-      "community": 42,
+      "community": 32,
       "norm_label": "features"
     },
     {
@@ -8140,7 +8470,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_views_landing_featurecard",
-      "community": 42,
+      "community": 32,
       "norm_label": "featurecard()"
     },
     {
@@ -8150,7 +8480,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_views_landing_renderlandingpage",
-      "community": 42,
+      "community": 32,
       "norm_label": "renderlandingpage()"
     },
     {
@@ -8160,7 +8490,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_login",
-      "community": 42,
+      "community": 20,
       "norm_label": "login.ts"
     },
     {
@@ -8170,7 +8500,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_views_login_renderauthgate",
-      "community": 42,
+      "community": 20,
       "norm_label": "renderauthgate()"
     },
     {
@@ -8180,7 +8510,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_views_login_authshell",
-      "community": 42,
+      "community": 20,
       "norm_label": "authshell()"
     },
     {
@@ -8190,7 +8520,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_views_login_openplatformlogin",
-      "community": 42,
+      "community": 20,
       "norm_label": "openplatformlogin()"
     },
     {
@@ -8200,7 +8530,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_views_login_renderloginform",
-      "community": 42,
+      "community": 20,
       "norm_label": "renderloginform()"
     },
     {
@@ -8270,7 +8600,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_views_menu_engineering_settingscard",
-      "community": 10,
+      "community": 11,
       "norm_label": "settingscard()"
     },
     {
@@ -8290,7 +8620,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_views_menu_engineering_renderitemrow",
-      "community": 26,
+      "community": 11,
       "norm_label": "renderitemrow()"
     },
     {
@@ -8310,7 +8640,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_views_menu_engineering_renderaicard",
-      "community": 10,
+      "community": 11,
       "norm_label": "renderaicard()"
     },
     {
@@ -8380,7 +8710,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_views_platform_admin_settingscard",
-      "community": 22,
+      "community": 4,
       "norm_label": "settingscard()"
     },
     {
@@ -8390,7 +8720,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_views_platform_admin_openplatformownergate",
-      "community": 4,
+      "community": 31,
       "norm_label": "openplatformownergate()"
     },
     {
@@ -8400,7 +8730,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_views_platform_admin_openplatformownerpanel",
-      "community": 31,
+      "community": 4,
       "norm_label": "openplatformownerpanel()"
     },
     {
@@ -8450,7 +8780,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "src_views_platform_admin_renderbusinessestab",
-      "community": 10,
+      "community": 0,
       "norm_label": "renderbusinessestab()"
     },
     {
@@ -8480,7 +8810,7 @@
       "source_location": "L443",
       "_origin": "ast",
       "id": "src_views_platform_admin_renderbroadcasttab",
-      "community": 22,
+      "community": 4,
       "norm_label": "renderbroadcasttab()"
     },
     {
@@ -8490,7 +8820,7 @@
       "source_location": "L499",
       "_origin": "ast",
       "id": "src_views_platform_admin_renderrevenuetab",
-      "community": 22,
+      "community": 4,
       "norm_label": "renderrevenuetab()"
     },
     {
@@ -8500,7 +8830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_recipes",
-      "community": 26,
+      "community": 8,
       "norm_label": "recipes.ts"
     },
     {
@@ -8510,7 +8840,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_views_recipes_openrecipebuildermodal",
-      "community": 26,
+      "community": 8,
       "norm_label": "openrecipebuildermodal()"
     },
     {
@@ -8520,7 +8850,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_views_recipes_handledelete",
-      "community": 22,
+      "community": 8,
       "norm_label": "handledelete()"
     },
     {
@@ -8530,7 +8860,7 @@
       "source_location": "L236",
       "_origin": "ast",
       "id": "src_views_recipes_toggleactive",
-      "community": 26,
+      "community": 8,
       "norm_label": "toggleactive()"
     },
     {
@@ -8540,7 +8870,7 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "src_views_recipes_statspanelactions",
-      "community": 26,
+      "community": 8,
       "norm_label": "statspanelactions"
     },
     {
@@ -8550,7 +8880,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "src_views_recipes_renderstatspanel",
-      "community": 26,
+      "community": 8,
       "norm_label": "renderstatspanel()"
     },
     {
@@ -8560,7 +8890,7 @@
       "source_location": "L276",
       "_origin": "ast",
       "id": "src_views_recipes_renderrow",
-      "community": 26,
+      "community": 8,
       "norm_label": "renderrow()"
     },
     {
@@ -8570,7 +8900,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "src_views_recipes_renderrecipes",
-      "community": 0,
+      "community": 10,
       "norm_label": "renderrecipes()"
     },
     {
@@ -8680,7 +9010,7 @@
       "source_location": "L339",
       "_origin": "ast",
       "id": "src_views_sales_buildmappingrow",
-      "community": 0,
+      "community": 10,
       "norm_label": "buildmappingrow()"
     },
     {
@@ -8770,7 +9100,7 @@
       "source_location": "L785",
       "_origin": "ast",
       "id": "src_views_sales_rendersales",
-      "community": 31,
+      "community": 5,
       "norm_label": "rendersales()"
     },
     {
@@ -8930,7 +9260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_setup",
-      "community": 35,
+      "community": 20,
       "norm_label": "setup.ts"
     },
     {
@@ -8940,7 +9270,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_views_setup_business_type_options",
-      "community": 35,
+      "community": 20,
       "norm_label": "business_type_options"
     },
     {
@@ -8950,7 +9280,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_views_setup_plan_options",
-      "community": 35,
+      "community": 20,
       "norm_label": "plan_options"
     },
     {
@@ -8970,7 +9300,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_views_setup_step",
-      "community": 35,
+      "community": 20,
       "norm_label": "step"
     },
     {
@@ -8990,7 +9320,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_views_setup_rendersetupwizard",
-      "community": 43,
+      "community": 20,
       "norm_label": "rendersetupwizard()"
     },
     {
@@ -9100,7 +9430,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "src_views_shopping_rendershopping",
-      "community": 10,
+      "community": 26,
       "norm_label": "rendershopping()"
     },
     {
@@ -9120,7 +9450,7 @@
       "source_location": "L277",
       "_origin": "ast",
       "id": "src_views_shopping_maybeshowbuyerlowstockalert",
-      "community": 0,
+      "community": 31,
       "norm_label": "maybeshowbuyerlowstockalert()"
     },
     {
@@ -10522,6 +10852,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_auth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L2",
       "weight": 1.0,
@@ -10582,6 +10923,17 @@
       "weight": 1.0,
       "source": "src_auth_sessionuser",
       "target": "src_types_userrole",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_auth_currentuser",
       "confidence_score": 1.0
     },
     {
@@ -10677,7 +11029,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L183",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_auth_restoresession",
@@ -10798,7 +11150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_main_handlelogoutclick",
       "target": "src_auth_logout",
@@ -10831,7 +11183,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L180",
+      "source_location": "L182",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_auth_takesessionexpiredreason",
@@ -11051,7 +11403,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L207",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_auth_daysuntilbusinessexpiry",
@@ -11106,7 +11458,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L194",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_auth_isbusinessexpired",
@@ -11150,7 +11502,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L206",
+      "source_location": "L208",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_auth_isbusinessexpiringsoon",
@@ -11290,7 +11642,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L208",
+      "source_location": "L210",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_components_alert_banner_createalertbanner",
@@ -11301,7 +11653,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L244",
+      "source_location": "L246",
       "weight": 1.0,
       "source": "src_main_maybeshowplatformbroadcast",
       "target": "src_components_alert_banner_createalertbanner",
@@ -11312,7 +11664,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L290",
+      "source_location": "L292",
       "weight": 1.0,
       "source": "src_main_watchforupdates",
       "target": "src_components_alert_banner_createalertbanner",
@@ -11584,7 +11936,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L204",
+      "source_location": "L206",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_components_bottom_nav_createappnav",
@@ -12089,6 +12441,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_components_modal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L3",
       "weight": 1.0,
@@ -12309,6 +12672,61 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L297",
+      "weight": 1.0,
+      "source": "src_views_hr_openpayrolldetailmodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L377",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L222",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L3",
       "weight": 1.0,
@@ -12475,7 +12893,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L74",
+      "source_location": "L76",
       "weight": 1.0,
       "source": "src_main_handlelogoutclick",
       "target": "src_components_modal_confirmmodal",
@@ -12610,6 +13028,72 @@
       "source_location": "L100",
       "weight": 1.0,
       "source": "src_views_expenses_handledeleteexpense",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeleteattendance",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L274",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeletepayroll",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L250",
+      "weight": 1.0,
+      "source": "src_views_hr_handlefinalizepayroll",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L262",
+      "weight": 1.0,
+      "source": "src_views_hr_handlemarkpayrollpaid",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L381",
+      "weight": 1.0,
+      "source": "src_views_hr_handlereviewadvance",
       "target": "src_components_modal_confirmmodal",
       "confidence_score": 1.0
     },
@@ -12990,7 +13474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L97",
+      "source_location": "L99",
       "weight": 1.0,
       "source": "src_main_createappheader",
       "target": "src_components_notification_bell_createnotificationbell",
@@ -13000,7 +13484,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "src_components_sidebar",
       "target": "src_components_sidebar_createsidebar",
@@ -13010,7 +13494,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "source": "src_components_sidebar",
       "target": "src_components_sidebar_navbutton",
@@ -13020,7 +13504,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "src_components_sidebar",
       "target": "src_components_sidebar_role_labels",
@@ -13030,7 +13514,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "source": "src_components_sidebar",
       "target": "src_components_sidebar_sidebar",
@@ -13215,7 +13699,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "src_components_sidebar_createsidebar",
       "target": "src_components_sidebar_navbutton",
@@ -13226,7 +13710,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_components_sidebar_navbutton",
       "target": "src_router_navigate",
@@ -13237,7 +13721,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "src_components_sidebar_navbutton",
       "target": "src_utils_icons_svgicon",
@@ -13249,7 +13733,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L101",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "src_components_sidebar_createsidebar",
       "target": "src_platform_owner_isplatformownersession"
@@ -13260,7 +13744,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/sidebar.ts",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_components_sidebar_createsidebar",
       "target": "src_utils_icons_svgicon"
@@ -13281,7 +13765,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L203",
+      "source_location": "L205",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_components_sidebar_createsidebar",
@@ -13380,6 +13864,17 @@
       "source_location": "L4",
       "weight": 1.0,
       "source": "src_views_expenses",
+      "target": "src_components_toast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_views_hr",
       "target": "src_components_toast",
       "confidence_score": 1.0
     },
@@ -13487,7 +13982,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L181",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_components_toast_showtoast",
@@ -13864,6 +14359,105 @@
       "source_location": "L73",
       "weight": 1.0,
       "source": "src_views_expenses_openexpenseformmodal",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeleteattendance",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L282",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeletepayroll",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L257",
+      "weight": 1.0,
+      "source": "src_views_hr_handlefinalizepayroll",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L269",
+      "weight": 1.0,
+      "source": "src_views_hr_handlemarkpayrollpaid",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L391",
+      "weight": 1.0,
+      "source": "src_views_hr_handlereviewadvance",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L347",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L182",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
       "target": "src_components_toast_showtoast",
       "confidence_score": 1.0
     },
@@ -16469,6 +17063,17 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "src_views_expenses",
+      "target": "src_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_views_hr",
       "target": "src_db",
       "confidence_score": 1.0
     },
@@ -19665,7 +20270,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_all_routes",
@@ -19675,7 +20280,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L151",
+      "source_location": "L153",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_bootstrap",
@@ -19685,7 +20290,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L84",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_createappheader",
@@ -19695,7 +20300,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L116",
+      "source_location": "L118",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_createbreadcrumb",
@@ -19705,7 +20310,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_handlelogoutclick",
@@ -19715,7 +20320,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L239",
+      "source_location": "L241",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_maybeshowplatformbroadcast",
@@ -19725,7 +20330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L67",
+      "source_location": "L69",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_openplatformowneroverlay",
@@ -19735,7 +20340,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_renderaccessdenied",
@@ -19745,7 +20350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L135",
+      "source_location": "L137",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_renderexpiredscreen",
@@ -19755,7 +20360,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L254",
+      "source_location": "L256",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_showbooterror",
@@ -19765,7 +20370,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_sync_status_icon_name",
@@ -19775,7 +20380,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_sync_status_label",
@@ -19785,7 +20390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L271",
+      "source_location": "L273",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_main_watchforupdates",
@@ -19950,7 +20555,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_types",
@@ -19961,7 +20566,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_types_appuser",
@@ -19972,7 +20577,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_types_userrole",
@@ -20360,7 +20965,7 @@
       "source_location": "L29",
       "weight": 1.0,
       "source": "src_main",
-      "target": "src_views_ingredients",
+      "target": "src_views_hr",
       "confidence_score": 1.0
     },
     {
@@ -20369,6 +20974,28 @@
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
       "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_main",
+      "target": "src_views_hr_renderhr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/main.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "src_main",
+      "target": "src_views_ingredients",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/main.ts",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_ingredients_renderingredients",
@@ -20401,7 +21028,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_menu_engineering",
@@ -20412,7 +21039,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_menu_engineering_rendermenuengineering",
@@ -20456,7 +21083,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_recipes",
@@ -20467,7 +21094,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_recipes_renderrecipes",
@@ -20478,7 +21105,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_sales",
@@ -20489,7 +21116,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_sales_rendersales",
@@ -20500,7 +21127,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_settings",
@@ -20511,7 +21138,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_settings_rendersettings",
@@ -20522,7 +21149,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_shopping",
@@ -20533,7 +21160,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_shopping_maybeshowbuyerlowstockalert",
@@ -20544,7 +21171,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "src_main",
       "target": "src_views_shopping_rendershopping",
@@ -20555,7 +21182,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "source": "src_main_renderaccessdenied",
       "target": "src_utils_dom_el",
@@ -20566,7 +21193,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L54",
+      "source_location": "L56",
       "weight": 1.0,
       "source": "src_main_renderaccessdenied",
       "target": "src_utils_dom_emptystate",
@@ -20577,7 +21204,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0,
       "source": "src_main_openplatformowneroverlay",
       "target": "src_utils_dom_el",
@@ -20588,7 +21215,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "src_main_openplatformowneroverlay",
       "target": "src_views_platform_admin_openplatformownerpanel",
@@ -20599,7 +21226,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L204",
+      "source_location": "L206",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_main_createappheader",
@@ -20610,7 +21237,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L85",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "src_main_createappheader",
       "target": "src_utils_dom_el",
@@ -20621,7 +21248,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L86",
+      "source_location": "L88",
       "weight": 1.0,
       "source": "src_main_createappheader",
       "target": "src_utils_icons_svgicon",
@@ -20632,7 +21259,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L204",
+      "source_location": "L206",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_main_createbreadcrumb",
@@ -20643,7 +21270,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L122",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "src_main_createbreadcrumb",
       "target": "src_router_navigate",
@@ -20654,7 +21281,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L117",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "src_main_createbreadcrumb",
       "target": "src_utils_dom_el",
@@ -20665,7 +21292,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L123",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "src_main_createbreadcrumb",
       "target": "src_utils_icons_svgicon",
@@ -20676,7 +21303,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L195",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_main_renderexpiredscreen",
@@ -20687,7 +21314,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L136",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "src_main_renderexpiredscreen",
       "target": "src_utils_dom_el",
@@ -20698,7 +21325,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L143",
+      "source_location": "L145",
       "weight": 1.0,
       "source": "src_main_renderexpiredscreen",
       "target": "src_utils_format_formatdate",
@@ -20709,7 +21336,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L137",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "src_main_renderexpiredscreen",
       "target": "src_utils_icons_svgicon",
@@ -20720,7 +21347,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_main_maybeshowplatformbroadcast",
@@ -20731,7 +21358,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L219",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_router_registerroutes",
@@ -20742,7 +21369,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L230",
+      "source_location": "L232",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_router_startrouter",
@@ -20753,7 +21380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L154",
+      "source_location": "L156",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_store_initonlinewatcher",
@@ -20764,7 +21391,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L153",
+      "source_location": "L155",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_store_initthemewatcher",
@@ -20775,7 +21402,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L159",
+      "source_location": "L161",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_store_refreshall",
@@ -20786,7 +21413,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_automation_runautomationtriggers",
@@ -20797,7 +21424,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L200",
+      "source_location": "L202",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_dom_el",
@@ -20808,7 +21435,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L210",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_format_topersian",
@@ -20819,7 +21446,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L163",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_inventory_engine_recalculatealltheoreticalstock",
@@ -20830,7 +21457,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L187",
+      "source_location": "L189",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_notifications_initlowstockwatcher",
@@ -20841,7 +21468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L188",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_notifications_requestnotificationpermission",
@@ -20852,7 +21479,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L186",
+      "source_location": "L188",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_notifications_setnotificationbannerhost",
@@ -20863,7 +21490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L165",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_rfm_recalculateallrfm",
@@ -20874,7 +21501,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L155",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_utils_sync_setupautosync",
@@ -20885,7 +21512,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L183",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_views_login_renderauthgate",
@@ -20896,7 +21523,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_views_platform_admin_openplatformownergate",
@@ -20907,7 +21534,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L233",
+      "source_location": "L235",
       "weight": 1.0,
       "source": "src_main_bootstrap",
       "target": "src_views_shopping_maybeshowbuyerlowstockalert",
@@ -20918,7 +21545,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L240",
+      "source_location": "L242",
       "weight": 1.0,
       "source": "src_main_maybeshowplatformbroadcast",
       "target": "src_utils_api_hasstoredsession",
@@ -20929,7 +21556,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L260",
+      "source_location": "L262",
       "weight": 1.0,
       "source": "src_main_showbooterror",
       "target": "src_utils_dom_el",
@@ -20940,7 +21567,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/main.ts",
-      "source_location": "L261",
+      "source_location": "L263",
       "weight": 1.0,
       "source": "src_main_showbooterror",
       "target": "src_utils_icons_svgicon",
@@ -21736,6 +22363,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L9",
       "weight": 1.0,
@@ -21850,6 +22488,17 @@
       "source_location": "L7",
       "weight": 1.0,
       "source": "src_views_expenses",
+      "target": "src_router_routecleanup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_views_hr",
       "target": "src_router_routecleanup",
       "confidence_score": 1.0
     },
@@ -22961,6 +23610,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_store",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L10",
       "weight": 1.0,
@@ -23367,6 +24027,17 @@
       "source_location": "L8",
       "weight": 1.0,
       "source": "src_views_expenses",
+      "target": "src_store_employees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_views_hr",
       "target": "src_store_employees",
       "confidence_score": 1.0
     },
@@ -24106,6 +24777,28 @@
       "source": "src_views_expenses_toggleemployeeactive",
       "target": "src_store_refreshemployees",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_store_refreshemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L524",
+      "weight": 1.0,
+      "source": "src_views_hr_renderhr",
+      "target": "src_store_refreshemployees"
     },
     {
       "relation": "calls",
@@ -25774,6 +26467,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L14",
       "weight": 1.0,
@@ -26252,6 +26956,94 @@
       "weight": 1.0,
       "source": "src_views_expenses",
       "target": "src_types_employee",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_employee",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_attendancestatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_attendancerecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_payrolladjustment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_payrollstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_payrollrecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_salaryadvancestatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_types_salaryadvance",
       "confidence_score": 1.0
     },
     {
@@ -29408,6 +30200,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L5",
       "weight": 1.0,
@@ -30359,6 +31162,182 @@
       "source_location": "L298",
       "weight": 1.0,
       "source": "src_views_expenses_rendersummarytab",
+      "target": "src_utils_dom_el"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "src_views_hr_badge",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L287",
+      "weight": 1.0,
+      "source": "src_views_hr_openpayrolldetailmodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L352",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L242",
+      "weight": 1.0,
+      "source": "src_views_hr_payrolldetailbody",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L410",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L432",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvancestab",
+      "target": "src_utils_dom_el"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L149",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancelist",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancetab",
+      "target": "src_utils_dom_el"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L485",
+      "weight": 1.0,
+      "source": "src_views_hr_renderhr",
+      "target": "src_utils_dom_el"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L472",
+      "weight": 1.0,
+      "source": "src_views_hr_renderleavebalancetab",
+      "target": "src_utils_dom_el"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L459",
+      "weight": 1.0,
+      "source": "src_views_hr_renderleavelist",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L314",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrolllist",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/hr.ts",
+      "source_location": "L331",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrollrunstab",
       "target": "src_utils_dom_el"
     },
     {
@@ -31388,6 +32367,50 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L355",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L191",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L5",
       "weight": 1.0,
@@ -31828,6 +32851,61 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L404",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancelist",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L452",
+      "weight": 1.0,
+      "source": "src_views_hr_renderleavelist",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L308",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrolllist",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L5",
       "weight": 1.0,
@@ -32063,6 +33141,50 @@
       "source_location": "L48",
       "weight": 1.0,
       "source": "src_views_expenses_openexpenseformmodal",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L351",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
       "target": "src_utils_dom_numberinput",
       "confidence_score": 1.0
     },
@@ -32360,6 +33482,50 @@
       "source_location": "L76",
       "weight": 1.0,
       "source": "src_views_expenses_openexpenseformmodal",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L366",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
       "target": "src_utils_dom_parsenumberinput",
       "confidence_score": 1.0
     },
@@ -32928,6 +34094,50 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L422",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancelist",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L323",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrolllist",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L5",
       "weight": 1.0,
@@ -33383,6 +34593,39 @@
       "source_location": "L44",
       "weight": 1.0,
       "source": "src_views_expenses_openexpenseformmodal",
+      "target": "src_utils_dom_selectel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_dom_selectel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "src_views_hr_employeeselect",
+      "target": "src_utils_dom_selectel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
       "target": "src_utils_dom_selectel",
       "confidence_score": 1.0
     },
@@ -35025,6 +36268,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L7",
       "weight": 1.0,
@@ -35993,6 +37247,72 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L264",
+      "weight": 1.0,
+      "source": "src_views_hr_handlemarkpayrollpaid",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L384",
+      "weight": 1.0,
+      "source": "src_views_hr_handlereviewadvance",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L227",
+      "weight": 1.0,
+      "source": "src_views_hr_payrolldetailbody",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L417",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L320",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrolllist",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L7",
       "weight": 1.0,
@@ -36481,6 +37801,50 @@
       "source_location": "L22",
       "weight": 1.0,
       "source": "src_views_dashboard",
+      "target": "src_utils_format_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_utils_format_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeleteattendance",
+      "target": "src_utils_format_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L417",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_utils_format_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancelist",
       "target": "src_utils_format_formatdate",
       "confidence_score": 1.0
     },
@@ -37427,6 +38791,17 @@
       "source_location": "L253",
       "weight": 1.0,
       "source": "src_views_expenses_renderemployeerow",
+      "target": "src_utils_format_formatpaytype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_views_hr",
       "target": "src_utils_format_formatpaytype",
       "confidence_score": 1.0
     },
@@ -40684,6 +42059,535 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_advance_status_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_advance_status_tone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_attendance_status_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_attendance_status_options",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_attendance_status_tone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_currentperiodmonth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_employeeselect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_handledeleteattendance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L273",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_handledeletepayroll",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L249",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_handlefinalizepayroll",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L261",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_handlemarkpayrollpaid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L380",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_handlereviewadvance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_openmarkattendancemodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L286",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_openpayrolldetailmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L345",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_openrequestadvancemodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L180",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_openrunpayrollmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_payroll_status_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_payroll_status_tone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L225",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_payrolldetailbody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L397",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderadvanceslist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L431",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderadvancestab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L134",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderattendancelist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderattendancetab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L484",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderhr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L471",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderleavebalancetab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L448",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderleavelist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L302",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderpayrolllist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L330",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_renderpayrollrunstab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_tab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "src_views_hr",
+      "target": "src_views_hr_todayiso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_views_hr_todayiso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_views_hr_currentperiodmonth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "src_views_hr_employeeselect",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L346",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L450",
+      "weight": 1.0,
+      "source": "src_views_hr_renderleavelist",
+      "target": "src_views_hr_activeemployees",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "src_views_hr_openmarkattendancemodal",
+      "target": "src_views_hr_employeeselect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L350",
+      "weight": 1.0,
+      "source": "src_views_hr_openrequestadvancemodal",
+      "target": "src_views_hr_employeeselect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L185",
+      "weight": 1.0,
+      "source": "src_views_hr_openrunpayrollmodal",
+      "target": "src_views_hr_employeeselect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L414",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvanceslist",
+      "target": "src_views_hr_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancelist",
+      "target": "src_views_hr_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L318",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrolllist",
+      "target": "src_views_hr_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L129",
+      "weight": 1.0,
+      "source": "src_views_hr_handledeleteattendance",
+      "target": "src_views_hr_renderattendancelist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "src_views_hr_renderattendancetab",
+      "target": "src_views_hr_renderattendancelist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L296",
+      "weight": 1.0,
+      "source": "src_views_hr_openpayrolldetailmodal",
+      "target": "src_views_hr_payrolldetailbody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L338",
+      "weight": 1.0,
+      "source": "src_views_hr_renderpayrollrunstab",
+      "target": "src_views_hr_renderpayrolllist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L439",
+      "weight": 1.0,
+      "source": "src_views_hr_renderadvancestab",
+      "target": "src_views_hr_renderadvanceslist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/hr.ts",
+      "source_location": "L477",
+      "weight": 1.0,
+      "source": "src_views_hr_renderleavebalancetab",
+      "target": "src_views_hr_renderleavelist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/ingredients.ts",
       "source_location": "L16",
       "weight": 1.0,
@@ -42479,5 +44383,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "53ad4aa2a33c5bfbe5290c36b22d40a387424c75"
+  "built_at_commit": "1f59b8fe61c114b68ec1cbe1abb1ef1f7e83b020"
 }
