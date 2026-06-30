@@ -1,8 +1,8 @@
 import { settings } from '../store';
 import type { PaidSubscriptionPlan, SubscriptionPaymentStatus, UserRole } from '../types';
 
-/** Falls back to this when settings.apiBaseUrl is unset (matches the type comment in types.ts). */
-const DEFAULT_API_BASE_URL = 'http://91.107.249.240/api';
+/** Falls back to this when settings.apiBaseUrl is unset (matches the type comment in types.ts). Host only — each endpoint call supplies its own /api/... path. */
+const DEFAULT_API_BASE_URL = 'http://91.107.249.240';
 
 const TOKEN_KEY = 'apiAccessToken';
 const REFRESH_KEY = 'apiRefreshToken';
@@ -17,8 +17,9 @@ export class ApiError extends Error {
   }
 }
 
+/** Strips a trailing slash and a trailing /api (older settings.apiBaseUrl values included it) so callers can append /api/... paths without doubling it. */
 function baseUrl(): string {
-  return (settings.get()?.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
+  return (settings.get()?.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '').replace(/\/api$/, '');
 }
 
 export function isOnline(): boolean {
@@ -58,7 +59,7 @@ async function tryRefresh(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       try {
-        const res = await fetch(`${baseUrl()}/auth/refresh`, {
+        const res = await fetch(`${baseUrl()}/api/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${refreshToken}` },
         });
@@ -243,20 +244,20 @@ export class ApiClient {
     phone?: string;
     plan?: string;
   }): Promise<AuthResult> {
-    const data = await request<AuthResult>('/auth/register', { method: 'POST', body: input, auth: false });
+    const data = await request<AuthResult>('/api/auth/register', { method: 'POST', body: input, auth: false });
     setTokens(data.token, data.refreshToken, data.expiresAt);
     return data;
   }
 
   async login(username: string, password: string, businessId?: string): Promise<AuthResult> {
-    const data = await request<AuthResult>('/auth/login', { method: 'POST', body: { username, password, businessId }, auth: false });
+    const data = await request<AuthResult>('/api/auth/login', { method: 'POST', body: { username, password, businessId }, auth: false });
     setTokens(data.token, data.refreshToken, data.expiresAt);
     return data;
   }
 
   async logout(): Promise<void> {
     try {
-      await request('/auth/logout', { method: 'POST' });
+      await request('/api/auth/logout', { method: 'POST' });
     } catch {
       // best-effort revoke; clear local tokens regardless
     }
@@ -264,13 +265,13 @@ export class ApiClient {
   }
 
   async me(): Promise<{ user: ApiUser; business: ApiBusiness }> {
-    return request('/auth/me');
+    return request('/api/auth/me');
   }
 
   // ----- Platform owner -----
 
   async platformLogin(username: string, password: string): Promise<{ token: string; expiresAt: string }> {
-    const data = await request<{ token: string; expiresAt: string }>('/platform/login', {
+    const data = await request<{ token: string; expiresAt: string }>('/api/platform/login', {
       method: 'POST',
       body: { username, password },
       auth: false,
@@ -280,66 +281,66 @@ export class ApiClient {
   }
 
   async listBusinesses(): Promise<ApiPlatformBusiness[]> {
-    const data = await request<{ businesses: ApiPlatformBusiness[] }>('/platform/businesses');
+    const data = await request<{ businesses: ApiPlatformBusiness[] }>('/api/platform/businesses');
     return data.businesses;
   }
 
   async getBusiness(id: string): Promise<{ business: ApiPlatformBusiness; users: ApiUser[]; payments: ApiSubscriptionPayment[] }> {
-    return request(`/platform/businesses/${id}`);
+    return request(`/api/platform/businesses/${id}`);
   }
 
   async updateBusinessSubscription(
     id: string,
     input: { plan?: string; expiresAt?: string; status?: string },
   ): Promise<{ business: ApiPlatformBusiness }> {
-    return request(`/platform/businesses/${id}/subscription`, { method: 'PATCH', body: input });
+    return request(`/api/platform/businesses/${id}/subscription`, { method: 'PATCH', body: input });
   }
 
   async listPendingPayments(): Promise<ApiSubscriptionPayment[]> {
-    const data = await request<{ payments: ApiSubscriptionPayment[] }>('/platform/payments/pending');
+    const data = await request<{ payments: ApiSubscriptionPayment[] }>('/api/platform/payments/pending');
     return data.payments;
   }
 
   async approvePayment(id: string, note?: string): Promise<{ ok: boolean; newExpiry: string }> {
-    return request(`/platform/payments/${id}/approve`, { method: 'POST', body: { note } });
+    return request(`/api/platform/payments/${id}/approve`, { method: 'POST', body: { note } });
   }
 
   async rejectPayment(id: string, note?: string): Promise<{ ok: boolean }> {
-    return request(`/platform/payments/${id}/reject`, { method: 'POST', body: { note } });
+    return request(`/api/platform/payments/${id}/reject`, { method: 'POST', body: { note } });
   }
 
   async platformMetrics(): Promise<ApiPlatformMetrics> {
-    return request('/platform/metrics');
+    return request('/api/platform/metrics');
   }
 
   async getPlatformPricing(): Promise<ApiPricingRow[]> {
-    const data = await request<{ pricing: ApiPricingRow[] }>('/platform/pricing');
+    const data = await request<{ pricing: ApiPricingRow[] }>('/api/platform/pricing');
     return data.pricing;
   }
 
   async setPlatformPricing(plan: PaidSubscriptionPlan, amount: number): Promise<ApiPricingRow[]> {
-    const data = await request<{ pricing: ApiPricingRow[] }>('/platform/pricing', { method: 'PATCH', body: { plan, amount } });
+    const data = await request<{ pricing: ApiPricingRow[] }>('/api/platform/pricing', { method: 'PATCH', body: { plan, amount } });
     return data.pricing;
   }
 
   async sendBroadcast(message: string): Promise<{ ok: boolean }> {
-    return request('/platform/broadcast', { method: 'POST', body: { message } });
+    return request('/api/platform/broadcast', { method: 'POST', body: { message } });
   }
 
   async getLatestBroadcast(): Promise<ApiBroadcast | null> {
-    const data = await request<{ broadcast: ApiBroadcast | null }>('/platform/broadcast/latest');
+    const data = await request<{ broadcast: ApiBroadcast | null }>('/api/platform/broadcast/latest');
     return data.broadcast;
   }
 
   // ----- Business user management -----
 
   async listUsers(): Promise<ApiUser[]> {
-    const data = await request<{ users: ApiUser[] }>('/business/users');
+    const data = await request<{ users: ApiUser[] }>('/api/business/users');
     return data.users;
   }
 
   async createUser(input: { username: string; password: string; fullName: string; role: UserRole; email?: string; phone?: string }): Promise<ApiUser> {
-    const data = await request<{ user: ApiUser }>('/business/users', { method: 'POST', body: input });
+    const data = await request<{ user: ApiUser }>('/api/business/users', { method: 'POST', body: input });
     return data.user;
   }
 
@@ -347,14 +348,14 @@ export class ApiClient {
     id: string,
     input: Partial<{ fullName: string; role: UserRole; email: string; phone: string; isActive: boolean; password: string }>,
   ): Promise<ApiUser> {
-    const data = await request<{ user: ApiUser }>(`/business/users/${id}`, { method: 'PATCH', body: input });
+    const data = await request<{ user: ApiUser }>(`/api/business/users/${id}`, { method: 'PATCH', body: input });
     return data.user;
   }
 
   // ----- Subscription (business scope) -----
 
   async getSubscriptionStatus(): Promise<{ plan: string; status: string; expiresAt: string; pendingPayment: ApiSubscriptionPayment | null }> {
-    return request('/subscription/status');
+    return request('/api/subscription/status');
   }
 
   async submitSubscriptionPayment(input: {
@@ -363,12 +364,12 @@ export class ApiClient {
     transferRef?: string;
     description?: string;
   }): Promise<ApiSubscriptionPayment> {
-    const data = await request<{ payment: ApiSubscriptionPayment }>('/subscription/payment', { method: 'POST', body: input });
+    const data = await request<{ payment: ApiSubscriptionPayment }>('/api/subscription/payment', { method: 'POST', body: input });
     return data.payment;
   }
 
   async getSubscriptionPricing(): Promise<ApiPricingRow[]> {
-    const data = await request<{ pricing: ApiPricingRow[] }>('/subscription/pricing');
+    const data = await request<{ pricing: ApiPricingRow[] }>('/api/subscription/pricing');
     return data.pricing;
   }
 
@@ -377,11 +378,11 @@ export class ApiClient {
   async syncPull(since: string, stores?: string[]): Promise<{ records: SyncRecord[]; serverTime: string }> {
     const params = new URLSearchParams({ since });
     if (stores && stores.length) params.set('stores', stores.join(','));
-    return request(`/sync/pull?${params.toString()}`);
+    return request(`/api/sync/pull?${params.toString()}`);
   }
 
   async syncPush(deviceId: string, records: SyncRecord[]): Promise<{ accepted: number; conflicts: SyncConflict[] }> {
-    return request('/sync/push', { method: 'POST', body: { deviceId, records } });
+    return request('/api/sync/push', { method: 'POST', body: { deviceId, records } });
   }
 }
 

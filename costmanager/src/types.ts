@@ -478,7 +478,7 @@ export interface Settings {
   lastSyncAt?: string;
   /** Cursor for /api/sync/pull?since= — separate from lastSyncAt (push time) since pull and push can succeed independently. */
   lastSyncPulledAt?: string;
-  /** Base URL of the costmanager-api backend, e.g. http://91.107.249.240/api. Falls back to a hardcoded default when unset. */
+  /** Base URL (host only, no /api suffix) of the costmanager-api backend, e.g. http://91.107.249.240. Falls back to a hardcoded default when unset; a trailing /api on older saved values is stripped automatically. */
   apiBaseUrl?: string;
   kavenegarApiKey?: string;
   kavenegarSenderLine?: string;
