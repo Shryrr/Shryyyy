@@ -540,7 +540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_gen_icons",
-      "community": 40,
+      "community": 20,
       "norm_label": "gen-icons.js"
     },
     {
@@ -550,7 +550,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "scripts_gen_icons_fs",
-      "community": 40,
+      "community": 20,
       "norm_label": "fs"
     },
     {
@@ -560,7 +560,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "scripts_gen_icons_path",
-      "community": 40,
+      "community": 20,
       "norm_label": "path"
     },
     {
@@ -570,7 +570,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "scripts_gen_icons_chromium",
-      "community": 40,
+      "community": 20,
       "norm_label": "{ chromium }"
     },
     {
@@ -580,7 +580,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "scripts_gen_icons_out_dir",
-      "community": 40,
+      "community": 20,
       "norm_label": "out_dir"
     },
     {
@@ -590,7 +590,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "scripts_gen_icons_svgmark",
-      "community": 40,
+      "community": 20,
       "norm_label": "svgmark()"
     },
     {
@@ -630,7 +630,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_auth_currentuser",
-      "community": 20,
+      "community": 22,
       "norm_label": "currentuser"
     },
     {
@@ -720,7 +720,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_auth_takesessionexpiredreason",
-      "community": 20,
+      "community": 31,
       "norm_label": "takesessionexpiredreason()"
     },
     {
@@ -760,7 +760,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "src_auth_hasrole",
-      "community": 26,
+      "community": 22,
       "norm_label": "hasrole()"
     },
     {
@@ -770,7 +770,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "src_auth_issuperadmin",
-      "community": 26,
+      "community": 20,
       "norm_label": "issuperadmin()"
     },
     {
@@ -780,7 +780,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "src_auth_hasfullaccess",
-      "community": 26,
+      "community": 22,
       "norm_label": "hasfullaccess()"
     },
     {
@@ -790,7 +790,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "src_auth_daysuntilbusinessexpiry",
-      "community": 43,
+      "community": 20,
       "norm_label": "daysuntilbusinessexpiry()"
     },
     {
@@ -800,7 +800,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "src_auth_isbusinessexpired",
-      "community": 43,
+      "community": 20,
       "norm_label": "isbusinessexpired()"
     },
     {
@@ -810,7 +810,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "src_auth_isbusinessexpiringsoon",
-      "community": 43,
+      "community": 20,
       "norm_label": "isbusinessexpiringsoon()"
     },
     {
@@ -820,7 +820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_alert_banner",
-      "community": 31,
+      "community": 42,
       "norm_label": "alert-banner.ts"
     },
     {
@@ -830,7 +830,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_alert_banner_alertbanneroptions",
-      "community": 31,
+      "community": 42,
       "norm_label": "alertbanneroptions"
     },
     {
@@ -840,7 +840,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_alert_banner_dismissedthissession",
-      "community": 31,
+      "community": 42,
       "norm_label": "dismissedthissession"
     },
     {
@@ -860,7 +860,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_bottom_nav",
-      "community": 32,
+      "community": 18,
       "norm_label": "bottom-nav.ts"
     },
     {
@@ -880,7 +880,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_bottom_nav_nav_items",
-      "community": 32,
+      "community": 18,
       "norm_label": "nav_items"
     },
     {
@@ -890,7 +890,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_bottom_nav_createappnav",
-      "community": 32,
+      "community": 31,
       "norm_label": "createappnav()"
     },
     {
@@ -960,7 +960,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_chart_destroychart",
-      "community": 7,
+      "community": 41,
       "norm_label": "destroychart()"
     },
     {
@@ -970,7 +970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_modal",
-      "community": 10,
+      "community": 46,
       "norm_label": "modal.ts"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_modal_modalhandle",
-      "community": 10,
+      "community": 46,
       "norm_label": "modalhandle"
     },
     {
@@ -990,7 +990,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_modal_modaloptions",
-      "community": 10,
+      "community": 46,
       "norm_label": "modaloptions"
     },
     {
@@ -1010,7 +1010,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_components_modal_confirmoptions",
-      "community": 10,
+      "community": 46,
       "norm_label": "confirmoptions"
     },
     {
@@ -1020,7 +1020,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_components_modal_confirmmodal",
-      "community": 22,
+      "community": 10,
       "norm_label": "confirmmodal()"
     },
     {
@@ -1030,7 +1030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_notification_bell",
-      "community": 32,
+      "community": 13,
       "norm_label": "notification-bell.ts"
     },
     {
@@ -1040,7 +1040,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_notification_bell_notification_route",
-      "community": 32,
+      "community": 13,
       "norm_label": "notification_route"
     },
     {
@@ -1050,7 +1050,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_notification_bell_createnotificationbell",
-      "community": 32,
+      "community": 31,
       "norm_label": "createnotificationbell()"
     },
     {
@@ -1060,7 +1060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_sidebar",
-      "community": 18,
+      "community": 32,
       "norm_label": "sidebar.ts"
     },
     {
@@ -1070,7 +1070,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_sidebar_sidebarlink",
-      "community": 18,
+      "community": 32,
       "norm_label": "sidebarlink"
     },
     {
@@ -1080,7 +1080,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_sidebar_sidebar_links",
-      "community": 18,
+      "community": 32,
       "norm_label": "sidebar_links"
     },
     {
@@ -1090,7 +1090,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_sidebar_role_labels",
-      "community": 18,
+      "community": 32,
       "norm_label": "role_labels"
     },
     {
@@ -1100,7 +1100,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_sidebar_sidebar",
-      "community": 18,
+      "community": 32,
       "norm_label": "sidebar"
     },
     {
@@ -1110,7 +1110,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_components_sidebar_navbutton",
-      "community": 18,
+      "community": 32,
       "norm_label": "navbutton()"
     },
     {
@@ -1120,7 +1120,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_components_sidebar_createsidebar",
-      "community": 18,
+      "community": 32,
       "norm_label": "createsidebar()"
     },
     {
@@ -1160,7 +1160,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_toast_showtoast",
-      "community": 22,
+      "community": 0,
       "norm_label": "showtoast()"
     },
     {
@@ -1330,7 +1330,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "src_db_newingredientinput",
-      "community": 8,
+      "community": 40,
       "norm_label": "newingredientinput"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L628",
       "_origin": "ast",
       "id": "src_db_recordsaleinput",
-      "community": 44,
+      "community": 47,
       "norm_label": "recordsaleinput"
     },
     {
@@ -1650,7 +1650,7 @@
       "source_location": "L683",
       "_origin": "ast",
       "id": "src_db_recordimportedsaleinput",
-      "community": 44,
+      "community": 47,
       "norm_label": "recordimportedsaleinput"
     },
     {
@@ -1720,7 +1720,7 @@
       "source_location": "L913",
       "_origin": "ast",
       "id": "src_db_toggleshoppingitemchecked",
-      "community": 44,
+      "community": 1,
       "norm_label": "toggleshoppingitemchecked()"
     },
     {
@@ -1850,7 +1850,7 @@
       "source_location": "L1058",
       "_origin": "ast",
       "id": "src_db_updatecustomersegment",
-      "community": 44,
+      "community": 1,
       "norm_label": "updatecustomersegment()"
     },
     {
@@ -2260,7 +2260,7 @@
       "source_location": "L1465",
       "_origin": "ast",
       "id": "src_db_finalizepayroll",
-      "community": 1,
+      "community": 44,
       "norm_label": "finalizepayroll()"
     },
     {
@@ -2390,7 +2390,7 @@
       "source_location": "L1558",
       "_origin": "ast",
       "id": "src_db_updateautomationtrigger",
-      "community": 1,
+      "community": 44,
       "norm_label": "updateautomationtrigger()"
     },
     {
@@ -2470,7 +2470,7 @@
       "source_location": "L1679",
       "_origin": "ast",
       "id": "src_db_getauthconfig",
-      "community": 29,
+      "community": 44,
       "norm_label": "getauthconfig()"
     },
     {
@@ -2480,7 +2480,7 @@
       "source_location": "L1688",
       "_origin": "ast",
       "id": "src_db_hassuperadmin",
-      "community": 29,
+      "community": 44,
       "norm_label": "hassuperadmin()"
     },
     {
@@ -2490,7 +2490,7 @@
       "source_location": "L1693",
       "_origin": "ast",
       "id": "src_db_registerbusinessinput",
-      "community": 35,
+      "community": 20,
       "norm_label": "registerbusinessinput"
     },
     {
@@ -2500,7 +2500,7 @@
       "source_location": "L1704",
       "_origin": "ast",
       "id": "src_db_isusernametaken",
-      "community": 29,
+      "community": 44,
       "norm_label": "isusernametaken()"
     },
     {
@@ -2520,7 +2520,7 @@
       "source_location": "L1751",
       "_origin": "ast",
       "id": "src_db_finduserbyusername",
-      "community": 29,
+      "community": 44,
       "norm_label": "finduserbyusername()"
     },
     {
@@ -2530,7 +2530,7 @@
       "source_location": "L1761",
       "_origin": "ast",
       "id": "src_db_cacheapiuser",
-      "community": 29,
+      "community": 44,
       "norm_label": "cacheapiuser()"
     },
     {
@@ -2540,7 +2540,7 @@
       "source_location": "L1792",
       "_origin": "ast",
       "id": "src_db_recordfailedloginattempt",
-      "community": 29,
+      "community": 44,
       "norm_label": "recordfailedloginattempt()"
     },
     {
@@ -2550,7 +2550,7 @@
       "source_location": "L1810",
       "_origin": "ast",
       "id": "src_db_resetloginattempts",
-      "community": 29,
+      "community": 44,
       "norm_label": "resetloginattempts()"
     },
     {
@@ -2560,7 +2560,7 @@
       "source_location": "L1820",
       "_origin": "ast",
       "id": "src_db_getuser",
-      "community": 29,
+      "community": 44,
       "norm_label": "getuser()"
     },
     {
@@ -2570,7 +2570,7 @@
       "source_location": "L1825",
       "_origin": "ast",
       "id": "src_db_listusers",
-      "community": 29,
+      "community": 44,
       "norm_label": "listusers()"
     },
     {
@@ -2580,7 +2580,7 @@
       "source_location": "L1830",
       "_origin": "ast",
       "id": "src_db_recordlogin",
-      "community": 29,
+      "community": 44,
       "norm_label": "recordlogin()"
     },
     {
@@ -2600,7 +2600,7 @@
       "source_location": "L1849",
       "_origin": "ast",
       "id": "src_db_createuser",
-      "community": 29,
+      "community": 44,
       "norm_label": "createuser()"
     },
     {
@@ -2620,7 +2620,7 @@
       "source_location": "L1883",
       "_origin": "ast",
       "id": "src_db_updateuser",
-      "community": 29,
+      "community": 44,
       "norm_label": "updateuser()"
     },
     {
@@ -2630,7 +2630,7 @@
       "source_location": "L1918",
       "_origin": "ast",
       "id": "src_db_deleteuser",
-      "community": 29,
+      "community": 44,
       "norm_label": "deleteuser()"
     },
     {
@@ -2640,7 +2640,7 @@
       "source_location": "L1927",
       "_origin": "ast",
       "id": "src_db_replaceauthusers",
-      "community": 29,
+      "community": 44,
       "norm_label": "replaceauthusers()"
     },
     {
@@ -2650,7 +2650,7 @@
       "source_location": "L1933",
       "_origin": "ast",
       "id": "src_db_changesuperadminpassword",
-      "community": 29,
+      "community": 44,
       "norm_label": "changesuperadminpassword()"
     },
     {
@@ -2770,7 +2770,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_main_renderaccessdenied",
-      "community": 10,
+      "community": 26,
       "norm_label": "renderaccessdenied()"
     },
     {
@@ -2820,7 +2820,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_main_createappheader",
-      "community": 32,
+      "community": 31,
       "norm_label": "createappheader()"
     },
     {
@@ -2830,7 +2830,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "src_main_createbreadcrumb",
-      "community": 18,
+      "community": 31,
       "norm_label": "createbreadcrumb()"
     },
     {
@@ -2840,7 +2840,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "src_main_renderexpiredscreen",
-      "community": 32,
+      "community": 31,
       "norm_label": "renderexpiredscreen()"
     },
     {
@@ -2930,7 +2930,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_platform_owner_isplatformownersession",
-      "community": 18,
+      "community": 32,
       "norm_label": "isplatformownersession()"
     },
     {
@@ -2970,7 +2970,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_platform_owner_getplatformpricing",
-      "community": 43,
+      "community": 20,
       "norm_label": "getplatformpricing()"
     },
     {
@@ -3140,7 +3140,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_router_registerroutes",
-      "community": 18,
+      "community": 31,
       "norm_label": "registerroutes()"
     },
     {
@@ -3190,7 +3190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_seed",
-      "community": 2,
+      "community": 29,
       "norm_label": "seed.ts"
     },
     {
@@ -3200,7 +3200,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_seed_seedingredientdef",
-      "community": 26,
+      "community": 29,
       "norm_label": "seedingredientdef"
     },
     {
@@ -3210,7 +3210,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_seed_seedmenuitemdef",
-      "community": 2,
+      "community": 29,
       "norm_label": "seedmenuitemdef"
     },
     {
@@ -3220,7 +3220,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_seed_ingredients",
-      "community": 2,
+      "community": 29,
       "norm_label": "ingredients"
     },
     {
@@ -3230,7 +3230,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_seed_menu_items",
-      "community": 2,
+      "community": 29,
       "norm_label": "menu_items"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_seed_plannedsale",
-      "community": 2,
+      "community": 29,
       "norm_label": "plannedsale"
     },
     {
@@ -3250,7 +3250,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_seed_weightedpick",
-      "community": 2,
+      "community": 29,
       "norm_label": "weightedpick()"
     },
     {
@@ -3260,7 +3260,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "src_seed_buildsalesplan",
-      "community": 2,
+      "community": 29,
       "norm_label": "buildsalesplan()"
     },
     {
@@ -3270,7 +3270,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_seed_computeconsumption",
-      "community": 2,
+      "community": 29,
       "norm_label": "computeconsumption()"
     },
     {
@@ -3280,7 +3280,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "src_seed_roundqty",
-      "community": 2,
+      "community": 29,
       "norm_label": "roundqty()"
     },
     {
@@ -3290,7 +3290,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_seed_seedexpensesandpayroll",
-      "community": 2,
+      "community": 29,
       "norm_label": "seedexpensesandpayroll()"
     },
     {
@@ -3300,7 +3300,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "src_seed_seeddatabase",
-      "community": 2,
+      "community": 29,
       "norm_label": "seeddatabase()"
     },
     {
@@ -3350,7 +3350,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_store_signal_get",
-      "community": 14,
+      "community": 13,
       "norm_label": ".get()"
     },
     {
@@ -3390,7 +3390,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_store_ingredients",
-      "community": 14,
+      "community": 18,
       "norm_label": "ingredients"
     },
     {
@@ -3500,7 +3500,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_store_notifications",
-      "community": 14,
+      "community": 13,
       "norm_label": "notifications"
     },
     {
@@ -3510,7 +3510,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_store_settings",
-      "community": 14,
+      "community": 42,
       "norm_label": "settings"
     },
     {
@@ -3560,7 +3560,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_store_takenavigationintent",
-      "community": 14,
+      "community": 13,
       "norm_label": "takenavigationintent()"
     },
     {
@@ -3570,7 +3570,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_store_refreshingredients",
-      "community": 5,
+      "community": 35,
       "norm_label": "refreshingredients()"
     },
     {
@@ -3580,7 +3580,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_store_refreshmenuitems",
-      "community": 8,
+      "community": 22,
       "norm_label": "refreshmenuitems()"
     },
     {
@@ -3600,7 +3600,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "src_store_refreshemployees",
-      "community": 10,
+      "community": 48,
       "norm_label": "refreshemployees()"
     },
     {
@@ -3610,7 +3610,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "src_store_refreshsales",
-      "community": 5,
+      "community": 35,
       "norm_label": "refreshsales()"
     },
     {
@@ -3620,7 +3620,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_store_refreshshoppinglist",
-      "community": 5,
+      "community": 35,
       "norm_label": "refreshshoppinglist()"
     },
     {
@@ -3640,7 +3640,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_store_refreshsmslogs",
-      "community": 7,
+      "community": 26,
       "norm_label": "refreshsmslogs()"
     },
     {
@@ -3650,7 +3650,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_store_refreshautomationtriggers",
-      "community": 7,
+      "community": 3,
       "norm_label": "refreshautomationtriggers()"
     },
     {
@@ -3660,7 +3660,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_store_refreshsuppliers",
-      "community": 16,
+      "community": 10,
       "norm_label": "refreshsuppliers()"
     },
     {
@@ -3680,7 +3680,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_store_refreshnotifications",
-      "community": 26,
+      "community": 40,
       "norm_label": "refreshnotifications()"
     },
     {
@@ -3720,7 +3720,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_store_lowstockcount",
-      "community": 14,
+      "community": 13,
       "norm_label": "lowstockcount()"
     },
     {
@@ -3730,7 +3730,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "src_store_unreadnotificationcount",
-      "community": 14,
+      "community": 13,
       "norm_label": "unreadnotificationcount()"
     },
     {
@@ -3750,7 +3750,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "src_store_initthemewatcher",
-      "community": 13,
+      "community": 31,
       "norm_label": "initthemewatcher()"
     },
     {
@@ -3790,7 +3790,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_ingredientcategory",
-      "community": 26,
+      "community": 29,
       "norm_label": "ingredientcategory"
     },
     {
@@ -3800,7 +3800,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_types_unit",
-      "community": 26,
+      "community": 29,
       "norm_label": "unit"
     },
     {
@@ -3810,7 +3810,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_types_purchaserecord",
-      "community": 26,
+      "community": 15,
       "norm_label": "purchaserecord"
     },
     {
@@ -3840,7 +3840,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_types_ingredient",
-      "community": 8,
+      "community": 40,
       "norm_label": "ingredient"
     },
     {
@@ -3890,7 +3890,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_types_expensecategory",
-      "community": 2,
+      "community": 29,
       "norm_label": "expensecategory"
     },
     {
@@ -3900,7 +3900,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_types_expensefrequency",
-      "community": 26,
+      "community": 2,
       "norm_label": "expensefrequency"
     },
     {
@@ -3910,7 +3910,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_types_expense",
-      "community": 8,
+      "community": 15,
       "norm_label": "expense"
     },
     {
@@ -3920,7 +3920,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_types_paytype",
-      "community": 2,
+      "community": 29,
       "norm_label": "paytype"
     },
     {
@@ -3930,7 +3930,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_types_employee",
-      "community": 8,
+      "community": 15,
       "norm_label": "employee"
     },
     {
@@ -4020,7 +4020,7 @@
       "source_location": "L181",
       "_origin": "ast",
       "id": "src_types_pettycashrequeststatus",
-      "community": 15,
+      "community": 16,
       "norm_label": "pettycashrequeststatus"
     },
     {
@@ -4060,7 +4060,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "src_types_ordertype",
-      "community": 44,
+      "community": 47,
       "norm_label": "ordertype"
     },
     {
@@ -4090,7 +4090,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "src_types_deliveryinfo",
-      "community": 44,
+      "community": 47,
       "norm_label": "deliveryinfo"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_location": "L369",
       "_origin": "ast",
       "id": "src_types_automationtriggertype",
-      "community": 15,
+      "community": 7,
       "norm_label": "automationtriggertype"
     },
     {
@@ -4330,7 +4330,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "src_types_businesstype",
-      "community": 35,
+      "community": 20,
       "norm_label": "businesstype"
     },
     {
@@ -4340,7 +4340,7 @@
       "source_location": "L432",
       "_origin": "ast",
       "id": "src_types_theme",
-      "community": 15,
+      "community": 3,
       "norm_label": "theme"
     },
     {
@@ -4360,7 +4360,7 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "src_types_subscriptionplan",
-      "community": 35,
+      "community": 20,
       "norm_label": "subscriptionplan"
     },
     {
@@ -4420,7 +4420,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "src_types_fullbackup",
-      "community": 28,
+      "community": 20,
       "norm_label": "fullbackup"
     },
     {
@@ -4540,7 +4540,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_utils_api_hasstoredsession",
-      "community": 31,
+      "community": 14,
       "norm_label": "hasstoredsession()"
     },
     {
@@ -5020,7 +5020,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "src_utils_automation_scheduleautomationrun",
-      "community": 5,
+      "community": 35,
       "norm_label": "scheduleautomationrun()"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_utils_calc_foodcoststatus",
-      "community": 8,
+      "community": 11,
       "norm_label": "foodcoststatus"
     },
     {
@@ -5060,7 +5060,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_utils_calc_recipecost",
-      "community": 8,
+      "community": 6,
       "norm_label": "recipecost()"
     },
     {
@@ -5100,7 +5100,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_utils_calc_monthlyfixedcost",
-      "community": 16,
+      "community": 37,
       "norm_label": "monthlyfixedcost()"
     },
     {
@@ -5150,7 +5150,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_utils_calc_avggrossmarginratio",
-      "community": 16,
+      "community": 8,
       "norm_label": "avggrossmarginratio()"
     },
     {
@@ -5160,7 +5160,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_utils_calc_dailybreakeven",
-      "community": 8,
+      "community": 43,
       "norm_label": "dailybreakeven()"
     },
     {
@@ -5180,7 +5180,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_utils_calc_periodprofitloss",
-      "community": 16,
+      "community": 37,
       "norm_label": "periodprofitloss()"
     },
     {
@@ -5190,7 +5190,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "src_utils_calc_salesinperiod",
-      "community": 16,
+      "community": 37,
       "norm_label": "salesinperiod()"
     },
     {
@@ -5210,7 +5210,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "src_utils_calc_dailyseries",
-      "community": 16,
+      "community": 37,
       "norm_label": "dailyseries()"
     },
     {
@@ -5240,7 +5240,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "src_utils_calc_inventoryvalue",
-      "community": 26,
+      "community": 22,
       "norm_label": "inventoryvalue()"
     },
     {
@@ -5250,7 +5250,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "src_utils_calc_lowstockingredients",
-      "community": 26,
+      "community": 22,
       "norm_label": "lowstockingredients()"
     },
     {
@@ -5300,7 +5300,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_utils_dom_el",
-      "community": 10,
+      "community": 21,
       "norm_label": "el()"
     },
     {
@@ -5350,7 +5350,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_utils_dom_emptystate",
-      "community": 10,
+      "community": 26,
       "norm_label": "emptystate()"
     },
     {
@@ -5400,7 +5400,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "src_utils_dom_iconbtn",
-      "community": 26,
+      "community": 21,
       "norm_label": "iconbtn()"
     },
     {
@@ -5440,7 +5440,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_utils_excel_import_parsedsheet",
-      "community": 5,
+      "community": 33,
       "norm_label": "parsedsheet"
     },
     {
@@ -5450,7 +5450,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_utils_excel_import_parsespreadsheetfile",
-      "community": 5,
+      "community": 33,
       "norm_label": "parsespreadsheetfile()"
     },
     {
@@ -5470,7 +5470,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_utils_excel_import_cashierfield",
-      "community": 5,
+      "community": 33,
       "norm_label": "cashierfield"
     },
     {
@@ -5490,7 +5490,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_utils_excel_import_cashier_field_labels",
-      "community": 5,
+      "community": 33,
       "norm_label": "cashier_field_labels"
     },
     {
@@ -5660,7 +5660,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "src_utils_excel_import_matchtype",
-      "community": 5,
+      "community": 33,
       "norm_label": "matchtype"
     },
     {
@@ -5690,7 +5690,7 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "src_utils_excel_import_cashierimportrow",
-      "community": 5,
+      "community": 33,
       "norm_label": "cashierimportrow"
     },
     {
@@ -5700,7 +5700,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "src_utils_excel_import_buildcashierrows",
-      "community": 5,
+      "community": 33,
       "norm_label": "buildcashierrows()"
     },
     {
@@ -5710,7 +5710,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "src_utils_excel_import_snappfoodimportrow",
-      "community": 5,
+      "community": 33,
       "norm_label": "snappfoodimportrow"
     },
     {
@@ -5730,7 +5730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_export",
-      "community": 16,
+      "community": 37,
       "norm_label": "export.ts"
     },
     {
@@ -5740,7 +5740,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_export_downloadblob",
-      "community": 16,
+      "community": 37,
       "norm_label": "downloadblob()"
     },
     {
@@ -5750,7 +5750,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_utils_export_downloadjson",
-      "community": 16,
+      "community": 37,
       "norm_label": "downloadjson()"
     },
     {
@@ -5760,7 +5760,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_utils_export_escapecsvcell",
-      "community": 16,
+      "community": 37,
       "norm_label": "escapecsvcell()"
     },
     {
@@ -5770,7 +5770,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_utils_export_tocsv",
-      "community": 16,
+      "community": 37,
       "norm_label": "tocsv()"
     },
     {
@@ -5780,7 +5780,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_utils_export_downloadcsv",
-      "community": 16,
+      "community": 37,
       "norm_label": "downloadcsv()"
     },
     {
@@ -5790,7 +5790,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_export_readfileasjson",
-      "community": 16,
+      "community": 37,
       "norm_label": "readfileasjson()"
     },
     {
@@ -5800,7 +5800,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_utils_export_shareorcopytext",
-      "community": 16,
+      "community": 37,
       "norm_label": "shareorcopytext()"
     },
     {
@@ -5810,7 +5810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_format",
-      "community": 26,
+      "community": 28,
       "norm_label": "format.ts"
     },
     {
@@ -5820,7 +5820,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_utils_format_moneyfmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "moneyfmt"
     },
     {
@@ -5830,7 +5830,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_utils_format_numberfmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "numberfmt"
     },
     {
@@ -5840,7 +5840,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_utils_format_plainfmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "plainfmt"
     },
     {
@@ -5850,7 +5850,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_utils_format_datefmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "datefmt"
     },
     {
@@ -5860,7 +5860,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_utils_format_dateshortfmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "dateshortfmt"
     },
     {
@@ -5870,7 +5870,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_utils_format_datetimefmt",
-      "community": 26,
+      "community": 28,
       "norm_label": "datetimefmt"
     },
     {
@@ -5880,7 +5880,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_utils_format_unit_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "unit_labels"
     },
     {
@@ -5910,7 +5910,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_utils_format_formatnumber",
-      "community": 26,
+      "community": 28,
       "norm_label": "formatnumber()"
     },
     {
@@ -5920,7 +5920,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_utils_format_formatmoney",
-      "community": 26,
+      "community": 21,
       "norm_label": "formatmoney()"
     },
     {
@@ -5930,7 +5930,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_utils_format_trimmed",
-      "community": 26,
+      "community": 43,
       "norm_label": "trimmed()"
     },
     {
@@ -5950,7 +5950,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "src_utils_format_formatdate",
-      "community": 26,
+      "community": 10,
       "norm_label": "formatdate()"
     },
     {
@@ -5960,7 +5960,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_utils_format_formatdateshort",
-      "community": 26,
+      "community": 21,
       "norm_label": "formatdateshort()"
     },
     {
@@ -5970,7 +5970,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_utils_format_formatdatetime",
-      "community": 7,
+      "community": 3,
       "norm_label": "formatdatetime()"
     },
     {
@@ -5980,7 +5980,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_utils_format_formatpct",
-      "community": 8,
+      "community": 43,
       "norm_label": "formatpct()"
     },
     {
@@ -6000,7 +6000,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "src_utils_format_ingredient_category_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "ingredient_category_labels"
     },
     {
@@ -6020,7 +6020,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_utils_format_expense_category_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "expense_category_labels"
     },
     {
@@ -6040,7 +6040,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_utils_format_expense_frequency_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "expense_frequency_labels"
     },
     {
@@ -6060,7 +6060,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_utils_format_business_type_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "business_type_labels"
     },
     {
@@ -6080,7 +6080,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_utils_format_pay_type_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "pay_type_labels"
     },
     {
@@ -6100,7 +6100,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "src_utils_format_rfm_segment_labels",
-      "community": 26,
+      "community": 28,
       "norm_label": "rfm_segment_labels"
     },
     {
@@ -6110,7 +6110,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "src_utils_format_rfm_segment_icons",
-      "community": 26,
+      "community": 28,
       "norm_label": "rfm_segment_icons"
     },
     {
@@ -6120,7 +6120,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "src_utils_format_formatrfmsegment",
-      "community": 7,
+      "community": 26,
       "norm_label": "formatrfmsegment()"
     },
     {
@@ -6140,7 +6140,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "src_utils_format_rfm_segment_order",
-      "community": 14,
+      "community": 28,
       "norm_label": "rfm_segment_order"
     },
     {
@@ -6150,7 +6150,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "src_utils_format_todayiso",
-      "community": 5,
+      "community": 35,
       "norm_label": "todayiso()"
     },
     {
@@ -6300,7 +6300,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "src_utils_inventory_engine_schedulerecalculation",
-      "community": 5,
+      "community": 35,
       "norm_label": "schedulerecalculation()"
     },
     {
@@ -6390,7 +6390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_notifications",
-      "community": 31,
+      "community": 42,
       "norm_label": "notifications.ts"
     },
     {
@@ -6400,7 +6400,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_utils_notifications_notifiedids",
-      "community": 31,
+      "community": 42,
       "norm_label": "notifiedids"
     },
     {
@@ -6430,7 +6430,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_utils_notifications_lowstockmessage",
-      "community": 31,
+      "community": 42,
       "norm_label": "lowstockmessage()"
     },
     {
@@ -6440,7 +6440,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_utils_notifications_notifybrowser",
-      "community": 31,
+      "community": 42,
       "norm_label": "notifybrowser()"
     },
     {
@@ -6450,7 +6450,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_utils_notifications_notifyinapp",
-      "community": 31,
+      "community": 42,
       "norm_label": "notifyinapp()"
     },
     {
@@ -6460,7 +6460,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_utils_notifications_checklowstockandnotify",
-      "community": 31,
+      "community": 42,
       "norm_label": "checklowstockandnotify()"
     },
     {
@@ -6530,7 +6530,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_utils_rfm_schedulerfmrecalculation",
-      "community": 5,
+      "community": 35,
       "norm_label": "schedulerfmrecalculation()"
     },
     {
@@ -6610,7 +6610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_utils_stock_alerts",
-      "community": 26,
+      "community": 40,
       "norm_label": "stock-alerts.ts"
     },
     {
@@ -6620,7 +6620,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_alert_roles",
-      "community": 26,
+      "community": 40,
       "norm_label": "alert_roles"
     },
     {
@@ -6630,7 +6630,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_notifiedlowstock",
-      "community": 26,
+      "community": 40,
       "norm_label": "notifiedlowstock"
     },
     {
@@ -6640,7 +6640,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_notifiedstockout",
-      "community": 26,
+      "community": 40,
       "norm_label": "notifiedstockout"
     },
     {
@@ -6650,7 +6650,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_lowstockmessage",
-      "community": 26,
+      "community": 40,
       "norm_label": "lowstockmessage()"
     },
     {
@@ -6660,7 +6660,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_stockoutmessage",
-      "community": 26,
+      "community": 40,
       "norm_label": "stockoutmessage()"
     },
     {
@@ -6670,7 +6670,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_notifyroles",
-      "community": 26,
+      "community": 40,
       "norm_label": "notifyroles()"
     },
     {
@@ -6680,7 +6680,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_utils_stock_alerts_checkstockalertsandnotify",
-      "community": 26,
+      "community": 40,
       "norm_label": "checkstockalertsandnotify()"
     },
     {
@@ -6730,7 +6730,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_utils_sync_pullfromserver",
-      "community": 28,
+      "community": 14,
       "norm_label": "pullfromserver()"
     },
     {
@@ -6740,7 +6740,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_utils_sync_pushtoserver",
-      "community": 28,
+      "community": 14,
       "norm_label": "pushtoserver()"
     },
     {
@@ -6750,7 +6750,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_utils_sync_syncnow",
-      "community": 28,
+      "community": 14,
       "norm_label": "syncnow()"
     },
     {
@@ -6760,7 +6760,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_utils_sync_setupautosync",
-      "community": 31,
+      "community": 14,
       "norm_label": "setupautosync()"
     },
     {
@@ -6777,7 +6777,7 @@
       "label": "AccountingTab",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L28",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "src_views_accounting_accountingtab",
       "community": 16,
@@ -6787,7 +6787,7 @@
       "label": "PERIOD_OPTIONS",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L30",
+      "source_location": "L34",
       "_origin": "ast",
       "id": "src_views_accounting_period_options",
       "community": 16,
@@ -6797,27 +6797,27 @@
       "label": "plRow()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L37",
+      "source_location": "L41",
       "_origin": "ast",
       "id": "src_views_accounting_plrow",
-      "community": 16,
+      "community": 43,
       "norm_label": "plrow()"
     },
     {
       "label": "plStatement()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L45",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "src_views_accounting_plstatement",
-      "community": 16,
+      "community": 43,
       "norm_label": "plstatement()"
     },
     {
       "label": "SOURCE_LABELS",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L60",
+      "source_location": "L64",
       "_origin": "ast",
       "id": "src_views_accounting_source_labels",
       "community": 16,
@@ -6827,7 +6827,7 @@
       "label": "SOURCE_COLORS",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L67",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "src_views_accounting_source_colors",
       "community": 16,
@@ -6837,7 +6837,7 @@
       "label": "effectiveSource()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L74",
+      "source_location": "L78",
       "_origin": "ast",
       "id": "src_views_accounting_effectivesource",
       "community": 16,
@@ -6847,7 +6847,7 @@
       "label": "SourceBreakdownEntry",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L78",
+      "source_location": "L82",
       "_origin": "ast",
       "id": "src_views_accounting_sourcebreakdownentry",
       "community": 16,
@@ -6857,7 +6857,7 @@
       "label": "bySourceBreakdown()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L85",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "src_views_accounting_bysourcebreakdown",
       "community": 16,
@@ -6867,7 +6867,7 @@
       "label": "sourceBreakdownRow()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L98",
+      "source_location": "L102",
       "_origin": "ast",
       "id": "src_views_accounting_sourcebreakdownrow",
       "community": 16,
@@ -6877,7 +6877,7 @@
       "label": "sourceBreakdownPanel()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L108",
+      "source_location": "L112",
       "_origin": "ast",
       "id": "src_views_accounting_sourcebreakdownpanel",
       "community": 16,
@@ -6887,27 +6887,27 @@
       "label": "breakEvenPanel()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L153",
+      "source_location": "L157",
       "_origin": "ast",
       "id": "src_views_accounting_breakevenpanel",
-      "community": 8,
+      "community": 43,
       "norm_label": "breakevenpanel()"
     },
     {
       "label": "renderFinancialDashboardTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L168",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "src_views_accounting_renderfinancialdashboardtab",
-      "community": 16,
+      "community": 37,
       "norm_label": "renderfinancialdashboardtab()"
     },
     {
       "label": "ExpenseSubTab",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L295",
+      "source_location": "L299",
       "_origin": "ast",
       "id": "src_views_accounting_expensesubtab",
       "community": 16,
@@ -6917,7 +6917,7 @@
       "label": "renderFixedVariableTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L297",
+      "source_location": "L301",
       "_origin": "ast",
       "id": "src_views_accounting_renderfixedvariabletab",
       "community": 16,
@@ -6927,17 +6927,27 @@
       "label": "SupplierVatSubTab",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L338",
+      "source_location": "L342",
       "_origin": "ast",
       "id": "src_views_accounting_suppliervatsubtab",
       "community": 16,
       "norm_label": "suppliervatsubtab"
     },
     {
+      "label": "SUPPLIER_TX_TYPE_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L344",
+      "_origin": "ast",
+      "id": "src_views_accounting_supplier_tx_type_labels",
+      "community": 16,
+      "norm_label": "supplier_tx_type_labels"
+    },
+    {
       "label": "openSupplierFormModal()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L340",
+      "source_location": "L349",
       "_origin": "ast",
       "id": "src_views_accounting_opensupplierformmodal",
       "community": 0,
@@ -6947,27 +6957,27 @@
       "label": "handleDeleteSupplier()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L381",
+      "source_location": "L390",
       "_origin": "ast",
       "id": "src_views_accounting_handledeletesupplier",
-      "community": 16,
+      "community": 10,
       "norm_label": "handledeletesupplier()"
     },
     {
       "label": "renderSupplierRow()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L394",
+      "source_location": "L403",
       "_origin": "ast",
       "id": "src_views_accounting_rendersupplierrow",
-      "community": 26,
+      "community": 21,
       "norm_label": "rendersupplierrow()"
     },
     {
       "label": "openSupplierPaymentFormModal()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L413",
+      "source_location": "L423",
       "_origin": "ast",
       "id": "src_views_accounting_opensupplierpaymentformmodal",
       "community": 0,
@@ -6977,17 +6987,17 @@
       "label": "handleDeleteSupplierPayment()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L467",
+      "source_location": "L477",
       "_origin": "ast",
       "id": "src_views_accounting_handledeletesupplierpayment",
-      "community": 22,
+      "community": 16,
       "norm_label": "handledeletesupplierpayment()"
     },
     {
       "label": "toggleSupplierPaymentPaid()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L480",
+      "source_location": "L490",
       "_origin": "ast",
       "id": "src_views_accounting_togglesupplierpaymentpaid",
       "community": 16,
@@ -6997,27 +7007,67 @@
       "label": "renderSupplierPaymentRow()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L485",
+      "source_location": "L495",
       "_origin": "ast",
       "id": "src_views_accounting_rendersupplierpaymentrow",
-      "community": 26,
+      "community": 21,
       "norm_label": "rendersupplierpaymentrow()"
     },
     {
       "label": "renderSuppliersSubTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L513",
+      "source_location": "L523",
       "_origin": "ast",
       "id": "src_views_accounting_rendersupplierssubtab",
       "community": 26,
       "norm_label": "rendersupplierssubtab()"
     },
     {
+      "label": "openRecordSupplierTransactionModal()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L626",
+      "_origin": "ast",
+      "id": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "community": 0,
+      "norm_label": "openrecordsuppliertransactionmodal()"
+    },
+    {
+      "label": "handleDeleteSupplierTransaction()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L687",
+      "_origin": "ast",
+      "id": "src_views_accounting_handledeletesuppliertransaction",
+      "community": 16,
+      "norm_label": "handledeletesuppliertransaction()"
+    },
+    {
+      "label": "renderSupplierTransactionsSubTab()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L700",
+      "_origin": "ast",
+      "id": "src_views_accounting_rendersuppliertransactionssubtab",
+      "community": 26,
+      "norm_label": "rendersuppliertransactionssubtab()"
+    },
+    {
+      "label": "renderSupplierTransactionRow()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L769",
+      "_origin": "ast",
+      "id": "src_views_accounting_rendersuppliertransactionrow",
+      "community": 21,
+      "norm_label": "rendersuppliertransactionrow()"
+    },
+    {
       "label": "renderVatSubTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L616",
+      "source_location": "L794",
       "_origin": "ast",
       "id": "src_views_accounting_rendervatsubtab",
       "community": 0,
@@ -7027,27 +7077,107 @@
       "label": "renderSuppliersVatTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L708",
+      "source_location": "L886",
       "_origin": "ast",
       "id": "src_views_accounting_rendersuppliersvattab",
       "community": 16,
       "norm_label": "rendersuppliersvattab()"
     },
     {
+      "label": "PETTY_CASH_TYPE_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L927",
+      "_origin": "ast",
+      "id": "src_views_accounting_petty_cash_type_labels",
+      "community": 16,
+      "norm_label": "petty_cash_type_labels"
+    },
+    {
+      "label": "PETTY_CASH_STATUS_LABELS",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L933",
+      "_origin": "ast",
+      "id": "src_views_accounting_petty_cash_status_labels",
+      "community": 16,
+      "norm_label": "petty_cash_status_labels"
+    },
+    {
+      "label": "PETTY_CASH_STATUS_TONE",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L939",
+      "_origin": "ast",
+      "id": "src_views_accounting_petty_cash_status_tone",
+      "community": 16,
+      "norm_label": "petty_cash_status_tone"
+    },
+    {
+      "label": "openPettyCashFormModal()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L945",
+      "_origin": "ast",
+      "id": "src_views_accounting_openpettycashformmodal",
+      "community": 0,
+      "norm_label": "openpettycashformmodal()"
+    },
+    {
+      "label": "handleReviewPettyCash()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L999",
+      "_origin": "ast",
+      "id": "src_views_accounting_handlereviewpettycash",
+      "community": 16,
+      "norm_label": "handlereviewpettycash()"
+    },
+    {
+      "label": "handleDeletePettyCash()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1012",
+      "_origin": "ast",
+      "id": "src_views_accounting_handledeletepettycash",
+      "community": 16,
+      "norm_label": "handledeletepettycash()"
+    },
+    {
+      "label": "renderPettyCashRow()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1025",
+      "_origin": "ast",
+      "id": "src_views_accounting_renderpettycashrow",
+      "community": 21,
+      "norm_label": "renderpettycashrow()"
+    },
+    {
+      "label": "renderPettyCashTab()",
+      "file_type": "code",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1049",
+      "_origin": "ast",
+      "id": "src_views_accounting_renderpettycashtab",
+      "community": 26,
+      "norm_label": "renderpettycashtab()"
+    },
+    {
       "label": "renderReportsTab()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L748",
+      "source_location": "L1095",
       "_origin": "ast",
       "id": "src_views_accounting_renderreportstab",
-      "community": 16,
+      "community": 37,
       "norm_label": "renderreportstab()"
     },
     {
       "label": "renderAccounting()",
       "file_type": "code",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L848",
+      "source_location": "L1195",
       "_origin": "ast",
       "id": "src_views_accounting_renderaccounting",
       "community": 16,
@@ -7060,7 +7190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_admin",
-      "community": 28,
+      "community": 20,
       "norm_label": "admin.ts"
     },
     {
@@ -7070,7 +7200,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_views_admin_tab",
-      "community": 28,
+      "community": 20,
       "norm_label": "tab"
     },
     {
@@ -7080,7 +7210,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_views_admin_role_labels",
-      "community": 28,
+      "community": 20,
       "norm_label": "role_labels"
     },
     {
@@ -7090,7 +7220,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_views_admin_role_options",
-      "community": 28,
+      "community": 20,
       "norm_label": "role_options"
     },
     {
@@ -7100,7 +7230,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_views_admin_plan_options",
-      "community": 28,
+      "community": 20,
       "norm_label": "plan_options"
     },
     {
@@ -7110,7 +7240,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_views_admin_extend_options",
-      "community": 28,
+      "community": 20,
       "norm_label": "extend_options"
     },
     {
@@ -7120,7 +7250,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_views_admin_business_type_options",
-      "community": 28,
+      "community": 20,
       "norm_label": "business_type_options"
     },
     {
@@ -7130,7 +7260,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_views_admin_rolelabel",
-      "community": 28,
+      "community": 20,
       "norm_label": "rolelabel()"
     },
     {
@@ -7140,7 +7270,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_views_admin_planlabel",
-      "community": 28,
+      "community": 20,
       "norm_label": "planlabel()"
     },
     {
@@ -7150,7 +7280,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_views_admin_settingscard",
-      "community": 28,
+      "community": 3,
       "norm_label": "settingscard()"
     },
     {
@@ -7160,7 +7290,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_views_admin_loadusers",
-      "community": 28,
+      "community": 20,
       "norm_label": "loadusers()"
     },
     {
@@ -7180,7 +7310,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "src_views_admin_handledeleteuser",
-      "community": 22,
+      "community": 20,
       "norm_label": "handledeleteuser()"
     },
     {
@@ -7190,7 +7320,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "src_views_admin_renderuserrow",
-      "community": 28,
+      "community": 20,
       "norm_label": "renderuserrow()"
     },
     {
@@ -7210,7 +7340,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "src_views_admin_plan_total_days",
-      "community": 28,
+      "community": 20,
       "norm_label": "plan_total_days"
     },
     {
@@ -7220,7 +7350,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_views_admin_statuslabel",
-      "community": 28,
+      "community": 20,
       "norm_label": "statuslabel()"
     },
     {
@@ -7230,7 +7360,7 @@
       "source_location": "L230",
       "_origin": "ast",
       "id": "src_views_admin_renderrenewalsection",
-      "community": 43,
+      "community": 20,
       "norm_label": "renderrenewalsection()"
     },
     {
@@ -7240,7 +7370,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "src_views_admin_rendersubscriptionstab",
-      "community": 43,
+      "community": 20,
       "norm_label": "rendersubscriptionstab()"
     },
     {
@@ -7250,7 +7380,7 @@
       "source_location": "L331",
       "_origin": "ast",
       "id": "src_views_admin_renderchangepasswordsection",
-      "community": 28,
+      "community": 3,
       "norm_label": "renderchangepasswordsection()"
     },
     {
@@ -7260,7 +7390,7 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "src_views_admin_renderbusinesssection",
-      "community": 28,
+      "community": 3,
       "norm_label": "renderbusinesssection()"
     },
     {
@@ -7270,7 +7400,7 @@
       "source_location": "L407",
       "_origin": "ast",
       "id": "src_views_admin_rendersyncsection",
-      "community": 28,
+      "community": 3,
       "norm_label": "rendersyncsection()"
     },
     {
@@ -7290,7 +7420,7 @@
       "source_location": "L480",
       "_origin": "ast",
       "id": "src_views_admin_renderbackupsection",
-      "community": 28,
+      "community": 3,
       "norm_label": "renderbackupsection()"
     },
     {
@@ -7300,7 +7430,7 @@
       "source_location": "L513",
       "_origin": "ast",
       "id": "src_views_admin_renderresetsection",
-      "community": 28,
+      "community": 3,
       "norm_label": "renderresetsection()"
     },
     {
@@ -7310,7 +7440,7 @@
       "source_location": "L550",
       "_origin": "ast",
       "id": "src_views_admin_rendersystemtab",
-      "community": 28,
+      "community": 3,
       "norm_label": "rendersystemtab()"
     },
     {
@@ -7320,7 +7450,7 @@
       "source_location": "L567",
       "_origin": "ast",
       "id": "src_views_admin_renderadmin",
-      "community": 28,
+      "community": 20,
       "norm_label": "renderadmin()"
     },
     {
@@ -7400,7 +7530,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_views_crm_settingscard",
-      "community": 7,
+      "community": 26,
       "norm_label": "settingscard()"
     },
     {
@@ -7420,7 +7550,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_views_crm_handledeletecustomer",
-      "community": 22,
+      "community": 0,
       "norm_label": "handledeletecustomer()"
     },
     {
@@ -7450,7 +7580,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_views_crm_rendercustomerrow",
-      "community": 7,
+      "community": 21,
       "norm_label": "rendercustomerrow()"
     },
     {
@@ -7470,7 +7600,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "src_views_crm_customermappingrow",
-      "community": 7,
+      "community": 26,
       "norm_label": "customermappingrow()"
     },
     {
@@ -7540,7 +7670,7 @@
       "source_location": "L384",
       "_origin": "ast",
       "id": "src_views_crm_importcustomersbtn",
-      "community": 10,
+      "community": 7,
       "norm_label": "importcustomersbtn()"
     },
     {
@@ -7550,7 +7680,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "src_views_crm_rendercustomerstab",
-      "community": 10,
+      "community": 7,
       "norm_label": "rendercustomerstab()"
     },
     {
@@ -7560,7 +7690,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "src_views_crm_rendersegmentstab",
-      "community": 7,
+      "community": 26,
       "norm_label": "rendersegmentstab()"
     },
     {
@@ -7580,7 +7710,7 @@
       "source_location": "L500",
       "_origin": "ast",
       "id": "src_views_crm_renderautomationcard",
-      "community": 7,
+      "community": 3,
       "norm_label": "renderautomationcard()"
     },
     {
@@ -7610,7 +7740,7 @@
       "source_location": "L598",
       "_origin": "ast",
       "id": "src_views_crm_rendersmslogrow",
-      "community": 7,
+      "community": 26,
       "norm_label": "rendersmslogrow()"
     },
     {
@@ -7620,7 +7750,7 @@
       "source_location": "L613",
       "_origin": "ast",
       "id": "src_views_crm_rendersmstab",
-      "community": 7,
+      "community": 26,
       "norm_label": "rendersmstab()"
     },
     {
@@ -7640,7 +7770,7 @@
       "source_location": "L769",
       "_origin": "ast",
       "id": "src_views_crm_renderloyaltyrow",
-      "community": 26,
+      "community": 21,
       "norm_label": "renderloyaltyrow()"
     },
     {
@@ -7650,7 +7780,7 @@
       "source_location": "L784",
       "_origin": "ast",
       "id": "src_views_crm_renderloyaltytab",
-      "community": 10,
+      "community": 7,
       "norm_label": "renderloyaltytab()"
     },
     {
@@ -7670,7 +7800,7 @@
       "source_location": "L826",
       "_origin": "ast",
       "id": "src_views_crm_renderreporttab",
-      "community": 7,
+      "community": 26,
       "norm_label": "renderreporttab()"
     },
     {
@@ -7770,7 +7900,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "src_views_dashboard_breakevenpanel",
-      "community": 8,
+      "community": 43,
       "norm_label": "breakevenpanel()"
     },
     {
@@ -7880,7 +8010,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_views_expenses_handledeleteexpense",
-      "community": 22,
+      "community": 2,
       "norm_label": "handledeleteexpense()"
     },
     {
@@ -7930,7 +8060,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_views_expenses_handledeleteemployee",
-      "community": 22,
+      "community": 48,
       "norm_label": "handledeleteemployee()"
     },
     {
@@ -7940,7 +8070,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "src_views_expenses_toggleemployeeactive",
-      "community": 10,
+      "community": 48,
       "norm_label": "toggleemployeeactive()"
     },
     {
@@ -8120,7 +8250,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_views_hr_badge",
-      "community": 10,
+      "community": 21,
       "norm_label": "badge()"
     },
     {
@@ -8140,7 +8270,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "src_views_hr_handledeleteattendance",
-      "community": 22,
+      "community": 10,
       "norm_label": "handledeleteattendance()"
     },
     {
@@ -8180,7 +8310,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_views_hr_payrolldetailbody",
-      "community": 10,
+      "community": 21,
       "norm_label": "payrolldetailbody()"
     },
     {
@@ -8190,7 +8320,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "src_views_hr_handlefinalizepayroll",
-      "community": 22,
+      "community": 10,
       "norm_label": "handlefinalizepayroll()"
     },
     {
@@ -8200,7 +8330,7 @@
       "source_location": "L261",
       "_origin": "ast",
       "id": "src_views_hr_handlemarkpayrollpaid",
-      "community": 22,
+      "community": 10,
       "norm_label": "handlemarkpayrollpaid()"
     },
     {
@@ -8210,7 +8340,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "src_views_hr_handledeletepayroll",
-      "community": 22,
+      "community": 10,
       "norm_label": "handledeletepayroll()"
     },
     {
@@ -8220,7 +8350,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "src_views_hr_openpayrolldetailmodal",
-      "community": 10,
+      "community": 21,
       "norm_label": "openpayrolldetailmodal()"
     },
     {
@@ -8230,7 +8360,7 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "src_views_hr_renderpayrolllist",
-      "community": 10,
+      "community": 21,
       "norm_label": "renderpayrolllist()"
     },
     {
@@ -8240,7 +8370,7 @@
       "source_location": "L330",
       "_origin": "ast",
       "id": "src_views_hr_renderpayrollrunstab",
-      "community": 10,
+      "community": 21,
       "norm_label": "renderpayrollrunstab()"
     },
     {
@@ -8260,7 +8390,7 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "src_views_hr_handlereviewadvance",
-      "community": 22,
+      "community": 10,
       "norm_label": "handlereviewadvance()"
     },
     {
@@ -8270,7 +8400,7 @@
       "source_location": "L397",
       "_origin": "ast",
       "id": "src_views_hr_renderadvanceslist",
-      "community": 10,
+      "community": 21,
       "norm_label": "renderadvanceslist()"
     },
     {
@@ -8280,7 +8410,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "src_views_hr_renderadvancestab",
-      "community": 10,
+      "community": 21,
       "norm_label": "renderadvancestab()"
     },
     {
@@ -8310,7 +8440,7 @@
       "source_location": "L484",
       "_origin": "ast",
       "id": "src_views_hr_renderhr",
-      "community": 10,
+      "community": 48,
       "norm_label": "renderhr()"
     },
     {
@@ -8320,7 +8450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_ingredients",
-      "community": 26,
+      "community": 22,
       "norm_label": "ingredients.ts"
     },
     {
@@ -8330,7 +8460,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_views_ingredients_category_options",
-      "community": 26,
+      "community": 22,
       "norm_label": "category_options"
     },
     {
@@ -8340,7 +8470,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_views_ingredients_unit_options",
-      "community": 26,
+      "community": 22,
       "norm_label": "unit_options"
     },
     {
@@ -8360,7 +8490,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_views_ingredients_openpurchasemodal",
-      "community": 0,
+      "community": 35,
       "norm_label": "openpurchasemodal()"
     },
     {
@@ -8380,7 +8510,7 @@
       "source_location": "L178",
       "_origin": "ast",
       "id": "src_views_ingredients_renderpurchaserow",
-      "community": 26,
+      "community": 21,
       "norm_label": "renderpurchaserow()"
     },
     {
@@ -8390,7 +8520,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_views_ingredients_openpurchasehistorymodal",
-      "community": 10,
+      "community": 26,
       "norm_label": "openpurchasehistorymodal()"
     },
     {
@@ -8400,7 +8530,7 @@
       "source_location": "L250",
       "_origin": "ast",
       "id": "src_views_ingredients_handledelete",
-      "community": 5,
+      "community": 35,
       "norm_label": "handledelete()"
     },
     {
@@ -8410,7 +8540,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "src_views_ingredients_renderingredientcard",
-      "community": 26,
+      "community": 21,
       "norm_label": "renderingredientcard()"
     },
     {
@@ -8420,7 +8550,7 @@
       "source_location": "L324",
       "_origin": "ast",
       "id": "src_views_ingredients_renderingredientsstatspanel",
-      "community": 26,
+      "community": 22,
       "norm_label": "renderingredientsstatspanel()"
     },
     {
@@ -8430,7 +8560,7 @@
       "source_location": "L337",
       "_origin": "ast",
       "id": "src_views_ingredients_renderingredients",
-      "community": 26,
+      "community": 22,
       "norm_label": "renderingredients()"
     },
     {
@@ -8500,7 +8630,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_views_login_renderauthgate",
-      "community": 20,
+      "community": 31,
       "norm_label": "renderauthgate()"
     },
     {
@@ -8590,7 +8720,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_views_menu_engineering_quadrantswatch",
-      "community": 11,
+      "community": 21,
       "norm_label": "quadrantswatch()"
     },
     {
@@ -8600,7 +8730,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_views_menu_engineering_settingscard",
-      "community": 11,
+      "community": 21,
       "norm_label": "settingscard()"
     },
     {
@@ -8610,7 +8740,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_views_menu_engineering_quadrantcard",
-      "community": 11,
+      "community": 21,
       "norm_label": "quadrantcard()"
     },
     {
@@ -8620,7 +8750,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_views_menu_engineering_renderitemrow",
-      "community": 11,
+      "community": 21,
       "norm_label": "renderitemrow()"
     },
     {
@@ -8630,7 +8760,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_views_menu_engineering_buildaiprompt",
-      "community": 26,
+      "community": 43,
       "norm_label": "buildaiprompt()"
     },
     {
@@ -8640,7 +8770,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_views_menu_engineering_renderaicard",
-      "community": 11,
+      "community": 21,
       "norm_label": "renderaicard()"
     },
     {
@@ -8720,7 +8850,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_views_platform_admin_openplatformownergate",
-      "community": 31,
+      "community": 4,
       "norm_label": "openplatformownergate()"
     },
     {
@@ -8780,7 +8910,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "src_views_platform_admin_renderbusinessestab",
-      "community": 0,
+      "community": 3,
       "norm_label": "renderbusinessestab()"
     },
     {
@@ -8790,7 +8920,7 @@
       "source_location": "L324",
       "_origin": "ast",
       "id": "src_views_platform_admin_renderpendingpaymentstab",
-      "community": 22,
+      "community": 21,
       "norm_label": "renderpendingpaymentstab()"
     },
     {
@@ -8830,7 +8960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_recipes",
-      "community": 8,
+      "community": 22,
       "norm_label": "recipes.ts"
     },
     {
@@ -8840,7 +8970,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_views_recipes_openrecipebuildermodal",
-      "community": 8,
+      "community": 0,
       "norm_label": "openrecipebuildermodal()"
     },
     {
@@ -8850,7 +8980,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_views_recipes_handledelete",
-      "community": 8,
+      "community": 22,
       "norm_label": "handledelete()"
     },
     {
@@ -8860,7 +8990,7 @@
       "source_location": "L236",
       "_origin": "ast",
       "id": "src_views_recipes_toggleactive",
-      "community": 8,
+      "community": 22,
       "norm_label": "toggleactive()"
     },
     {
@@ -8870,7 +9000,7 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "src_views_recipes_statspanelactions",
-      "community": 8,
+      "community": 22,
       "norm_label": "statspanelactions"
     },
     {
@@ -8890,7 +9020,7 @@
       "source_location": "L276",
       "_origin": "ast",
       "id": "src_views_recipes_renderrow",
-      "community": 8,
+      "community": 21,
       "norm_label": "renderrow()"
     },
     {
@@ -8900,7 +9030,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "src_views_recipes_renderrecipes",
-      "community": 10,
+      "community": 22,
       "norm_label": "renderrecipes()"
     },
     {
@@ -8910,7 +9040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_sales",
-      "community": 5,
+      "community": 33,
       "norm_label": "sales.ts"
     },
     {
@@ -8920,7 +9050,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_views_sales_period_options",
-      "community": 5,
+      "community": 33,
       "norm_label": "period_options"
     },
     {
@@ -8930,7 +9060,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_views_sales_panel",
-      "community": 5,
+      "community": 21,
       "norm_label": "panel()"
     },
     {
@@ -8940,7 +9070,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_views_sales_renderquicksaleform",
-      "community": 5,
+      "community": 35,
       "norm_label": "renderquicksaleform()"
     },
     {
@@ -8950,7 +9080,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_views_sales_renderbulkbreakdown",
-      "community": 5,
+      "community": 21,
       "norm_label": "renderbulkbreakdown()"
     },
     {
@@ -8960,7 +9090,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_views_sales_renderbulksaleform",
-      "community": 5,
+      "community": 35,
       "norm_label": "renderbulksaleform()"
     },
     {
@@ -8970,7 +9100,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "src_views_sales_rendersalerow",
-      "community": 26,
+      "community": 21,
       "norm_label": "rendersalerow()"
     },
     {
@@ -8980,7 +9110,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "src_views_sales_rendersaleslogtab",
-      "community": 5,
+      "community": 35,
       "norm_label": "rendersaleslogtab()"
     },
     {
@@ -8990,7 +9120,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "src_views_sales_matchbadge",
-      "community": 5,
+      "community": 33,
       "norm_label": "matchbadge()"
     },
     {
@@ -9000,7 +9130,7 @@
       "source_location": "L327",
       "_origin": "ast",
       "id": "src_views_sales_builditemresolutionselect",
-      "community": 5,
+      "community": 33,
       "norm_label": "builditemresolutionselect()"
     },
     {
@@ -9010,7 +9140,7 @@
       "source_location": "L339",
       "_origin": "ast",
       "id": "src_views_sales_buildmappingrow",
-      "community": 10,
+      "community": 26,
       "norm_label": "buildmappingrow()"
     },
     {
@@ -9030,7 +9160,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "src_views_sales_rendercashierpreviewtable",
-      "community": 26,
+      "community": 21,
       "norm_label": "rendercashierpreviewtable()"
     },
     {
@@ -9040,7 +9170,7 @@
       "source_location": "L407",
       "_origin": "ast",
       "id": "src_views_sales_rendercashierimport",
-      "community": 5,
+      "community": 35,
       "norm_label": "rendercashierimport()"
     },
     {
@@ -9050,7 +9180,7 @@
       "source_location": "L530",
       "_origin": "ast",
       "id": "src_views_sales_rendersnappfoodpreviewtable",
-      "community": 26,
+      "community": 21,
       "norm_label": "rendersnappfoodpreviewtable()"
     },
     {
@@ -9060,7 +9190,7 @@
       "source_location": "L571",
       "_origin": "ast",
       "id": "src_views_sales_rendersnappfoodimport",
-      "community": 5,
+      "community": 35,
       "norm_label": "rendersnappfoodimport()"
     },
     {
@@ -9070,7 +9200,7 @@
       "source_location": "L741",
       "_origin": "ast",
       "id": "src_views_sales_importsubtab",
-      "community": 5,
+      "community": 33,
       "norm_label": "importsubtab"
     },
     {
@@ -9090,7 +9220,7 @@
       "source_location": "L783",
       "_origin": "ast",
       "id": "src_views_sales_salestab",
-      "community": 5,
+      "community": 33,
       "norm_label": "salestab"
     },
     {
@@ -9100,7 +9230,7 @@
       "source_location": "L785",
       "_origin": "ast",
       "id": "src_views_sales_rendersales",
-      "community": 5,
+      "community": 33,
       "norm_label": "rendersales()"
     },
     {
@@ -9150,7 +9280,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_views_settings_formatbytes",
-      "community": 3,
+      "community": 26,
       "norm_label": "formatbytes()"
     },
     {
@@ -9220,7 +9350,7 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "src_views_settings_openimportmodemodal",
-      "community": 0,
+      "community": 3,
       "norm_label": "openimportmodemodal()"
     },
     {
@@ -9310,7 +9440,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_views_setup_wizardstate",
-      "community": 35,
+      "community": 20,
       "norm_label": "wizardstate"
     },
     {
@@ -9410,7 +9540,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_views_shopping_openpurchaserequestactionsheet",
-      "community": 22,
+      "community": 26,
       "norm_label": "openpurchaserequestactionsheet()"
     },
     {
@@ -9420,7 +9550,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "src_views_shopping_handlepurchaserequest",
-      "community": 22,
+      "community": 26,
       "norm_label": "handlepurchaserequest()"
     },
     {
@@ -10841,6 +10971,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_auth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/views/admin.ts",
       "source_location": "L2",
       "weight": 1.0,
@@ -10923,6 +11064,17 @@
       "weight": 1.0,
       "source": "src_auth_sessionuser",
       "target": "src_types_userrole",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_auth_currentuser",
       "confidence_score": 1.0
     },
     {
@@ -12161,7 +12313,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L226",
+      "source_location": "L230",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_components_chart_renderchart",
@@ -12172,7 +12324,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L135",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_components_chart_renderchart",
@@ -12260,7 +12412,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L204",
+      "source_location": "L208",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_components_chart_destroychart",
@@ -12530,7 +12682,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L378",
+      "source_location": "L996",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L684",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_components_modal_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L387",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierformmodal",
       "target": "src_components_modal_openmodal",
@@ -12541,7 +12715,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L464",
+      "source_location": "L474",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_components_modal_openmodal",
@@ -12915,7 +13089,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L382",
+      "source_location": "L1013",
+      "weight": 1.0,
+      "source": "src_views_accounting_handledeletepettycash",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L391",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplier",
       "target": "src_components_modal_confirmmodal",
@@ -12926,9 +13111,31 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L468",
+      "source_location": "L478",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplierpayment",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L688",
+      "weight": 1.0,
+      "source": "src_views_accounting_handledeletesuppliertransaction",
+      "target": "src_components_modal_confirmmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1000",
+      "weight": 1.0,
+      "source": "src_views_accounting_handlereviewpettycash",
       "target": "src_components_modal_confirmmodal",
       "confidence_score": 1.0
     },
@@ -14048,7 +14255,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L391",
+      "source_location": "L1021",
+      "weight": 1.0,
+      "source": "src_views_accounting_handledeletepettycash",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L400",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplier",
       "target": "src_components_toast_showtoast",
@@ -14059,7 +14277,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L477",
+      "source_location": "L487",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplierpayment",
       "target": "src_components_toast_showtoast",
@@ -14070,7 +14288,51 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L366",
+      "source_location": "L696",
+      "weight": 1.0,
+      "source": "src_views_accounting_handledeletesuppliertransaction",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1008",
+      "weight": 1.0,
+      "source": "src_views_accounting_handlereviewpettycash",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L974",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L663",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L375",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierformmodal",
       "target": "src_components_toast_showtoast",
@@ -14081,7 +14343,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L441",
+      "source_location": "L451",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_components_toast_showtoast",
@@ -14092,7 +14354,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L530",
+      "source_location": "L540",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_components_toast_showtoast",
@@ -14103,7 +14365,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L649",
+      "source_location": "L711",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_components_toast_showtoast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L827",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_components_toast_showtoast",
@@ -17027,7 +17300,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_db",
@@ -23556,7 +23829,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store",
@@ -23837,7 +24110,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_ingredients",
@@ -23958,7 +24231,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_expenses",
@@ -24002,7 +24275,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_employees",
@@ -24057,7 +24330,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_sales",
@@ -24211,7 +24484,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_suppliers",
@@ -24244,7 +24517,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_supplierpayments",
@@ -24299,7 +24572,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_settings",
@@ -25124,7 +25397,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_refreshsuppliers",
@@ -25135,7 +25408,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L390",
+      "source_location": "L399",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplier",
       "target": "src_store_refreshsuppliers",
@@ -25146,7 +25419,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L373",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierformmodal",
       "target": "src_store_refreshsuppliers",
@@ -25168,7 +25441,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_refreshsupplierpayments",
@@ -25179,7 +25452,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L476",
+      "source_location": "L486",
       "weight": 1.0,
       "source": "src_views_accounting_handledeletesupplierpayment",
       "target": "src_store_refreshsupplierpayments",
@@ -25190,7 +25463,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L459",
+      "source_location": "L469",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_store_refreshsupplierpayments",
@@ -25201,7 +25474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L482",
+      "source_location": "L492",
       "weight": 1.0,
       "source": "src_views_accounting_togglesupplierpaymentpaid",
       "target": "src_store_refreshsupplierpayments",
@@ -25278,7 +25551,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_refreshsettings",
@@ -25289,7 +25562,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L648",
+      "source_location": "L826",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_store_refreshsettings",
@@ -25542,7 +25815,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_store_ingredientsbyid",
@@ -25553,9 +25826,20 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L556",
+      "source_location": "L566",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
+      "target": "src_store_ingredientsbyid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L731",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
       "target": "src_store_ingredientsbyid",
       "confidence_score": 1.0
     },
@@ -26413,7 +26697,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_types",
@@ -27051,7 +27335,40 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L24",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_types_pettycashtxtype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_types_pettycashrequeststatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_types_pettycashtransaction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_types_salesource",
@@ -27062,7 +27379,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L79",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownentry",
       "target": "src_types_salesource",
@@ -27117,7 +27434,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_types_sale",
@@ -27282,7 +27599,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_types_supplier",
@@ -27293,10 +27610,32 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_types_supplierpayment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_types_suppliertransactiontype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_types_suppliertransaction",
       "confidence_score": 1.0
     },
     {
@@ -29116,7 +29455,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc",
@@ -29479,7 +29818,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_monthlyfixedcost",
@@ -29490,7 +29829,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L189",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_calc_monthlyfixedcost",
@@ -29501,7 +29840,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L778",
+      "source_location": "L1125",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_calc_monthlyfixedcost",
@@ -29578,7 +29917,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_avggrossmarginratio",
@@ -29589,7 +29928,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L192",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_calc_avggrossmarginratio",
@@ -29611,7 +29950,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_dailybreakeven",
@@ -29622,7 +29961,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L155",
+      "source_location": "L159",
       "weight": 1.0,
       "source": "src_views_accounting_breakevenpanel",
       "target": "src_utils_calc_dailybreakeven",
@@ -29655,7 +29994,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_periodpl",
@@ -29666,7 +30005,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_periodprofitloss",
@@ -29677,7 +30016,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L190",
+      "source_location": "L194",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_calc_periodprofitloss",
@@ -29688,7 +30027,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L779",
+      "source_location": "L1126",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_calc_periodprofitloss",
@@ -29710,7 +30049,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_salesinperiod",
@@ -29721,7 +30060,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L188",
+      "source_location": "L192",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_calc_salesinperiod",
@@ -29732,7 +30071,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L772",
+      "source_location": "L1119",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_calc_salesinperiod",
@@ -29743,7 +30082,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L656",
+      "source_location": "L834",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_calc_salesinperiod",
@@ -29787,7 +30126,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_utils_calc_dailyseries",
@@ -29798,7 +30137,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L225",
+      "source_location": "L229",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_calc_dailyseries",
@@ -30410,7 +30749,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L160",
+      "source_location": "L164",
       "weight": 1.0,
       "source": "src_views_accounting_breakevenpanel",
       "target": "src_utils_dom_el",
@@ -30421,7 +30760,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L341",
+      "source_location": "L955",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L640",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L350",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierformmodal",
       "target": "src_utils_dom_el",
@@ -30432,7 +30793,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L420",
+      "source_location": "L430",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_utils_dom_el",
@@ -30443,7 +30804,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L38",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "src_views_accounting_plrow",
       "target": "src_utils_dom_el",
@@ -30454,7 +30815,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L46",
+      "source_location": "L50",
       "weight": 1.0,
       "source": "src_views_accounting_plstatement",
       "target": "src_utils_dom_el",
@@ -30466,7 +30827,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/accounting.ts",
-      "source_location": "L849",
+      "source_location": "L1196",
       "weight": 1.0,
       "source": "src_views_accounting_renderaccounting",
       "target": "src_utils_dom_el"
@@ -30476,7 +30837,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L169",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_dom_el",
@@ -30487,7 +30848,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L298",
+      "source_location": "L302",
       "weight": 1.0,
       "source": "src_views_accounting_renderfixedvariabletab",
       "target": "src_utils_dom_el",
@@ -30498,7 +30859,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L750",
+      "source_location": "L1026",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashrow",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1050",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashtab",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1097",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_dom_el",
@@ -30509,7 +30892,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L489",
+      "source_location": "L499",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierpaymentrow",
       "target": "src_utils_dom_el",
@@ -30520,7 +30903,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L395",
+      "source_location": "L404",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierrow",
       "target": "src_utils_dom_el",
@@ -30531,7 +30914,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L514",
+      "source_location": "L524",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_utils_dom_el",
@@ -30542,7 +30925,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L709",
+      "source_location": "L887",
       "weight": 1.0,
       "source": "src_views_accounting_rendersuppliersvattab",
       "target": "src_utils_dom_el",
@@ -30553,7 +30936,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L618",
+      "source_location": "L776",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionrow",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L701",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_utils_dom_el",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L796",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_el",
@@ -30564,7 +30969,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L110",
+      "source_location": "L114",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_utils_dom_el",
@@ -30575,7 +30980,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L99",
+      "source_location": "L103",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownrow",
       "target": "src_utils_dom_el",
@@ -32137,7 +32542,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L352",
+      "source_location": "L959",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L648",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_utils_dom_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierformmodal",
       "target": "src_utils_dom_field",
@@ -32148,7 +32575,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L426",
+      "source_location": "L436",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_utils_dom_field",
@@ -32159,7 +32586,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L625",
+      "source_location": "L803",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_field",
@@ -32731,7 +33158,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L575",
+      "source_location": "L1082",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashtab",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L585",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_utils_dom_emptystate",
@@ -32742,7 +33180,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L112",
+      "source_location": "L748",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_utils_dom_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L116",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_utils_dom_emptystate",
@@ -33061,7 +33510,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L419",
+      "source_location": "L954",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L639",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_utils_dom_numberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L429",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_utils_dom_numberinput",
@@ -33072,7 +33543,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L619",
+      "source_location": "L797",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_numberinput",
@@ -33402,7 +33873,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L444",
+      "source_location": "L972",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L666",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_utils_dom_parsenumberinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L454",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_utils_dom_parsenumberinput",
@@ -33413,7 +33906,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L645",
+      "source_location": "L823",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_parsenumberinput",
@@ -33754,7 +34247,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_dom_kpicard",
@@ -33765,7 +34258,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L566",
+      "source_location": "L1074",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashtab",
+      "target": "src_utils_dom_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L576",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_utils_dom_kpicard",
@@ -33776,7 +34280,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L676",
+      "source_location": "L740",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_utils_dom_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L854",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_kpicard",
@@ -33985,7 +34500,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L502",
+      "source_location": "L1039",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashrow",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L512",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierpaymentrow",
       "target": "src_utils_dom_iconbtn",
@@ -33996,9 +34522,20 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L407",
+      "source_location": "L417",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierrow",
+      "target": "src_utils_dom_iconbtn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L789",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionrow",
       "target": "src_utils_dom_iconbtn",
       "confidence_score": 1.0
     },
@@ -34458,7 +34995,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L415",
+      "source_location": "L946",
+      "weight": 1.0,
+      "source": "src_views_accounting_openpettycashformmodal",
+      "target": "src_utils_dom_selectel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L628",
+      "weight": 1.0,
+      "source": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "target": "src_utils_dom_selectel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L425",
       "weight": 1.0,
       "source": "src_views_accounting_opensupplierpaymentformmodal",
       "target": "src_utils_dom_selectel",
@@ -34469,7 +35028,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_dom_selectel",
@@ -34480,7 +35039,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L749",
+      "source_location": "L1096",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_dom_selectel",
@@ -34491,7 +35050,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L632",
+      "source_location": "L810",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_dom_selectel",
@@ -35676,7 +36235,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L272",
+      "source_location": "L276",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_export_downloadjson",
@@ -35687,7 +36246,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L817",
+      "source_location": "L1164",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_export_downloadjson",
@@ -35764,7 +36323,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L258",
+      "source_location": "L262",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_export_downloadcsv",
@@ -35775,7 +36334,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L785",
+      "source_location": "L1132",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_export_downloadcsv",
@@ -35786,7 +36345,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L685",
+      "source_location": "L863",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_export_downloadcsv",
@@ -36434,7 +36993,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L566",
+      "source_location": "L1075",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashtab",
+      "target": "src_utils_format_topersian",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L576",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_utils_format_topersian",
@@ -36445,7 +37015,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L678",
+      "source_location": "L742",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_utils_format_topersian",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L856",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_format_topersian",
@@ -36456,7 +37037,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_utils_format_topersian",
@@ -37083,7 +37664,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L158",
+      "source_location": "L162",
       "weight": 1.0,
       "source": "src_views_accounting_breakevenpanel",
       "target": "src_utils_format_formatmoney",
@@ -37094,7 +37675,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L48",
+      "source_location": "L1002",
+      "weight": 1.0,
+      "source": "src_views_accounting_handlereviewpettycash",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "src_views_accounting_plstatement",
       "target": "src_utils_format_formatmoney",
@@ -37105,7 +37697,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L496",
+      "source_location": "L1033",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashrow",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L506",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierpaymentrow",
       "target": "src_utils_format_formatmoney",
@@ -37116,7 +37719,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L123",
+      "source_location": "L409",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersupplierrow",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L783",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionrow",
+      "target": "src_utils_format_formatmoney",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L127",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_utils_format_formatmoney",
@@ -37688,7 +38313,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_format_formatmoneyshort",
@@ -37699,7 +38324,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L567",
+      "source_location": "L1074",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashtab",
+      "target": "src_utils_format_formatmoneyshort",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L577",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierssubtab",
       "target": "src_utils_format_formatmoneyshort",
@@ -37710,7 +38346,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L676",
+      "source_location": "L740",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionssubtab",
+      "target": "src_utils_format_formatmoneyshort",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L854",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_format_formatmoneyshort",
@@ -37897,7 +38544,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L229",
+      "source_location": "L233",
       "weight": 1.0,
       "source": "src_views_accounting_renderfinancialdashboardtab",
       "target": "src_utils_format_formatdateshort",
@@ -37908,7 +38555,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L789",
+      "source_location": "L1033",
+      "weight": 1.0,
+      "source": "src_views_accounting_renderpettycashrow",
+      "target": "src_utils_format_formatdateshort",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1136",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_format_formatdateshort",
@@ -37919,7 +38577,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L496",
+      "source_location": "L506",
       "weight": 1.0,
       "source": "src_views_accounting_rendersupplierpaymentrow",
       "target": "src_utils_format_formatdateshort",
@@ -37930,7 +38588,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L689",
+      "source_location": "L783",
+      "weight": 1.0,
+      "source": "src_views_accounting_rendersuppliertransactionrow",
+      "target": "src_utils_format_formatdateshort",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L867",
       "weight": 1.0,
       "source": "src_views_accounting_rendervatsubtab",
       "target": "src_utils_format_formatdateshort",
@@ -38161,7 +38830,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L158",
+      "source_location": "L162",
       "weight": 1.0,
       "source": "src_views_accounting_breakevenpanel",
       "target": "src_utils_format_formatpct",
@@ -38172,7 +38841,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L52",
+      "source_location": "L56",
       "weight": 1.0,
       "source": "src_views_accounting_plstatement",
       "target": "src_utils_format_formatpct",
@@ -38370,7 +39039,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L828",
+      "source_location": "L1175",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_format_formatunit",
@@ -38557,7 +39226,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L827",
+      "source_location": "L1174",
       "weight": 1.0,
       "source": "src_views_accounting_renderreportstab",
       "target": "src_utils_format_formatingredientcategory",
@@ -40582,7 +41251,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L28",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_accountingtab",
@@ -40592,7 +41261,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L153",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_breakevenpanel",
@@ -40602,7 +41271,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L85",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_bysourcebreakdown",
@@ -40612,7 +41281,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L74",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_effectivesource",
@@ -40622,7 +41291,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L295",
+      "source_location": "L299",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_expensesubtab",
@@ -40632,7 +41301,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L381",
+      "source_location": "L1012",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_handledeletepettycash",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L390",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_handledeletesupplier",
@@ -40642,7 +41321,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L467",
+      "source_location": "L477",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_handledeletesupplierpayment",
@@ -40652,7 +41331,47 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L340",
+      "source_location": "L687",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_handledeletesuppliertransaction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L999",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_handlereviewpettycash",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L945",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_openpettycashformmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L626",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_openrecordsuppliertransactionmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L349",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_opensupplierformmodal",
@@ -40662,7 +41381,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L413",
+      "source_location": "L423",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_opensupplierpaymentformmodal",
@@ -40672,7 +41391,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L30",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_period_options",
@@ -40682,7 +41401,37 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L37",
+      "source_location": "L933",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_petty_cash_status_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L939",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_petty_cash_status_tone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L927",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_petty_cash_type_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_plrow",
@@ -40692,7 +41441,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L45",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_plstatement",
@@ -40702,7 +41451,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L848",
+      "source_location": "L1195",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_renderaccounting",
@@ -40712,7 +41461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L168",
+      "source_location": "L172",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_renderfinancialdashboardtab",
@@ -40722,7 +41471,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L297",
+      "source_location": "L301",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_renderfixedvariabletab",
@@ -40732,7 +41481,27 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L748",
+      "source_location": "L1025",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_renderpettycashrow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1049",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_renderpettycashtab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L1095",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_renderreportstab",
@@ -40742,7 +41511,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L485",
+      "source_location": "L495",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_rendersupplierpaymentrow",
@@ -40752,7 +41521,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L394",
+      "source_location": "L403",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_rendersupplierrow",
@@ -40762,7 +41531,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L513",
+      "source_location": "L523",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_rendersupplierssubtab",
@@ -40772,7 +41541,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L708",
+      "source_location": "L886",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_rendersuppliersvattab",
@@ -40782,7 +41551,27 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L616",
+      "source_location": "L769",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_rendersuppliertransactionrow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L700",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_rendersuppliertransactionssubtab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L794",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_rendervatsubtab",
@@ -40792,7 +41581,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_source_colors",
@@ -40802,7 +41591,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L60",
+      "source_location": "L64",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_source_labels",
@@ -40812,7 +41601,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L78",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_sourcebreakdownentry",
@@ -40822,7 +41611,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L108",
+      "source_location": "L112",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_sourcebreakdownpanel",
@@ -40832,7 +41621,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L98",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_sourcebreakdownrow",
@@ -40842,7 +41631,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L338",
+      "source_location": "L344",
+      "weight": 1.0,
+      "source": "src_views_accounting",
+      "target": "src_views_accounting_supplier_tx_type_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/views/accounting.ts",
+      "source_location": "L342",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_suppliervatsubtab",
@@ -40852,7 +41651,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L480",
+      "source_location": "L490",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_accounting_togglesupplierpaymentpaid",
@@ -40863,7 +41662,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_expenses",
@@ -40874,7 +41673,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_expenses_renderexpensestab",
@@ -40885,7 +41684,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_expenses_renderpayrolltab",
@@ -40896,7 +41695,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_expenses_rendersummarytab",
@@ -40907,7 +41706,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_sales",
@@ -40918,7 +41717,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_sales_renderimporttab",
@@ -40929,7 +41728,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "src_views_accounting",
       "target": "src_views_sales_rendersaleslogtab",
@@ -40940,7 +41739,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L48",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "src_views_accounting_plstatement",
       "target": "src_views_accounting_plrow",
@@ -40951,7 +41750,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L88",
+      "source_location": "L92",
       "weight": 1.0,
       "source": "src_views_accounting_bysourcebreakdown",
       "target": "src_views_accounting_effectivesource",
@@ -40962,7 +41761,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/views/accounting.ts",
-      "source_location": "L121",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "src_views_accounting_sourcebreakdownpanel",
       "target": "src_views_accounting_sourcebreakdownrow",
@@ -44383,5 +45182,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1f59b8fe61c114b68ec1cbe1abb1ef1f7e83b020"
+  "built_at_commit": "c51a3f64a3d77574537839c893a731a430e26663"
 }

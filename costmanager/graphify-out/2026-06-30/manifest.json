@@ -65,8 +65,8 @@
     "semantic_hash": ""
   },
   "src/main.ts": {
-    "mtime": 1782801757.336773,
-    "ast_hash": "4a4b3f0be8ac5e5b823c2169da202638",
+    "mtime": 1782802876.1567473,
+    "ast_hash": "8ea178b0f2eb0bf2033f40385b8e3309",
     "semantic_hash": ""
   },
   "src/platform-owner.ts": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "src/components/sidebar.ts": {
-    "mtime": 1782782781.3067033,
-    "ast_hash": "ab381c95f6da5419559d5cb01ab47779",
+    "mtime": 1782802869.0247474,
+    "ast_hash": "ceb978efdd9f12fff411445366f59306",
     "semantic_hash": ""
   },
   "src/utils/icons.ts": {
@@ -302,6 +302,11 @@
   "src/utils/api.ts": {
     "mtime": 1782800603.0527992,
     "ast_hash": "5b02f56c804f7481926ac392f56056ea",
+    "semantic_hash": ""
+  },
+  "src/views/hr.ts": {
+    "mtime": 1782802684.7967517,
+    "ast_hash": "3ca93c8b832775e9cd950c6b43923b13",
     "semantic_hash": ""
   }
 }
