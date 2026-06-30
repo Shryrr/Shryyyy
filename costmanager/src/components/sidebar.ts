@@ -18,6 +18,7 @@ const SIDEBAR_LINKS: SidebarLink[] = [
   { path: '/recipes', label: 'منو و فودکاست', icon: 'utensils', roles: ['superadmin', 'manager'] },
   { path: '/sales', label: 'فروش', icon: 'receipt', roles: ['superadmin', 'manager'] },
   { path: '/expenses', label: 'هزینه‌ها و حقوق', icon: 'wallet', roles: ['superadmin', 'manager'] },
+  { path: '/hr', label: 'منابع انسانی', icon: 'user', roles: ['superadmin', 'manager'] },
   { path: '/accounting', label: 'حسابداری و سود و زیان', icon: 'bar-chart', roles: ['superadmin', 'manager'] },
   { path: '/crm', label: 'CRM', icon: 'users', roles: ['superadmin', 'manager'] },
   { path: '/menu-engineering', label: 'مهندسی منو', icon: 'cpu', roles: ['superadmin', 'manager'] },

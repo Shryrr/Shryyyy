@@ -26,6 +26,7 @@ import { renderAdmin } from './views/admin';
 import { renderCrm } from './views/crm';
 import { renderDashboard } from './views/dashboard';
 import { renderExpenses } from './views/expenses';
+import { renderHr } from './views/hr';
 import { renderIngredients } from './views/ingredients';
 import { renderMenuEngineering } from './views/menu-engineering';
 import { renderRecipes } from './views/recipes';
@@ -39,6 +40,7 @@ const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
   { path: '/ingredients', title: 'انبار مواد اولیه', render: renderIngredients, roles: ['superadmin', 'manager', 'warehouse'] },
   { path: '/recipes', title: 'منو و فودکاست', render: renderRecipes, roles: ['superadmin', 'manager'] },
   { path: '/expenses', title: 'هزینه‌ها و حقوق', render: renderExpenses, roles: ['superadmin', 'manager'] },
+  { path: '/hr', title: 'منابع انسانی', render: renderHr, roles: ['superadmin', 'manager'] },
   { path: '/sales', title: 'فروش', render: renderSales, roles: ['superadmin', 'manager'] },
   { path: '/accounting', title: 'حسابداری و سود و زیان', render: renderAccounting, roles: ['superadmin', 'manager'] },
   { path: '/crm', title: 'CRM', render: renderCrm, roles: ['superadmin', 'manager'] },
