@@ -36,7 +36,14 @@ shown once. This is the login for `/platform-login` in the PWA.
 Review `.env` afterwards and confirm `CORS_ORIGIN` matches the real origin
 the PWA is served from (defaults to `http://91.107.249.240`).
 
-## 3. Install the systemd service
+## 3. Create the uploads directory
+
+```bash
+mkdir -p /var/www/costmanager-api/data/uploads
+sudo chown -R www-data:www-data /var/www/costmanager-api/data
+```
+
+## 4. Install the systemd service
 
 ```bash
 sudo cp deploy/costmanager-api.service /etc/systemd/system/costmanager-api.service
@@ -51,7 +58,7 @@ Check logs if anything looks wrong:
 sudo journalctl -u costmanager-api -f
 ```
 
-## 4. Wire up nginx
+## 5. Wire up nginx
 
 Copy the snippet and include it from the existing site config that already
 serves the PWA static files:
@@ -63,7 +70,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## 5. Smoke test
+## 6. Smoke test
 
 ```bash
 curl http://91.107.249.240/api/health
@@ -78,7 +85,39 @@ curl -X POST http://91.107.249.240/api/platform/login \
 
 Should return a token + expiresAt.
 
-## 6. Updating later
+## 7. Schedule automated backup and archiving (crontab)
+
+Run as the service user (`www-data`) or root. Edit crontab with:
+
+```bash
+sudo crontab -e
+```
+
+Add these lines:
+
+```cron
+# Daily backup at 02:00 — keeps last 30 days of .tar.gz snapshots
+0 2 * * * /var/www/costmanager-api/scripts/backup.sh >> /var/log/costmanager-backup.log 2>&1
+
+# Monthly archive on the 1st at 03:00 — moves records >2 years old to archive table
+0 3 1 * * /var/www/costmanager-api/scripts/archive.sh >> /var/log/costmanager-archive.log 2>&1
+```
+
+Make the scripts executable (if not already):
+
+```bash
+chmod +x /var/www/costmanager-api/scripts/backup.sh
+chmod +x /var/www/costmanager-api/scripts/archive.sh
+```
+
+Verify after first run:
+
+```bash
+ls -lh /var/www/costmanager-api/data/backups/
+tail /var/log/costmanager-backup.log
+```
+
+## 8. Updating later
 
 ```bash
 cd /var/www/costmanager-api
@@ -94,10 +133,17 @@ restart.
 ## Notes
 
 - `.env` and `data/` are gitignored on purpose — they hold secrets and the
-  live database. Never commit them. Back up `data/costmanager.db` directly
-  on the server if you need backups (e.g. a cron'd `sqlite3 .backup`).
+  live database. Never commit them.
 - The service runs as `www-data` per the unit file; make sure
-  `/var/www/costmanager-api` (including `data/`) is writable by that user
-  (`sudo chown -R www-data:www-data /var/www/costmanager-api`).
-- Rate limits are in-memory per-process — restarting the service clears
-  them.
+  `/var/www/costmanager-api` (including `data/` and `data/uploads/`) is
+  writable by that user:
+  ```bash
+  sudo chown -R www-data:www-data /var/www/costmanager-api
+  ```
+- Rate limits are in-memory per-process — restarting the service clears them.
+- File uploads are stored in `data/uploads/` and served at `/api/uploads/<filename>`.
+  Include that directory in your backup policy (the `backup.sh` script already
+  handles it).
+- The `archive.sh` script moves `business_data` rows older than 2 years into
+  `archive_business_data`. The live table stays lean; the archive table is
+  queryable in place.
