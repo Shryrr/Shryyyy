@@ -20,11 +20,12 @@ import {
   type PeriodPL,
 } from '../utils/calc';
 import * as db from '../db';
+import { api } from '../utils/api';
+import type { ApiPettyCashTransaction } from '../utils/api';
 import { renderExpensesTab, renderPayrollTab, renderSummaryTab } from './expenses';
 import { renderImportTab, renderSalesLogTab } from './sales';
 import type {
-  PettyCashRequestStatus, PettyCashTransaction, PettyCashTxType, Sale, SaleSource, Supplier, SupplierPayment, SupplierTransaction,
-  SupplierTransactionType,
+  Sale, SaleSource, Supplier, SupplierPayment, SupplierTransaction, SupplierTransactionType,
 } from '../types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -873,6 +874,32 @@ function renderVatSubTab(container: HTMLElement): () => void {
     );
   });
 
+  const xmlExportBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['خروجی XML مالیاتی (تجربی)']);
+  container.appendChild(
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['خروجی XML برای سامانهٔ مالیاتی']),
+      el('p', { class: 'field__hint' }, ['⚠️ این خروجی صرفاً جنبهٔ اطلاعاتی دارد و مطابقت کامل با الزامات سامانهٔ مالیات بر ارزش افزوده را تضمین نمی‌کند. پیش از تسلیم، با حسابدار یا مشاور مالیاتی خود مشورت کنید.']),
+      xmlExportBtn,
+    ]),
+  );
+
+  xmlExportBtn.addEventListener('click', () => {
+    const list = vatSales();
+    const biz = settings.get()?.businessName ?? 'نامشخص';
+    const rows = list
+      .map(
+        (s) =>
+          `  <Invoice>\n    <Date>${s.date.slice(0, 10)}</Date>\n    <Item>${s.menuItemName}</Item>\n    <TaxableAmount>${Math.round(s.unitSalePrice * s.quantity)}</TaxableAmount>\n    <VatRate>${s.vatRate ?? 0}</VatRate>\n    <VatAmount>${Math.round(s.vatAmount ?? 0)}</VatAmount>\n  </Invoice>`,
+      )
+      .join('\n');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<VatReport>\n  <Business>${biz}</Business>\n  <Period>${periodSelect.value}d</Period>\n  <GeneratedAt>${new Date().toISOString()}</GeneratedAt>\n${rows}\n</VatReport>`;
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `vat-report-${periodSelect.value}d.xml`;
+    a.click();
+  });
+
   periodSelect.addEventListener('change', render);
   const unsubSales = sales.subscribe(render);
   const unsubSettings = settings.subscribe(render);
@@ -924,33 +951,34 @@ function renderSuppliersVatTab(container: HTMLElement): () => void {
 
 // ---------- Tab: تنخواه ----------
 
-const PETTY_CASH_TYPE_LABELS: Record<PettyCashTxType, string> = {
+const PETTY_CASH_TYPE_LABELS: Record<string, string> = {
   deposit: 'واریز',
   withdrawal: 'برداشت',
-  expense: 'هزینه',
+  expense: 'درخواست موجودی برای خرید',
 };
 
-const PETTY_CASH_STATUS_LABELS: Record<PettyCashRequestStatus, string> = {
+const PETTY_CASH_STATUS_LABELS: Record<string, string> = {
   pending: 'در انتظار تأیید',
   approved: 'تأییدشده',
   rejected: 'ردشده',
 };
 
-const PETTY_CASH_STATUS_TONE: Record<PettyCashRequestStatus, string> = {
+const PETTY_CASH_STATUS_TONE: Record<string, string> = {
   pending: 'badge--warning',
   approved: 'badge--success',
   rejected: 'badge--danger',
 };
 
 function openPettyCashFormModal(onDone: () => void): void {
-  const typeSelect = selectEl(
-    [
-      { value: 'deposit', label: PETTY_CASH_TYPE_LABELS.deposit },
-      { value: 'withdrawal', label: PETTY_CASH_TYPE_LABELS.withdrawal },
-      { value: 'expense', label: PETTY_CASH_TYPE_LABELS.expense },
-    ],
-    'expense',
-  );
+  const user = currentUser.get();
+  const role = user?.role ?? '';
+  const canDeposit = role === 'superadmin' || role === 'manager';
+
+  const typeOptions = [
+    { value: 'expense', label: PETTY_CASH_TYPE_LABELS.expense },
+    ...(canDeposit ? [{ value: 'deposit', label: PETTY_CASH_TYPE_LABELS.deposit }, { value: 'withdrawal', label: PETTY_CASH_TYPE_LABELS.withdrawal }] : []),
+  ];
+  const typeSelect = selectEl(typeOptions, 'expense');
   const amountInput = numberInput(0);
   const dateInput = el('input', { type: 'date', class: 'input', value: new Date().toISOString().slice(0, 10) });
   const reasonInput = el('input', { type: 'text', class: 'input' });
@@ -960,7 +988,7 @@ function openPettyCashFormModal(onDone: () => void): void {
     field('مبلغ (تومان)', amountInput),
     field('تاریخ', dateInput),
     field('شرح', reasonInput),
-    el('p', { class: 'field__hint' }, ['واریز و برداشت بلافاصله ثبت می‌شود؛ درخواست هزینه نیاز به تأیید مدیر دارد.']),
+    el('p', { class: 'field__hint' }, ['واریز و برداشت بلافاصله ثبت می‌شود؛ درخواست موجودی نیاز به تأیید مدیر دارد.']),
     el('div', { class: 'modal-actions' }, [
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
       el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت']),
@@ -970,64 +998,64 @@ function openPettyCashFormModal(onDone: () => void): void {
   body.addEventListener('submit', async (e) => {
     e.preventDefault();
     const amount = parseNumberInput(amountInput);
-    if (amount <= 0) {
-      showToast('مبلغ باید بیشتر از صفر باشد', 'error');
-      return;
-    }
+    if (amount <= 0) { showToast('مبلغ باید بیشتر از صفر باشد', 'error'); return; }
     const reason = reasonInput.value.trim();
-    if (!reason) {
-      showToast('شرح الزامی است', 'error');
-      return;
+    if (!reason) { showToast('شرح الزامی است', 'error'); return; }
+    try {
+      await api.createPettyCash({
+        type: typeSelect.value,
+        amount,
+        reason,
+        date: dateInput.value ? new Date(dateInput.value).toISOString() : new Date().toISOString(),
+      });
+      showToast('تراکنش ثبت شد', 'success');
+      modal.close();
+      onDone();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا در ثبت', 'error');
     }
-    const user = currentUser.get();
-    await db.requestPettyCash({
-      type: typeSelect.value as PettyCashTxType,
-      amount,
-      reason,
-      requestedBy: user?.id ?? '',
-      requestedByName: user?.name ?? 'نامشخص',
-      date: dateInput.value ? new Date(dateInput.value).toISOString() : new Date().toISOString(),
-    });
-    showToast('تراکنش ثبت شد', 'success');
-    modal.close();
-    onDone();
   });
 
   const modal = openModal({ title: 'تراکنش تنخواه جدید', body });
 }
 
-async function handleReviewPettyCash(tx: PettyCashTransaction, status: PettyCashRequestStatus, onDone: () => void): Promise<void> {
+async function handleReviewPettyCash(tx: ApiPettyCashTransaction, approve: boolean, onDone: () => void): Promise<void> {
   const confirmed = await confirmModal({
-    title: status === 'approved' ? 'تأیید هزینه' : 'رد هزینه',
-    message: `درخواست هزینهٔ «${tx.reason}» به مبلغ ${formatMoney(tx.amount)} ${status === 'approved' ? 'تأیید' : 'رد'} شود؟`,
-    confirmLabel: status === 'approved' ? 'تأیید' : 'رد',
-    danger: status === 'rejected',
+    title: approve ? 'تأیید درخواست' : 'رد درخواست',
+    message: `درخواست «${tx.reason}» به مبلغ ${formatMoney(tx.amount)} ${approve ? 'تأیید' : 'رد'} شود؟`,
+    confirmLabel: approve ? 'تأیید' : 'رد',
+    danger: !approve,
   });
   if (!confirmed) return;
-  await db.reviewPettyCashRequest(tx.id, status, currentUser.get()?.name ?? 'نامشخص');
-  showToast(status === 'approved' ? 'هزینه تأیید شد' : 'هزینه رد شد', 'success');
-  onDone();
+  try {
+    if (approve) await api.approvePettyCash(tx.id);
+    else await api.rejectPettyCash(tx.id);
+    showToast(approve ? 'درخواست تأیید شد' : 'درخواست رد شد', 'success');
+    onDone();
+  } catch (err: unknown) {
+    showToast(err instanceof Error ? err.message : 'خطا', 'error');
+  }
 }
 
-async function handleDeletePettyCash(tx: PettyCashTransaction, onDone: () => void): Promise<void> {
-  const confirmed = await confirmModal({
-    title: 'حذف تراکنش',
-    message: 'این تراکنش برای همیشه حذف می‌شود.',
-    confirmLabel: 'حذف',
-    danger: true,
-  });
+async function handleDeletePettyCash(tx: ApiPettyCashTransaction, onDone: () => void): Promise<void> {
+  const confirmed = await confirmModal({ title: 'حذف تراکنش', message: 'این تراکنش برای همیشه حذف می‌شود.', confirmLabel: 'حذف', danger: true });
   if (!confirmed) return;
-  await db.deletePettyCash(tx.id);
-  showToast('تراکنش حذف شد', 'success');
-  onDone();
+  try {
+    await api.deletePettyCash(tx.id);
+    showToast('تراکنش حذف شد', 'success');
+    onDone();
+  } catch (err: unknown) {
+    showToast(err instanceof Error ? err.message : 'خطا', 'error');
+  }
 }
 
-function renderPettyCashRow(tx: PettyCashTransaction, onDone: () => void): HTMLElement {
+function renderPettyCashRow(tx: ApiPettyCashTransaction, role: string, onDone: () => void): HTMLElement {
+  const canReview = role === 'superadmin' || role === 'manager';
   return el('div', { class: 'expense-row' }, [
     el('div', { class: 'expense-row__main' }, [
       el('div', { class: 'expense-row__title-row' }, [
-        el('span', { class: 'expense-row__name' }, [PETTY_CASH_TYPE_LABELS[tx.type]]),
-        el('span', { class: `badge ${PETTY_CASH_STATUS_TONE[tx.status]}` }, [PETTY_CASH_STATUS_LABELS[tx.status]]),
+        el('span', { class: 'expense-row__name' }, [PETTY_CASH_TYPE_LABELS[tx.type] ?? tx.type]),
+        el('span', { class: `badge ${PETTY_CASH_STATUS_TONE[tx.status] ?? ''}` }, [PETTY_CASH_STATUS_LABELS[tx.status] ?? tx.status]),
       ]),
       el('div', { class: 'expense-row__meta' }, [
         `${formatMoney(tx.amount)} · ${formatDateShort(tx.date)} · ${tx.requestedByName}`,
@@ -1035,13 +1063,13 @@ function renderPettyCashRow(tx: PettyCashTransaction, onDone: () => void): HTMLE
       ]),
     ]),
     el('div', { class: 'expense-row__actions' }, [
-      tx.type === 'expense' && tx.status === 'pending'
-        ? iconBtn('check', 'تأیید', () => void handleReviewPettyCash(tx, 'approved', onDone))
+      canReview && tx.type === 'expense' && tx.status === 'pending'
+        ? iconBtn('check', 'تأیید', () => void handleReviewPettyCash(tx, true, onDone))
         : null,
-      tx.type === 'expense' && tx.status === 'pending'
-        ? iconBtn('x', 'رد', () => void handleReviewPettyCash(tx, 'rejected', onDone))
+      canReview && tx.type === 'expense' && tx.status === 'pending'
+        ? iconBtn('x', 'رد', () => void handleReviewPettyCash(tx, false, onDone))
         : null,
-      iconBtn('trash', 'حذف', () => void handleDeletePettyCash(tx, onDone)),
+      canReview ? iconBtn('trash', 'حذف', () => void handleDeletePettyCash(tx, onDone)) : null,
     ]),
   ]);
 }
@@ -1049,23 +1077,33 @@ function renderPettyCashRow(tx: PettyCashTransaction, onDone: () => void): HTMLE
 function renderPettyCashTab(container: HTMLElement): () => void {
   const kpiContainer = el('div');
   const listEl = el('div', { class: 'expense-list' });
+  const role = currentUser.get()?.role ?? '';
+  const canAdd = role !== 'accountant';
 
-  const addBtn = el('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openPettyCashFormModal(() => void renderAll()) }, [
-    '+ تراکنش جدید',
-  ]);
+  const addBtn = canAdd
+    ? el('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openPettyCashFormModal(() => void renderAll()) }, ['+ تراکنش جدید'])
+    : null;
+  const printBtn = el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => window.print() }, ['چاپ']);
 
   container.append(
     kpiContainer,
     el('div', { class: 'chart-card' }, [
       el('h3', { class: 'chart-card__title' }, ['تنخواه']),
-      el('div', { class: 'tab-toolbar' }, [addBtn]),
+      el('div', { class: 'tab-toolbar' }, [addBtn, printBtn].filter(Boolean) as HTMLElement[]),
       listEl,
     ]),
   );
 
   async function renderAll(): Promise<void> {
-    const transactions = await db.listPettyCash();
-    const balance = await db.getPettyCashBalance();
+    let transactions: ApiPettyCashTransaction[] = [];
+    let balance = 0;
+    try {
+      const result = await api.listPettyCash();
+      transactions = result.transactions;
+      balance = result.balance;
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا در بارگذاری تنخواه', 'error');
+    }
     const pendingCount = transactions.filter((t) => t.status === 'pending').length;
 
     kpiContainer.innerHTML = '';
@@ -1082,8 +1120,7 @@ function renderPettyCashTab(container: HTMLElement): () => void {
       listEl.appendChild(emptyState({ icon: 'wallet', title: 'هنوز تراکنش تنخواه ثبت نشده است' }));
       return;
     }
-    const sorted = [...transactions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    for (const tx of sorted) listEl.appendChild(renderPettyCashRow(tx, () => void renderAll()));
+    for (const tx of transactions) listEl.appendChild(renderPettyCashRow(tx, role, () => void renderAll()));
   }
 
   void renderAll();
@@ -1186,6 +1223,12 @@ function renderReportsTab(container: HTMLElement): () => void {
     const backup = await db.exportAllData();
     downloadJSON(`accounting-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
   });
+
+  const printBtn = el('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ['چاپ گزارش‌ها']);
+  printBtn.addEventListener('click', () => window.print());
+  container.appendChild(
+    el('div', { class: 'chart-card' }, [el('h3', { class: 'chart-card__title' }, ['چاپ']), printBtn]),
+  );
 
   return () => {};
 }

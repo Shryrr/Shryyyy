@@ -175,10 +175,64 @@ export interface SalaryAdvance {
   note?: string;
 }
 
+// ---------- Purchase requests ----------
+
+export type PurchaseRequestStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
+
+export interface PurchaseRequestItem {
+  ingredientId: string;
+  ingredientName: string;
+  suggestedQty: number;
+  unit: Unit;
+  estimatedCost: number;
+}
+
+export interface PurchaseRequest {
+  id: string;
+  createdBy: string;
+  createdByName: string;
+  status: PurchaseRequestStatus;
+  items: PurchaseRequestItem[];
+  neededByDatetime?: string | null;
+  estimatedTotal?: number | null;
+  note?: string | null;
+  acceptedBy?: string | null;
+  acceptedAt?: string | null;
+  estimatedPurchaseDatetime?: string | null;
+  completedBy?: string | null;
+  completedAt?: string | null;
+  actualTotal?: number | null;
+  receiptUrl?: string | null;
+  completionNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ---------- Petty cash ----------
 
 export type PettyCashTxType = 'deposit' | 'withdrawal' | 'expense';
 export type PettyCashRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface PettyCashPermission {
+  userId: string;
+  canView: boolean;
+  canWithdraw: boolean;
+  canRequest: boolean;
+  updatedAt?: string;
+}
+
+// ---------- Audit log ----------
+
+export interface AuditLogEntry {
+  id: string;
+  userId?: string | null;
+  userName?: string | null;
+  action: string;
+  resourceType: string;
+  resourceId?: string | null;
+  detail?: string | null;
+  createdAt: string;
+}
 
 export interface PettyCashTransaction {
   id: string;
@@ -431,7 +485,7 @@ export interface SubscriptionPaymentRecord {
 export type BusinessType = 'cafe' | 'restaurant' | 'fast_food' | 'bakery' | 'other';
 export type Theme = 'light' | 'dark' | 'auto';
 
-export type UserRole = 'superadmin' | 'manager' | 'warehouse' | 'buyer';
+export type UserRole = 'superadmin' | 'manager' | 'warehouse' | 'buyer' | 'accountant';
 export type SubscriptionPlan = '1m' | '3m' | '6m' | '12m' | 'unlimited';
 export type PaidSubscriptionPlan = '1m' | '3m' | '6m' | '12m';
 export type BusinessSubscriptionStatus = 'trial' | 'pending_payment' | 'active' | 'expired';
@@ -451,6 +505,8 @@ export interface AppUser {
   /** Persisted (not in-memory) so a page reload can't reset a lockout window. */
   failedLoginAttempts?: number;
   lockedUntil?: string;
+  /** Accountant role only: optional expiry date after which access is revoked. */
+  accountantExpiresAt?: string;
 }
 
 export interface AuthConfig {

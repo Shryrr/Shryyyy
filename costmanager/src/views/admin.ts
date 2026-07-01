@@ -11,20 +11,23 @@ import { pullFromServer, pushToServer } from '../utils/sync';
 import type { RouteCleanup } from '../router';
 import { refreshAll, refreshSettings, settings } from '../store';
 import type { AppUser, BusinessType, FullBackup, UserRole } from '../types';
+import type { AuditLogEntry, PettyCashPermission } from '../types';
 
-type Tab = 'users' | 'system';
+type Tab = 'users' | 'audit' | 'system';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   superadmin: 'مدیر اصلی',
   manager: 'مدیر',
   warehouse: 'انباردار',
   buyer: 'خریدار',
+  accountant: 'حسابدار',
 };
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'manager', label: ROLE_LABELS.manager },
   { value: 'warehouse', label: ROLE_LABELS.warehouse },
   { value: 'buyer', label: ROLE_LABELS.buyer },
+  { value: 'accountant', label: ROLE_LABELS.accountant },
 ];
 
 const BUSINESS_TYPE_OPTIONS: BusinessType[] = ['cafe', 'restaurant', 'fast_food', 'bakery', 'other'];
@@ -41,7 +44,14 @@ function settingsCard(title: string, body: HTMLElement): HTMLElement {
 
 async function loadUsers(): Promise<AppUser[]> {
   const users = await api.listUsers();
-  return users.map((u) => ({ id: u.id, name: u.fullName, username: u.username, role: u.role, isActive: u.isActive } as AppUser));
+  return users.map((u) => ({
+    id: u.id,
+    name: u.fullName,
+    username: u.username,
+    role: u.role,
+    isActive: u.isActive,
+    accountantExpiresAt: (u as unknown as Record<string, unknown>).accountantExpiresAt as string | undefined,
+  } as AppUser));
 }
 
 // ---------- Users tab ----------
@@ -59,6 +69,16 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
   const roleSelect = selectEl(ROLE_OPTIONS, existing && !isSuperadminUser ? existing.role : 'manager');
   const activeCheckbox = el('input', { type: 'checkbox', checked: existing?.isActive ?? true });
 
+  const expiresInput = el('input', {
+    type: 'datetime-local', class: 'input', dir: 'ltr',
+    value: existing?.accountantExpiresAt ? existing.accountantExpiresAt.slice(0, 16) : '',
+  });
+  const expiresRow = field('انقضای دسترسی حسابدار (اختیاری)', expiresInput);
+  expiresRow.style.display = roleSelect.value === 'accountant' ? '' : 'none';
+  roleSelect.addEventListener('change', () => {
+    expiresRow.style.display = roleSelect.value === 'accountant' ? '' : 'none';
+  });
+
   passwordInput.addEventListener('input', () => {
     const { label } = passwordStrength(passwordInput.value);
     strengthEl.textContent = passwordInput.value ? `قدرت رمز عبور: ${label}` : '';
@@ -71,6 +91,7 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
     strengthEl,
     field('تکرار رمز عبور', confirmPasswordInput),
     isSuperadminUser ? el('p', { class: 'form-hint' }, ['نقش مدیر اصلی قابل تغییر نیست']) : field('نقش', roleSelect),
+    !isSuperadminUser ? expiresRow : null,
     !existing ? el('p', { class: 'form-hint' }, ['کارمندان رایگان اضافه می‌شوند و اشتراک جداگانه ندارند.']) : null,
     existing && !isSuperadminUser ? el('label', { class: 'toolbar__checkbox' }, [activeCheckbox, ' فعال']) : null,
     el('div', { class: 'modal-actions' }, [
@@ -112,10 +133,19 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
         if (!isSuperadminUser) {
           patch.role = roleSelect.value as UserRole;
           patch.isActive = activeCheckbox.checked;
+          if (roleSelect.value === 'accountant' && expiresInput.value) {
+            (patch as Record<string, unknown>).accountantExpiresAt = new Date(expiresInput.value).toISOString();
+          } else {
+            (patch as Record<string, unknown>).accountantExpiresAt = null;
+          }
         }
         await api.updateUser(existing.id, patch);
       } else {
-        await api.createUser({ fullName: name, username, password, role: roleSelect.value as UserRole });
+        const payload: Record<string, unknown> = { fullName: name, username, password, role: roleSelect.value as UserRole };
+        if (roleSelect.value === 'accountant' && expiresInput.value) {
+          payload.accountantExpiresAt = new Date(expiresInput.value).toISOString();
+        }
+        await api.createUser(payload as Parameters<typeof api.createUser>[0]);
       }
       showToast(existing ? 'تغییرات ذخیره شد' : 'کاربر افزوده شد', 'success');
       modal.close();
@@ -172,12 +202,43 @@ function renderUserRow(user: AppUser, onChange: () => void): HTMLElement {
 
 function renderUsersTab(container: HTMLElement): () => void {
   const listEl = el('div', { class: 'expense-list' });
+  const permSection = el('div', { class: 'settings-card', style: 'margin-top:1rem' });
+  const permTitle = el('h3', { class: 'settings-card__title' }, ['مجوزهای صندوق خرد']);
+  const permTable = el('div', { class: 'expense-list', style: 'margin-top:.5rem' });
+  permSection.append(permTitle, permTable);
+
   container.append(
     el('div', { class: 'tab-toolbar' }, [
       el('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => openUserFormModal(render) }, ['+ افزودن کاربر']),
     ]),
     listEl,
+    permSection,
   );
+
+  async function renderPerms(): Promise<void> {
+    permTable.innerHTML = '';
+    let perms: PettyCashPermission[] = [];
+    let userNames: Record<string, string> = {};
+    try {
+      const result = await api.getPettyCashPermissions();
+      perms = result.permissions;
+      for (const u of result.users) userNames[u.id] = u.fullName;
+    } catch { return; }
+    if (!perms.length) { permTable.appendChild(emptyState({ icon: 'shield', title: 'هنوز مجوزی تنظیم نشده است' })); return; }
+    for (const p of perms) {
+      const row = el('div', { class: 'expense-row' }, [
+        el('div', { class: 'expense-row__main' }, [
+          el('span', { class: 'expense-row__name' }, [userNames[p.userId] ?? p.userId]),
+        ]),
+        el('div', { class: 'expense-row__actions', style: 'gap:.5rem;flex-wrap:wrap' }, [
+          makePermToggle(p, 'canView', 'مشاهده', renderPerms),
+          makePermToggle(p, 'canWithdraw', 'برداشت', renderPerms),
+          makePermToggle(p, 'canRequest', 'درخواست', renderPerms),
+        ]),
+      ]);
+      permTable.appendChild(row);
+    }
+  }
 
   async function render(): Promise<void> {
     listEl.innerHTML = '';
@@ -191,10 +252,75 @@ function renderUsersTab(container: HTMLElement): () => void {
       return;
     }
     for (const user of users) listEl.appendChild(renderUserRow(user, render));
+    void renderPerms();
   }
 
   render();
   return () => {};
+}
+
+function makePermToggle(perm: PettyCashPermission, key: 'canView' | 'canWithdraw' | 'canRequest', label: string, onDone: () => void): HTMLElement {
+  const btn = el('button', {
+    type: 'button',
+    class: `btn btn-sm ${perm[key] ? 'btn-primary' : 'btn-secondary'}`,
+    onclick: async () => {
+      try {
+        await api.setPettyCashPermission(perm.userId, {
+          canView: perm.canView,
+          canWithdraw: perm.canWithdraw,
+          canRequest: perm.canRequest,
+          [key]: !perm[key],
+        });
+        onDone();
+      } catch { showToast('خطا در به‌روزرسانی مجوز', 'error'); }
+    },
+  }, [label]);
+  return btn;
+}
+
+// ---------- Audit log tab ----------
+
+function renderAuditTab(container: HTMLElement): () => void {
+  const listEl = el('div', { class: 'expense-list' });
+  const loadMoreBtn = el('button', { type: 'button', class: 'btn btn-secondary', style: 'margin-top:.5rem;width:100%' }, ['بارگذاری بیشتر']);
+  let offset = 0;
+  const limit = 50;
+
+  async function loadMore(): Promise<void> {
+    loadMoreBtn.disabled = true;
+    try {
+      const log = await api.listAuditLog(limit, offset);
+      if (!log.length) { loadMoreBtn.style.display = 'none'; return; }
+      for (const entry of log) listEl.appendChild(renderAuditRow(entry));
+      offset += log.length;
+      if (log.length < limit) loadMoreBtn.style.display = 'none';
+    } catch { showToast('خطا در بارگذاری گزارش', 'error'); }
+    finally { loadMoreBtn.disabled = false; }
+  }
+
+  loadMoreBtn.addEventListener('click', () => void loadMore());
+
+  container.append(listEl, loadMoreBtn);
+  void loadMore();
+  return () => {};
+}
+
+function renderAuditRow(entry: AuditLogEntry): HTMLElement {
+  const date = new Date(entry.createdAt).toLocaleString('fa-IR');
+  return el('div', { class: 'expense-row' }, [
+    el('div', { class: 'expense-row__main' }, [
+      el('div', { class: 'expense-row__title-row' }, [
+        el('span', { class: 'expense-row__name' }, [entry.action]),
+        el('span', { class: 'badge badge--muted' }, [entry.resourceType]),
+      ]),
+      el('div', { class: 'expense-row__meta' }, [
+        entry.userName ?? entry.userId ?? 'سیستم',
+        ' · ',
+        date,
+        entry.detail ? ` · ${entry.detail}` : '',
+      ]),
+    ]),
+  ]);
 }
 
 // ---------- System settings tab ----------
@@ -446,6 +572,7 @@ export async function renderAdmin(container: HTMLElement): Promise<RouteCleanup>
 
   const tabs: { id: Tab; label: string; render: (c: HTMLElement) => () => void }[] = [
     { id: 'users', label: 'کاربران', render: renderUsersTab },
+    { id: 'audit', label: 'گزارش فعالیت', render: renderAuditTab },
     { id: 'system', label: 'تنظیمات سیستم', render: renderSystemTab },
   ];
 

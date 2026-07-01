@@ -32,6 +32,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   manager: 'مدیر',
   warehouse: 'انباردار',
   buyer: 'خریدار',
+  accountant: 'حسابدار',
 };
 
 export interface Sidebar {

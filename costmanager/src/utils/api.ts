@@ -1,5 +1,5 @@
 import { settings } from '../store';
-import type { PaidSubscriptionPlan, SubscriptionPaymentStatus, UserRole } from '../types';
+import type { AuditLogEntry, PaidSubscriptionPlan, PettyCashPermission, PurchaseRequest, PurchaseRequestItem, SubscriptionPaymentStatus, UserRole } from '../types';
 
 const TOKEN_KEY = 'apiAccessToken';
 const REFRESH_KEY = 'apiRefreshToken';
@@ -82,7 +82,7 @@ async function tryRefresh(): Promise<boolean> {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
   body?: unknown;
   /** Attach the stored access token and retry once via refresh on 401. Default true. */
   auth?: boolean;
@@ -201,6 +201,21 @@ export interface ApiPricingRow {
   plan: PaidSubscriptionPlan;
   amount: number;
   updated_at: string;
+}
+
+export interface ApiPettyCashTransaction {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'expense';
+  amount: number;
+  reason: string;
+  requestedBy: string;
+  requestedByName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  date: string;
+  createdAt: string;
+  receiptUrl?: string | null;
 }
 
 export interface ApiPlatformMetrics {
@@ -379,6 +394,95 @@ export class ApiClient {
   async getSubscriptionPricing(): Promise<ApiPricingRow[]> {
     const data = await request<{ pricing: ApiPricingRow[] }>('/api/subscription/pricing');
     return data.pricing;
+  }
+
+  // ----- Petty cash -----
+
+  async listPettyCash(): Promise<{ transactions: ApiPettyCashTransaction[]; balance: number }> {
+    return request('/api/petty-cash');
+  }
+
+  async createPettyCash(input: { type: string; amount: number; reason: string; date?: string; receiptUrl?: string }): Promise<ApiPettyCashTransaction> {
+    const data = await request<{ transaction: ApiPettyCashTransaction }>('/api/petty-cash', { method: 'POST', body: input });
+    return data.transaction;
+  }
+
+  async approvePettyCash(id: string): Promise<ApiPettyCashTransaction> {
+    const data = await request<{ transaction: ApiPettyCashTransaction }>(`/api/petty-cash/${id}/approve`, { method: 'POST' });
+    return data.transaction;
+  }
+
+  async rejectPettyCash(id: string): Promise<ApiPettyCashTransaction> {
+    const data = await request<{ transaction: ApiPettyCashTransaction }>(`/api/petty-cash/${id}/reject`, { method: 'POST' });
+    return data.transaction;
+  }
+
+  async deletePettyCash(id: string): Promise<void> {
+    await request<{ ok: boolean }>(`/api/petty-cash/${id}`, { method: 'DELETE' });
+  }
+
+  async getPettyCashPermissions(): Promise<{ permissions: PettyCashPermission[]; users: ApiUser[] }> {
+    return request('/api/petty-cash/permissions');
+  }
+
+  async setPettyCashPermission(userId: string, perm: { canView: boolean; canWithdraw: boolean; canRequest: boolean }): Promise<void> {
+    await request(`/api/petty-cash/permissions/${userId}`, { method: 'PUT', body: perm });
+  }
+
+  // ----- Purchase requests -----
+
+  async listPurchaseRequests(): Promise<PurchaseRequest[]> {
+    const data = await request<{ requests: PurchaseRequest[] }>('/api/purchase-requests');
+    return data.requests;
+  }
+
+  async createPurchaseRequest(input: {
+    items: PurchaseRequestItem[];
+    neededByDatetime?: string;
+    estimatedTotal?: number;
+    note?: string;
+  }): Promise<PurchaseRequest> {
+    const data = await request<{ request: PurchaseRequest }>('/api/purchase-requests', { method: 'POST', body: input });
+    return data.request;
+  }
+
+  async acceptPurchaseRequest(id: string, estimatedPurchaseDatetime?: string): Promise<PurchaseRequest> {
+    const data = await request<{ request: PurchaseRequest }>(`/api/purchase-requests/${id}/accept`, { method: 'POST', body: { estimatedPurchaseDatetime } });
+    return data.request;
+  }
+
+  async completePurchaseRequest(id: string, input: { actualTotal?: number; receiptUrl?: string; completionNote?: string }): Promise<PurchaseRequest> {
+    const data = await request<{ request: PurchaseRequest }>(`/api/purchase-requests/${id}/complete`, { method: 'POST', body: input });
+    return data.request;
+  }
+
+  async cancelPurchaseRequest(id: string): Promise<void> {
+    await request<{ ok: boolean }>(`/api/purchase-requests/${id}/cancel`, { method: 'POST' });
+  }
+
+  // ----- Audit log -----
+
+  async listAuditLog(limit = 100, offset = 0): Promise<AuditLogEntry[]> {
+    const data = await request<{ log: AuditLogEntry[] }>(`/api/audit?limit=${limit}&offset=${offset}`);
+    return data.log;
+  }
+
+  // ----- File uploads -----
+
+  async uploadFile(file: File): Promise<{ id: string; url: string }> {
+    if (!isOnline()) throw new ApiError(0, 'OFFLINE');
+    const token = getAccessToken();
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${baseUrl()}/api/uploads`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    let data: unknown = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) throw new ApiError(res.status, (data as { message?: string } | null)?.message ?? `HTTP ${res.status}`);
+    return data as { id: string; url: string };
   }
 
   // ----- Sync -----

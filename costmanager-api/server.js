@@ -42,6 +42,10 @@ app.use('/api/platform', require('./routes/platform'));
 app.use('/api/business', require('./routes/business'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/subscription', require('./routes/subscription'));
+app.use('/api/petty-cash', require('./routes/petty-cash'));
+app.use('/api/purchase-requests', require('./routes/purchase-requests'));
+app.use('/api/audit', require('./routes/audit'));
+app.use('/api/uploads', require('./routes/uploads'));
 
 app.use((req, res) => res.status(404).json({ message: 'یافت نشد' }));
 

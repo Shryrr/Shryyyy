@@ -1,14 +1,15 @@
 import * as db from '../db';
 import { currentUser } from '../auth';
-import { openModal } from '../components/modal';
+import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { el, emptyState, field, iconBtn, iconTextBtn, kpiCard, numberInput, parseNumberInput } from '../utils/dom';
-import { formatDate, formatIngredientCategory, formatMoney, formatUnit, toPersian, todayISO } from '../utils/format';
+import { formatDate, formatDateTime, formatIngredientCategory, formatMoney, formatUnit, toPersian, todayISO } from '../utils/format';
 import { shareOrCopyText } from '../utils/export';
 import type { RouteCleanup } from '../router';
 import { ingredientsById, refreshIngredients, refreshNotifications, refreshShoppingList, settings, shoppingList } from '../store';
 import { scheduleRecalculation } from '../utils/inventory-engine';
-import type { AppUser, Ingredient, IngredientCategory, ShoppingListItem } from '../types';
+import type { AppUser, Ingredient, IngredientCategory, PurchaseRequest, PurchaseRequestStatus, ShoppingListItem } from '../types';
+import { api } from '../utils/api';
 
 function buildShareText(items: ShoppingListItem[]): string {
   const lines = ['🛒 لیست خرید مواد اولیه', ''];
@@ -169,61 +170,141 @@ function buildPurchaseRequestText(businessName: string, userName: string, items:
   return lines.join('\n');
 }
 
-async function findActiveBuyerPhone(): Promise<string | undefined> {
-  const users = await db.listUsers();
-  return users.find((u) => u.role === 'buyer' && u.isActive && u.phone)?.phone;
-}
+const PR_STATUS_LABELS: Record<PurchaseRequestStatus, string> = {
+  pending: 'در انتظار خریدار',
+  accepted: 'پذیرفته‌شده',
+  completed: 'تکمیل‌شده',
+  cancelled: 'لغوشده',
+};
 
-function openPurchaseRequestActionSheet(text: string, user: AppUser): void {
-  async function handleSms(): Promise<void> {
-    const phone = await findActiveBuyerPhone();
-    window.location.href = `sms:${phone ?? ''}?body=${encodeURIComponent(text)}`;
-    modal.close();
-  }
+const PR_STATUS_TONE: Record<PurchaseRequestStatus, string> = {
+  pending: 'badge--warning',
+  accepted: 'badge--primary',
+  completed: 'badge--success',
+  cancelled: 'badge--danger',
+};
 
-  async function handleCopy(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(text);
-      showToast('متن درخواست خرید کپی شد ✓', 'success');
-    } catch {
-      showToast('خطا در کپی متن', 'error');
-    }
-    modal.close();
-  }
+function openCreatePurchaseRequestModal(items: ShoppingListItem[], onDone: () => void): void {
+  const total = items.reduce((sum, i) => sum + i.estimatedCost, 0);
+  const neededByInput = el('input', { type: 'datetime-local', class: 'input' });
+  const noteInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' });
 
-  async function handleNotify(): Promise<void> {
-    await db.createNotification({
-      type: 'purchase_request',
-      title: 'درخواست خرید جدید',
-      message: text,
-      targetRole: 'buyer',
-      createdBy: user.id,
-    });
-    await refreshNotifications();
-    showToast('نوتیفیکیشن برای مسئول خرید ارسال شد ✓', 'success');
-    modal.close();
-  }
-
-  const body = el('div', { class: 'action-sheet' }, [
-    iconTextBtn('smartphone', 'ارسال پیامک از گوشی', 'btn btn-secondary action-sheet__btn', handleSms),
-    iconTextBtn('clipboard', 'کپی متن', 'btn btn-secondary action-sheet__btn', handleCopy),
-    iconTextBtn('bell', 'ارسال نوتیفیکیشن', 'btn btn-primary action-sheet__btn', handleNotify),
+  const body = el('form', { class: 'form' }, [
+    el('p', { class: 'field__hint' }, [`${toPersian(items.length)} قلم · مجموع تخمینی: ${formatMoney(total)}`]),
+    field('نیاز تا تاریخ (اختیاری)', neededByInput),
+    field('یادداشت (اختیاری)', noteInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ارسال درخواست']),
+    ]),
   ]);
 
-  const modal = openModal({ title: 'ارسال درخواست خرید', body, maxWidth: '380px' });
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api.createPurchaseRequest({
+        items: items.map((i) => ({ ingredientId: i.ingredientId, ingredientName: i.ingredientName, suggestedQty: i.suggestedQty, unit: i.unit, estimatedCost: i.estimatedCost })),
+        neededByDatetime: neededByInput.value ? new Date(neededByInput.value).toISOString() : undefined,
+        estimatedTotal: total,
+        note: noteInput.value.trim() || undefined,
+      });
+      await db.createNotification({ type: 'purchase_request', title: 'درخواست خرید جدید', message: `${toPersian(items.length)} قلم · ${formatMoney(total)}`, targetRole: 'buyer', createdBy: currentUser.get()?.id ?? '' });
+      await refreshNotifications();
+      showToast('درخواست خرید ارسال شد ✓', 'success');
+      modal.close();
+      onDone();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا در ارسال', 'error');
+    }
+  });
+
+  const modal = openModal({ title: 'ارسال درخواست خرید', body });
 }
 
-async function handlePurchaseRequest(): Promise<void> {
-  const user = currentUser.get();
-  if (!user) return;
+function openAcceptPRModal(pr: PurchaseRequest, onDone: () => void): void {
+  const estInput = el('input', { type: 'datetime-local', class: 'input' });
+  const body = el('form', { class: 'form' }, [
+    field('زمان تخمینی خرید (اختیاری)', estInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['پذیرفتن درخواست']),
+    ]),
+  ]);
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api.acceptPurchaseRequest(pr.id, estInput.value ? new Date(estInput.value).toISOString() : undefined);
+      showToast('درخواست پذیرفته شد', 'success');
+      modal.close();
+      onDone();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+  const modal = openModal({ title: 'پذیرفتن درخواست خرید', body });
+}
+
+function openCompletePRModal(pr: PurchaseRequest, onDone: () => void): void {
+  const actualInput = numberInput(pr.estimatedTotal ?? 0);
+  const noteInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' });
+
+  const body = el('form', { class: 'form' }, [
+    field('مبلغ واقعی خرید (تومان)', actualInput),
+    field('یادداشت تکمیل (اختیاری)', noteInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت تکمیل خرید']),
+    ]),
+  ]);
+
+  body.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api.completePurchaseRequest(pr.id, { actualTotal: parseNumberInput(actualInput) || undefined, completionNote: noteInput.value.trim() || undefined });
+      showToast('خرید ثبت شد ✓', 'success');
+      modal.close();
+      onDone();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+  const modal = openModal({ title: 'تکمیل درخواست خرید', body });
+}
+
+function renderPurchaseRequestRow(pr: PurchaseRequest, role: string, onDone: () => void): HTMLElement {
+  const canAccept = (role === 'buyer' || role === 'superadmin' || role === 'manager') && pr.status === 'pending';
+  const canComplete = (role === 'buyer' || role === 'superadmin' || role === 'manager') && (pr.status === 'pending' || pr.status === 'accepted');
+  const canCancel = (role === 'superadmin' || role === 'manager') && pr.status !== 'completed' && pr.status !== 'cancelled';
+
+  return el('div', { class: 'expense-row' }, [
+    el('div', { class: 'expense-row__main' }, [
+      el('div', { class: 'expense-row__title-row' }, [
+        el('span', { class: 'expense-row__name' }, [`درخواست خرید — ${pr.createdByName}`]),
+        el('span', { class: `badge ${PR_STATUS_TONE[pr.status]}` }, [PR_STATUS_LABELS[pr.status]]),
+      ]),
+      el('div', { class: 'expense-row__meta' }, [
+        `${toPersian(pr.items.length)} قلم · تخمین: ${formatMoney(pr.estimatedTotal ?? 0)} · ${formatDate(pr.createdAt)}`,
+        pr.neededByDatetime ? ` · نیاز تا: ${formatDate(pr.neededByDatetime)}` : '',
+        pr.actualTotal ? ` · پرداخت‌شده: ${formatMoney(pr.actualTotal)}` : '',
+        pr.completionNote ? ` · ${pr.completionNote}` : '',
+      ]),
+    ]),
+    el('div', { class: 'expense-row__actions' }, [
+      canAccept ? iconBtn('check', 'پذیرفتن', () => openAcceptPRModal(pr, onDone)) : null,
+      canComplete ? iconBtn('clipboard', 'ثبت تکمیل', () => openCompletePRModal(pr, onDone)) : null,
+      canCancel ? iconBtn('x', 'لغو', async () => {
+        const ok = await confirmModal({ title: 'لغو درخواست', message: 'این درخواست خرید لغو شود؟', confirmLabel: 'لغو', danger: true });
+        if (!ok) return;
+        try { await api.cancelPurchaseRequest(pr.id); onDone(); } catch {}
+      }) : null,
+    ]),
+  ]);
+}
+
+async function handlePurchaseRequest(onDone: () => void): Promise<void> {
   const items = [...shoppingList.get()].sort((a, b) => a.ingredientName.localeCompare(b.ingredientName, 'fa'));
-  if (!items.length) {
-    showToast('لیست خرید خالی است', 'error');
-    return;
-  }
-  const total = items.reduce((sum, i) => sum + i.estimatedCost, 0);
-  const businessName = settings.get()?.businessName ?? '';
-  openPurchaseRequestActionSheet(buildPurchaseRequestText(businessName, user.name, items, total), user);
+  if (!items.length) { showToast('لیست خرید خالی است', 'error'); return; }
+  openCreatePurchaseRequestModal(items, onDone);
 }
 
 export async function renderShopping(container: HTMLElement): Promise<RouteCleanup> {
@@ -233,9 +314,13 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
   await db.regenerateShoppingList();
   await refreshShoppingList();
 
+  const user = currentUser.get();
+  const role = user?.role ?? '';
+
   const budgetEl = el('div');
   const listEl = el('div', { class: 'shopping-list' });
   const footerEl = el('div', { class: 'shopping-footer' });
+  const prListEl = el('div', { class: 'expense-list' });
 
   async function handleRegenerate(): Promise<void> {
     await db.regenerateShoppingList();
@@ -245,15 +330,26 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
 
   async function handleShare(): Promise<void> {
     const items = shoppingList.get();
-    if (!items.length) {
-      showToast('لیست خرید خالی است', 'error');
-      return;
-    }
+    if (!items.length) { showToast('لیست خرید خالی است', 'error'); return; }
     try {
       const result = await shareOrCopyText(buildShareText(items));
       showToast(result === 'shared' ? 'لیست خرید به اشتراک گذاشته شد' : 'لیست خرید در کلیپ‌بورد کپی شد', 'success');
     } catch {
       showToast('خطا در اشتراک‌گذاری', 'error');
+    }
+  }
+
+  async function renderPRs(): Promise<void> {
+    prListEl.innerHTML = '';
+    try {
+      const requests = await api.listPurchaseRequests();
+      if (!requests.length) {
+        prListEl.appendChild(emptyState({ icon: 'send', title: 'هنوز درخواست خریدی ثبت نشده است' }));
+        return;
+      }
+      for (const pr of requests) prListEl.appendChild(renderPurchaseRequestRow(pr, role, () => void renderPRs()));
+    } catch {
+      prListEl.appendChild(emptyState({ icon: 'send', title: 'خطا در بارگذاری درخواست‌ها' }));
     }
   }
 
@@ -267,13 +363,21 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
     ]),
   );
 
-  if (currentUser.get()?.role !== 'buyer') {
+  if (role !== 'buyer' && role !== 'accountant') {
     root.appendChild(
-      iconTextBtn('send', 'ارسال درخواست خرید به مسئول خرید', 'btn btn-primary purchase-request-btn', handlePurchaseRequest),
+      iconTextBtn('send', 'ارسال درخواست خرید به مسئول خرید', 'btn btn-primary purchase-request-btn', () => void handlePurchaseRequest(() => void renderPRs())),
     );
   }
 
-  root.append(budgetEl, listEl, footerEl);
+  root.append(
+    budgetEl,
+    listEl,
+    footerEl,
+    el('div', { class: 'chart-card' }, [
+      el('h3', { class: 'chart-card__title' }, ['درخواست‌های خرید']),
+      prListEl,
+    ]),
+  );
 
   function render(): void {
     listEl.innerHTML = '';
@@ -285,9 +389,7 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
     renderBudgetSection(budgetEl, items);
 
     if (!items.length) {
-      listEl.appendChild(
-        emptyState({ icon: 'cart', title: 'لیست خرید خالی است', message: 'موجودی همهٔ مواد اولیه بالاتر از حد آستانه است.' }),
-      );
+      listEl.appendChild(emptyState({ icon: 'cart', title: 'لیست خرید خالی است', message: 'موجودی همهٔ مواد اولیه بالاتر از حد آستانه است.' }));
       footerEl.innerHTML = '';
       return;
     }
@@ -304,6 +406,7 @@ export async function renderShopping(container: HTMLElement): Promise<RouteClean
     );
   }
 
+  void renderPRs();
   const unsub = shoppingList.subscribe(render);
   return () => unsub();
 }

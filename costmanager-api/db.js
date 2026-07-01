@@ -116,6 +116,79 @@ CREATE TABLE IF NOT EXISTS platform_broadcasts (
   message TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS petty_cash_transactions (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  type TEXT NOT NULL,
+  amount REAL NOT NULL,
+  reason TEXT NOT NULL,
+  requested_by TEXT NOT NULL,
+  requested_by_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  approved_by TEXT,
+  approved_at TEXT,
+  date TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  receipt_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS petty_cash_permissions (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  user_id TEXT NOT NULL REFERENCES users(id),
+  can_view INTEGER NOT NULL DEFAULT 1,
+  can_withdraw INTEGER NOT NULL DEFAULT 0,
+  can_request INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  UNIQUE(business_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS purchase_requests (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  created_by TEXT NOT NULL,
+  created_by_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  items TEXT NOT NULL,
+  needed_by_datetime TEXT,
+  estimated_total REAL,
+  note TEXT,
+  accepted_by TEXT,
+  accepted_at TEXT,
+  estimated_purchase_datetime TEXT,
+  completed_by TEXT,
+  completed_at TEXT,
+  actual_total REAL,
+  receipt_url TEXT,
+  completion_note TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  user_id TEXT,
+  user_name TEXT,
+  action TEXT NOT NULL,
+  resource_type TEXT NOT NULL,
+  resource_id TEXT,
+  detail TEXT,
+  ip_address TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS uploads (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  uploaded_by TEXT,
+  original_name TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  path TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
 `;
 
 function migrate() {
