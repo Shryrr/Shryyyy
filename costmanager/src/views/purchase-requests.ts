@@ -120,9 +120,24 @@ function buildPaymentForm(prefillSupplierId?: string): {
 
 // ── modals ─────────────────────────────────────────────────────────────────────
 
+function prItemLabel(pr: PurchaseRequest): string {
+  const items = Array.isArray(pr.items) ? pr.items : [];
+  if (items.length > 0) return `${items[0].ingredientName} — ${toPersian(items[0].suggestedQty ?? 0)} واحد`;
+  if (pr.requestedQty != null) return `${toPersian(pr.requestedQty)} واحد`;
+  return '—';
+}
+
+function prInfoBadge(pr: PurchaseRequest): HTMLElement {
+  return el('div', { class: 'pr-modal-info' }, [
+    el('span', { class: 'pr-modal-info__label' }, ['قلم درخواست:']),
+    el('span', { class: 'pr-modal-info__value' }, [prItemLabel(pr)]),
+  ]);
+}
+
 function openAcceptModal(pr: PurchaseRequest, onDone: () => void): void {
   const estInput = el('input', { type: 'datetime-local', class: 'input' }) as HTMLInputElement;
   const body = el('form', { class: 'form' }, [
+    prInfoBadge(pr),
     field('زمان تخمینی خرید (اختیاری)', estInput),
     el('div', { class: 'modal-actions' }, [
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
@@ -146,6 +161,7 @@ function openAcceptModal(pr: PurchaseRequest, onDone: () => void): void {
 function openCompleteModal(pr: PurchaseRequest, onDone: () => void): void {
   const { formEl, getValues } = buildPaymentForm(pr.supplierId ?? undefined);
   const body = el('form', { class: 'form' }, [
+    prInfoBadge(pr),
     formEl,
     el('div', { class: 'modal-actions' }, [
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
