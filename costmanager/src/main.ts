@@ -92,7 +92,7 @@ function createAppHeader(user: AppUser, onMenuClick: () => void): HTMLElement {
   const syncBadge = el('span', { class: 'app-header__sync-badge' }, []);
   syncBadge.hidden = true;
 
-  const menuBtn = el('button', { type: 'button', class: 'app-header__icon-btn', title: 'منو', onclick: onMenuClick }, []);
+  const menuBtn = el('button', { type: 'button', class: 'app-header__icon-btn app-header__menu-btn', title: 'منو', onclick: onMenuClick }, []);
   menuBtn.setAttribute('aria-label', 'باز کردن منو');
   menuBtn.appendChild(svgIcon('menu'));
   menuBtn.addEventListener('touchend', (e) => { e.preventDefault(); onMenuClick(); });
