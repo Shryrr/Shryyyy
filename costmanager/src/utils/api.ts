@@ -356,6 +356,10 @@ export class ApiClient {
     return data.user;
   }
 
+  async deleteUser(id: string): Promise<void> {
+    await request<Record<string, never>>(`/api/business/users/${id}`, { method: 'DELETE' });
+  }
+
   // ----- Subscription (business scope) -----
 
   async getSubscriptionStatus(): Promise<{ plan: string; status: string; expiresAt: string; pendingPayment: ApiSubscriptionPayment | null }> {

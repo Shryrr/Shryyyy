@@ -1,4 +1,5 @@
 import * as db from '../db';
+import { api } from '../utils/api';
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
 import { passwordStrength, validatePassword, validateUsername } from '../utils/password';
@@ -39,8 +40,8 @@ function settingsCard(title: string, body: HTMLElement): HTMLElement {
 }
 
 async function loadUsers(): Promise<AppUser[]> {
-  const config = await db.getAuthConfig();
-  return config.users;
+  const users = await api.listUsers();
+  return users.map((u) => ({ id: u.id, name: u.fullName, username: u.username, role: u.role, isActive: u.isActive } as AppUser));
 }
 
 // ---------- Users tab ----------
@@ -106,15 +107,15 @@ function openUserFormModal(onSaved: () => void, existing?: AppUser): void {
     }
     try {
       if (existing) {
-        const patch: db.UpdateUserInput = { name, username };
+        const patch: Parameters<typeof api.updateUser>[1] = { fullName: name };
         if (password) patch.password = password;
         if (!isSuperadminUser) {
           patch.role = roleSelect.value as UserRole;
           patch.isActive = activeCheckbox.checked;
         }
-        await db.updateUser(existing.id, patch);
+        await api.updateUser(existing.id, patch);
       } else {
-        await db.createUser({ name, username, password, role: roleSelect.value as UserRole });
+        await api.createUser({ fullName: name, username, password, role: roleSelect.value as UserRole });
       }
       showToast(existing ? 'تغییرات ذخیره شد' : 'کاربر افزوده شد', 'success');
       modal.close();
@@ -136,7 +137,7 @@ async function handleDeleteUser(user: AppUser, onDone: () => void): Promise<void
   });
   if (!confirmed) return;
   try {
-    await db.deleteUser(user.id);
+    await api.deleteUser(user.id);
     showToast('کاربر حذف شد', 'success');
     onDone();
   } catch (err) {
@@ -158,7 +159,7 @@ function renderUserRow(user: AppUser, onChange: () => void): HTMLElement {
       iconBtn('edit', 'ویرایش', () => openUserFormModal(onChange, user)),
       !isSuperadminUser
         ? iconBtn(user.isActive ? 'eye' : 'eye-off', user.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی', async () => {
-          await db.updateUser(user.id, { isActive: !user.isActive });
+          await api.updateUser(user.id, { isActive: !user.isActive });
           onChange();
         })
         : null,

@@ -46,6 +46,14 @@ router.post('/users', requireRole('superadmin'), (req, res) => {
   res.status(201).json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id)) });
 });
 
+router.delete('/users/:id', requireRole('superadmin'), (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ? AND business_id = ?').get(req.params.id, req.auth.businessId);
+  if (!user) return res.status(404).json({ message: 'کاربر یافت نشد' });
+  if (user.role === 'superadmin') return res.status(400).json({ message: 'مدیر اصلی قابل حذف نیست' });
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 router.patch('/users/:id', requireRole('superadmin'), (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ? AND business_id = ?').get(req.params.id, req.auth.businessId);
   if (!user) return res.status(404).json({ message: 'کاربر یافت نشد' });
