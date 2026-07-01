@@ -150,6 +150,8 @@ CREATE TABLE IF NOT EXISTS purchase_requests (
   created_by TEXT NOT NULL,
   created_by_name TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
+  ingredient_id TEXT,
+  requested_qty REAL,
   items TEXT NOT NULL,
   needed_by_datetime TEXT,
   estimated_total REAL,
@@ -159,11 +161,40 @@ CREATE TABLE IF NOT EXISTS purchase_requests (
   estimated_purchase_datetime TEXT,
   completed_by TEXT,
   completed_at TEXT,
+  actual_price REAL,
+  actual_qty REAL,
   actual_total REAL,
+  payment_method TEXT,
+  cash_amount REAL,
+  credit_amount REAL,
+  supplier_id TEXT,
+  invoice_ref TEXT,
+  invoice_image_url TEXT,
   receipt_url TEXT,
   completion_note TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS suppliers (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  name TEXT NOT NULL,
+  phone TEXT,
+  balance REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS supplier_transactions (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  supplier_id TEXT NOT NULL REFERENCES suppliers(id),
+  purchase_request_id TEXT,
+  type TEXT NOT NULL,
+  amount REAL NOT NULL,
+  note TEXT,
+  created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -223,6 +254,23 @@ function migrate() {
       'INSERT INTO subscription_pricing (plan, amount, updated_at) VALUES (?, ?, ?)',
     );
     for (const [plan, amount] of defaults) insert.run(plan, amount, now);
+  }
+
+  // Add new purchase_request columns to existing databases (idempotent — fails silently if already present)
+  const prNewCols = [
+    ['ingredient_id', 'TEXT'],
+    ['requested_qty', 'REAL'],
+    ['actual_price', 'REAL'],
+    ['actual_qty', 'REAL'],
+    ['payment_method', 'TEXT'],
+    ['cash_amount', 'REAL'],
+    ['credit_amount', 'REAL'],
+    ['supplier_id', 'TEXT'],
+    ['invoice_ref', 'TEXT'],
+    ['invoice_image_url', 'TEXT'],
+  ];
+  for (const [col, type] of prNewCols) {
+    try { db.exec(`ALTER TABLE purchase_requests ADD COLUMN ${col} ${type}`); } catch {}
   }
 
   console.log('Migrations complete.');
