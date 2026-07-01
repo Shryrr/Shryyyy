@@ -13,6 +13,7 @@ import { inventoryValue, lowStockIngredients } from '../utils/calc';
 import { scheduleRecalculation } from '../utils/inventory-engine';
 import { STOCKOUT_WARNING_DAYS } from '../utils/stock-alerts';
 import type { Ingredient, IngredientCategory, PurchaseRecord, Unit } from '../types';
+import { renderPurchaseRequestModal } from './purchase-requests';
 
 const CATEGORY_OPTIONS: IngredientCategory[] = [
   'coffee_tea', 'dairy', 'dry_goods', 'protein', 'produce', 'bakery', 'beverages', 'packaging', 'other',
@@ -355,7 +356,7 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
     ]),
     el('div', { class: 'ingredient-card__actions' }, [
       status === 'low'
-        ? el('button', { class: 'btn btn-warning btn-sm', type: 'button', onclick: () => openPurchaseRequestModal(ingredient) }, ['درخواست خرید'])
+        ? el('button', { class: 'btn btn-warning btn-sm', type: 'button', onclick: () => renderPurchaseRequestModal(ingredient.id, ingredient.name) }, ['درخواست خرید'])
         : null,
       canEdit ? el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']) : null,
       canEdit ? iconBtn('clipboard', 'ثبت شمارش فیزیکی', () => openPhysicalCountModal(ingredient)) : null,

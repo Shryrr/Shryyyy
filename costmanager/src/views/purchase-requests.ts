@@ -309,7 +309,7 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
           ]),
           el('div', { class: 'expense-row__actions' }, [
             canAccept  ? iconBtn('check',     'پذیرفتن',    () => openAcceptModal(pr,   () => void load())) : null,
-            canComplete ? iconBtn('clipboard', 'ثبت تکمیل', () => openCompleteModal(pr, () => void load())) : null,
+            canComplete ? iconBtn('clipboard', 'ثبت تکمیل', () => renderPurchaseCompletionModal(pr, () => void load())) : null,
             canCancel  ? iconBtn('x',          'لغو',       async () => {
               const ok = await confirmModal({ title: 'لغو درخواست', message: 'این درخواست لغو شود؟', confirmLabel: 'لغو', danger: true });
               if (!ok) return;
@@ -325,4 +325,125 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
   }
 
   void load();
+}
+
+// ── exact-label modal functions ────────────────────────────────────────────────
+
+/** Creation modal — called from ingredient cards.
+ *  Labels: "مقدار درخواستی", "نیاز تا", submit: "درخواست خرید" */
+export function renderPurchaseRequestModal(ingredientId: string, ingredientName: string, onDone?: () => void): void {
+  const qtyInput = numberInput(0);
+  const dateInput = document.createElement('input');
+  dateInput.type = 'datetime-local';
+  dateInput.className = 'input';
+
+  const form = document.createElement('form');
+  form.className = 'form';
+  form.appendChild(field('مقدار درخواستی', qtyInput));
+  form.appendChild(field('نیاز تا', dateInput));
+
+  const actions = document.createElement('div');
+  actions.className = 'modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'انصراف';
+  cancelBtn.addEventListener('click', () => modal.close());
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.className = 'btn btn-primary';
+  submitBtn.textContent = 'درخواست خرید';
+  actions.append(cancelBtn, submitBtn);
+  form.appendChild(actions);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const qty = parseNumberInput(qtyInput);
+    if (!qty || !dateInput.value) { showToast('مقدار و زمان نیاز الزامی است', 'error'); return; }
+    try {
+      await api.createPurchaseRequest({
+        ingredientId,
+        requestedQty: qty,
+        neededByDatetime: new Date(dateInput.value).toISOString(),
+      });
+      showToast('درخواست خرید ثبت شد ✓', 'success');
+      modal.close();
+      onDone?.();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+
+  const modal = openModal({ title: `درخواست خرید — ${ingredientName}`, body: form });
+}
+
+/** Completion modal — called from purchase-request list rows.
+ *  Labels: "روش پرداخت" (نقدی/اعتباری/ترکیبی), submit: "ثبت خرید انجام‌شده" */
+export function renderPurchaseCompletionModal(pr: PurchaseRequest, onDone?: () => void): void {
+  const rName = `pm2-${Date.now()}`;
+  const cashR   = document.createElement('input');
+  cashR.type = 'radio'; cashR.name = rName; cashR.value = 'cash'; cashR.checked = true;
+  const creditR = document.createElement('input');
+  creditR.type = 'radio'; creditR.name = rName; creditR.value = 'credit';
+  const splitR  = document.createElement('input');
+  splitR.type = 'radio'; splitR.name = rName; splitR.value = 'split';
+
+  const pmField = document.createElement('div');
+  pmField.className = 'field';
+  const pmLabel = document.createElement('label');
+  pmLabel.className = 'field__label';
+  pmLabel.textContent = 'روش پرداخت';
+  const radioGroup = document.createElement('div');
+  radioGroup.className = 'radio-group';
+  const mkLbl = (input: HTMLInputElement, text: string): HTMLLabelElement => {
+    const l = document.createElement('label');
+    l.className = 'radio-label';
+    l.appendChild(input);
+    l.append(' ' + text);
+    return l;
+  };
+  radioGroup.append(mkLbl(cashR, 'نقدی'), mkLbl(creditR, 'اعتباری'), mkLbl(splitR, 'ترکیبی'));
+  pmField.append(pmLabel, radioGroup);
+
+  const noteInput = document.createElement('input');
+  noteInput.type = 'text';
+  noteInput.className = 'input';
+  noteInput.placeholder = 'اختیاری';
+
+  const form = document.createElement('form');
+  form.className = 'form';
+  form.appendChild(pmField);
+  form.appendChild(field('یادداشت', noteInput));
+
+  const actions = document.createElement('div');
+  actions.className = 'modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'انصراف';
+  cancelBtn.addEventListener('click', () => modal.close());
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.className = 'btn btn-primary';
+  submitBtn.textContent = 'ثبت خرید انجام‌شده';
+  actions.append(cancelBtn, submitBtn);
+  form.appendChild(actions);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pm: 'cash' | 'credit' | 'split' = creditR.checked ? 'credit' : splitR.checked ? 'split' : 'cash';
+    try {
+      await api.completePurchaseRequest(pr.id, {
+        paymentMethod: pm,
+        note: noteInput.value.trim() || undefined,
+      });
+      showToast('خرید انجام‌شده ثبت شد ✓', 'success');
+      modal.close();
+      onDone?.();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+
+  const modal = openModal({ title: 'ثبت تکمیل خرید', body: form, maxWidth: '480px' });
 }
