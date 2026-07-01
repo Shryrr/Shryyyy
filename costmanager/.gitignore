@@ -3,3 +3,4 @@ dist/
 /sw.js
 *.log
 .DS_Store
+src/graphify-out/
