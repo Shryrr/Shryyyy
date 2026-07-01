@@ -865,11 +865,11 @@ canvas {
 }
 
 .notification-bell__panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  inset-inline-end: 0;
-  width: min(320px, 90vw);
-  max-height: 360px;
+  position: fixed;
+  top: var(--header-h);
+  left: 16px;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(360px, 70vh);
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -997,7 +997,8 @@ canvas {
 
 .app-nav {
   position: fixed;
-  inset-inline: 0;
+  left: 0;
+  right: 0;
   bottom: 0;
   z-index: var(--z-nav);
   display: flex;
@@ -1090,7 +1091,7 @@ canvas {
   position: fixed;
   top: 0;
   bottom: 0;
-  inset-inline-start: 0;
+  right: 0;
   width: min(280px, 80vw);
   z-index: calc(var(--z-modal) + 1);
   display: flex;
@@ -1190,6 +1191,60 @@ canvas {
   padding: var(--space-2) var(--space-3);
   color: var(--ink-2);
   font-size: 13px;
+}
+
+/* Dark-mode sidebar — explicitly override browser button defaults that iOS
+   can paint white even when background:transparent is declared. */
+[data-theme='dark'] .sidebar {
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+}
+
+[data-theme='dark'] .sidebar__title {
+  color: var(--ink);
+}
+
+[data-theme='dark'] .sidebar__item {
+  color: var(--ink);
+  background: transparent;
+}
+
+[data-theme='dark'] .sidebar__item:hover {
+  background: var(--primary-light);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .sidebar__item--active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+[data-theme='dark'] .sidebar__item--danger {
+  color: var(--danger);
+}
+
+[data-theme='dark'] .sidebar__close-btn {
+  color: var(--ink);
+  background: transparent;
+}
+
+[data-theme='dark'] .sidebar__user {
+  color: var(--ink-2);
+}
+
+/* Dark-mode bottom nav */
+[data-theme='dark'] .app-nav {
+  background: var(--surface);
+  border-top-color: var(--line);
+}
+
+[data-theme='dark'] .app-nav__item {
+  color: var(--ink-3);
+  background: transparent;
+}
+
+[data-theme='dark'] .app-nav__item--active {
+  color: var(--primary);
 }
 
 /* ==========================================================================

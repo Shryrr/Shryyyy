@@ -125,8 +125,8 @@
     "semantic_hash": ""
   },
   "costmanager/src/main.ts": {
-    "mtime": 1782802876.1567473,
-    "ast_hash": "8ea178b0f2eb0bf2033f40385b8e3309",
+    "mtime": 1782865127.8281472,
+    "ast_hash": "31cde24b1ad256e2750e3b853e23aaef",
     "semantic_hash": ""
   },
   "costmanager/src/platform-owner.ts": {
@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "costmanager/sw.js": {
-    "mtime": 1782847612.580111,
-    "ast_hash": "fc27424e0bba9f4eef7b459e54e48985",
+    "mtime": 1782865142.8841476,
+    "ast_hash": "1c975c675c2e260d335428fb0480ab0f",
     "semantic_hash": ""
   },
   "costmanager/tsconfig.json": {

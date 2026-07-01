@@ -95,6 +95,7 @@ function createAppHeader(user: AppUser, onMenuClick: () => void): HTMLElement {
   const menuBtn = el('button', { type: 'button', class: 'app-header__icon-btn', title: 'منو', onclick: onMenuClick }, []);
   menuBtn.setAttribute('aria-label', 'باز کردن منو');
   menuBtn.appendChild(svgIcon('menu'));
+  menuBtn.addEventListener('touchend', (e) => { e.preventDefault(); onMenuClick(); });
 
   const actions = el('div', { class: 'app-header__actions' }, [createNotificationBell(user), menuBtn]);
 
