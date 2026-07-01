@@ -13,7 +13,7 @@ import { inventoryValue, lowStockIngredients } from '../utils/calc';
 import { scheduleRecalculation } from '../utils/inventory-engine';
 import { STOCKOUT_WARNING_DAYS } from '../utils/stock-alerts';
 import type { Ingredient, IngredientCategory, PurchaseRecord, Unit } from '../types';
-import { renderPurchaseRequestModal } from './purchase-requests';
+import { renderCreateRequestModal } from './purchase-requests';
 
 const CATEGORY_OPTIONS: IngredientCategory[] = [
   'coffee_tea', 'dairy', 'dry_goods', 'protein', 'produce', 'bakery', 'beverages', 'packaging', 'other',
@@ -100,46 +100,6 @@ function openIngredientFormModal(existing?: Ingredient): void {
   const modal = openModal({ title: existing ? 'ویرایش ماده اولیه' : 'افزودن ماده اولیه', body });
 }
 
-function openPurchaseRequestModal(ingredient: Ingredient): void {
-  const suggestedQty = Math.max(0, ingredient.minStock - ingredient.currentStock + (ingredient.maxStock > ingredient.minStock ? ingredient.maxStock - ingredient.minStock : 0));
-  const qtyInput = numberInput(suggestedQty || 1);
-  const neededByInput = el('input', { type: 'datetime-local', class: 'input' }) as HTMLInputElement;
-  const noteInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' });
-
-  const body = el('form', { class: 'form' }, [
-    el('p', { class: 'form-hint' }, [
-      `${ingredient.name} — موجودی فعلی: ${toPersian(ingredient.currentStock)} ${formatUnit(ingredient.unit)} (حد آستانه: ${toPersian(ingredient.minStock)} ${formatUnit(ingredient.unit)})`,
-    ]),
-    field(`مقدار درخواستی (${formatUnit(ingredient.unit)})`, qtyInput),
-    field('نیاز تا تاریخ *', neededByInput),
-    field('یادداشت (اختیاری)', noteInput),
-    el('div', { class: 'modal-actions' }, [
-      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
-      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ارسال درخواست خرید']),
-    ]),
-  ]);
-
-  body.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const qty = parseNumberInput(qtyInput);
-    if (qty <= 0) { showToast('مقدار درخواستی باید بیشتر از صفر باشد', 'error'); return; }
-    if (!neededByInput.value) { showToast('تاریخ نیاز الزامی است', 'error'); return; }
-    try {
-      await api.createPurchaseRequest({
-        ingredientId: ingredient.id,
-        requestedQty: qty,
-        neededByDatetime: new Date(neededByInput.value).toISOString(),
-        note: noteInput.value.trim() || undefined,
-      });
-      showToast('درخواست خرید ارسال شد ✓', 'success');
-      modal.close();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'خطا در ارسال', 'error');
-    }
-  });
-
-  const modal = openModal({ title: `درخواست خرید — ${ingredient.name}`, body });
-}
 
 function openPurchaseModal(ingredient: Ingredient): void {
   const qtyInput = numberInput(0);
@@ -356,7 +316,7 @@ function renderIngredientCard(ingredient: Ingredient): HTMLElement {
     ]),
     el('div', { class: 'ingredient-card__actions' }, [
       status === 'low'
-        ? el('button', { class: 'btn btn-warning btn-sm', type: 'button', onclick: () => renderPurchaseRequestModal(ingredient.id, ingredient.name) }, ['درخواست خرید'])
+        ? el('button', { class: 'btn btn-warning btn-sm', type: 'button', onclick: () => renderCreateRequestModal(ingredient) }, ['درخواست خرید'])
         : null,
       canEdit ? el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => openPurchaseModal(ingredient) }, ['ثبت خرید']) : null,
       canEdit ? iconBtn('clipboard', 'ثبت شمارش فیزیکی', () => openPhysicalCountModal(ingredient)) : null,

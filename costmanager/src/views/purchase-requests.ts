@@ -1,12 +1,11 @@
 import { confirmModal, openModal } from '../components/modal';
 import { showToast } from '../components/toast';
-import { createImageUpload } from '../components/image-upload';
 import { el, emptyState, field, iconBtn, numberInput, parseNumberInput } from '../utils/dom';
 import { formatDate, formatMoney, toPersian } from '../utils/format';
 import { api } from '../utils/api';
 import { currentUser } from '../auth';
 import type { RouteCleanup } from '../router';
-import type { PurchaseRequest, PurchaseRequestStatus } from '../types';
+import type { Ingredient, PurchaseRequest, PurchaseRequestStatus } from '../types';
 
 const STATUS_LABEL: Record<PurchaseRequestStatus, string> = {
   pending:   'در انتظار خریدار',
@@ -14,7 +13,6 @@ const STATUS_LABEL: Record<PurchaseRequestStatus, string> = {
   completed: 'تکمیل‌شده',
   cancelled: 'لغوشده',
 };
-
 const STATUS_CLASS: Record<PurchaseRequestStatus, string> = {
   pending:   'badge--warning',
   accepted:  'badge--primary',
@@ -22,215 +20,229 @@ const STATUS_CLASS: Record<PurchaseRequestStatus, string> = {
   cancelled: 'badge--danger',
 };
 
-// ── shared payment form ────────────────────────────────────────────────────────
+// ── 1. Creation modal ──────────────────────────────────────────────────────────
 
-function buildPaymentForm(prefillSupplierId?: string): {
-  formEl: HTMLElement;
-  getValues: () => {
-    actualPrice?: number;
-    actualQty?: number;
-    paymentMethod: 'cash' | 'credit' | 'split';
-    cashAmount?: number;
-    creditAmount?: number;
-    supplierId?: string;
-    invoiceRef?: string;
-    invoiceImageUrl?: string;
-    note?: string;
-  };
-} {
+export function renderCreateRequestModal(ingredient: Ingredient, onDone?: () => void): void {
+  const currentStock = Number(ingredient.currentStock ?? 0);
+  const maxStock     = Number((ingredient as Record<string, unknown>).maxStock ?? ingredient.minStock ?? 0);
+  const defaultQty   = Math.max(0, maxStock - currentStock);
+
+  const stockDisplay = el('div', { class: 'field' }, [
+    el('label', { class: 'field__label' }, ['موجودی فعلی']),
+    el('div', { class: 'input input--readonly' }, [toPersian(currentStock) + ' ' + (ingredient.unit ?? '')]),
+  ]);
+
+  const qtyInput = numberInput(defaultQty);
+
+  const dateInput = document.createElement('input');
+  dateInput.type = 'datetime-local';
+  dateInput.className = 'input';
+  dateInput.required = true;
+
+  const noteArea = document.createElement('textarea');
+  noteArea.className = 'input';
+  noteArea.rows = 2;
+  noteArea.placeholder = 'اختیاری';
+
+  const form = el('form', { class: 'form' }, [
+    stockDisplay,
+    field('مقدار درخواستی', qtyInput),
+    field('نیاز تا', dateInput),
+    field('توضیحات', noteArea),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت درخواست']),
+    ]),
+  ]);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const qty = parseNumberInput(qtyInput);
+    if (!qty || qty <= 0) { showToast('مقدار درخواستی را وارد کنید', 'error'); return; }
+    if (!dateInput.value) { showToast('زمان نیاز را انتخاب کنید', 'error'); return; }
+    try {
+      await api.createPurchaseRequest({
+        ingredientId: ingredient.id,
+        requestedQty: qty,
+        neededByDatetime: new Date(dateInput.value).toISOString(),
+        note: noteArea.value.trim() || undefined,
+      });
+      showToast('درخواست خرید ثبت شد ✓', 'success');
+      modal.close();
+      onDone?.();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+
+  const modal = openModal({ title: `درخواست خرید — ${ingredient.name}`, body: form });
+}
+
+// ── 2. Accept modal (buyer) ────────────────────────────────────────────────────
+
+export function renderAcceptModal(request: PurchaseRequest, onDone?: () => void): void {
+  const items = Array.isArray(request.items) ? request.items : [];
+  const ingredientName = items[0]?.ingredientName ?? items[0]?.name ?? '—';
+  const requestedQty = request.requestedQty ?? items[0]?.suggestedQty ?? items[0]?.requestedQty ?? 0;
+
+  const estInput = document.createElement('input');
+  estInput.type = 'datetime-local';
+  estInput.className = 'input';
+
+  const form = el('form', { class: 'form' }, [
+    el('div', { class: 'pr-modal-info' }, [
+      el('div', {}, [
+        el('span', { class: 'pr-modal-info__label' }, ['ماده اولیه: ']),
+        el('strong', {}, [ingredientName]),
+      ]),
+      el('div', {}, [
+        el('span', { class: 'pr-modal-info__label' }, ['مقدار درخواستی: ']),
+        el('strong', {}, [toPersian(requestedQty)]),
+      ]),
+      request.neededByDatetime
+        ? el('div', {}, [
+            el('span', { class: 'pr-modal-info__label' }, ['نیاز تا: ']),
+            el('strong', {}, [formatDate(request.neededByDatetime)]),
+          ])
+        : null,
+    ]),
+    field('زمان تخمینی خرید', estInput),
+    el('div', { class: 'modal-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['تأیید درخواست']),
+    ]),
+  ]);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api.acceptPurchaseRequest(
+        request.id,
+        estInput.value ? new Date(estInput.value).toISOString() : undefined,
+      );
+      showToast('درخواست تأیید شد ✓', 'success');
+      modal.close();
+      onDone?.();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'خطا', 'error');
+    }
+  });
+
+  const modal = openModal({ title: 'تأیید درخواست خرید', body: form });
+}
+
+// ── 3. Completion modal (buyer) ────────────────────────────────────────────────
+
+export function renderCompletionModal(request: PurchaseRequest, onDone?: () => void): void {
   const priceInput = numberInput(0);
-  const qtyInput = numberInput(0);
+  const qtyInput   = numberInput(request.requestedQty ?? 0);
 
-  const rName = `pm-${Date.now()}`;
+  // payment method radios
+  const rName   = `pm-${Date.now()}`;
   const cashR   = el('input', { type: 'radio', name: rName, value: 'cash'   }) as HTMLInputElement;
   cashR.checked = true;
   const creditR = el('input', { type: 'radio', name: rName, value: 'credit' }) as HTMLInputElement;
   const splitR  = el('input', { type: 'radio', name: rName, value: 'split'  }) as HTMLInputElement;
 
-  const cashRow   = field('مبلغ نقدی (تومان)',  numberInput(0));
-  const creditRow = field('مبلغ نسیه (تومان)', numberInput(0));
-  const cashAmtEl   = cashRow.querySelector('input')   as HTMLInputElement;
-  const creditAmtEl = creditRow.querySelector('input') as HTMLInputElement;
-  creditRow.style.display = 'none';
+  const cashAmtInput   = numberInput(0);
+  const creditAmtInput = numberInput(0);
+  const cashAmtRow   = field('مبلغ نقدی (تومان)',   cashAmtInput);
+  const creditAmtRow = field('مبلغ اعتباری (تومان)', creditAmtInput);
+  cashAmtRow.style.display   = 'none';
+  creditAmtRow.style.display = 'none';
 
-  const updateRows = (): void => {
+  const updatePaymentRows = (): void => {
     const pm = creditR.checked ? 'credit' : splitR.checked ? 'split' : 'cash';
-    cashRow.style.display   = pm === 'credit' ? 'none' : '';
-    creditRow.style.display = pm === 'cash'   ? 'none' : '';
+    cashAmtRow.style.display   = pm === 'ترکیبی' || pm === 'split' ? '' : 'none';
+    creditAmtRow.style.display = pm === 'ترکیبی' || pm === 'split' || pm === 'credit' ? '' : 'none';
   };
-  cashR.addEventListener('change', updateRows);
-  creditR.addEventListener('change', updateRows);
-  splitR.addEventListener('change', updateRows);
+  [cashR, creditR, splitR].forEach((r) => r.addEventListener('change', updatePaymentRows));
 
+  // supplier select
   const supplierSel = el('select', { class: 'input' }) as HTMLSelectElement;
-  supplierSel.appendChild(el('option', { value: '' }, ['— تامین‌کننده (اختیاری) —']));
+  supplierSel.appendChild(el('option', { value: '' }, ['— تأمین‌کننده (اختیاری) —']));
   void api.listSuppliers().then((list) => {
     for (const s of list) {
-      const opt = el('option', { value: s.id }, [s.name]) as HTMLOptionElement;
-      supplierSel.appendChild(opt);
+      supplierSel.appendChild(el('option', { value: s.id }, [s.name]));
     }
-    if (prefillSupplierId) supplierSel.value = prefillSupplierId;
   });
 
-  const invRefInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' }) as HTMLInputElement;
-  let invoiceImageUrl = '';
-  const imgUpload = createImageUpload({
-    label: 'تصویر فاکتور (اختیاری)',
-    onUploaded: (url) => { invoiceImageUrl = url; },
-  });
-  const noteInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' }) as HTMLInputElement;
+  const invoiceInput = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' }) as HTMLInputElement;
+  const noteInput    = el('input', { type: 'text', class: 'input', placeholder: 'اختیاری' }) as HTMLInputElement;
 
-  const formEl = el('div', {}, [
-    field('قیمت واقعی هر واحد (تومان)', priceInput),
+  const form = el('form', { class: 'form' }, [
+    field('قیمت خرید جدید (تومان)', priceInput),
     field('مقدار خریداری‌شده', qtyInput),
     el('div', { class: 'field' }, [
       el('label', { class: 'field__label' }, ['روش پرداخت']),
       el('div', { class: 'radio-group' }, [
-        el('label', { class: 'radio-label' }, [cashR,   ' نقد']),
-        el('label', { class: 'radio-label' }, [creditR, ' نسیه']),
+        el('label', { class: 'radio-label' }, [cashR,   ' نقدی']),
+        el('label', { class: 'radio-label' }, [creditR, ' اعتباری']),
         el('label', { class: 'radio-label' }, [splitR,  ' ترکیبی']),
       ]),
     ]),
-    cashRow,
-    creditRow,
-    field('تامین‌کننده', supplierSel),
-    field('شماره فاکتور', invRefInput),
-    el('div', { class: 'field' }, [el('label', { class: 'field__label' }, ['تصویر فاکتور']), imgUpload]),
+    cashAmtRow,
+    creditAmtRow,
+    field('تأمین‌کننده', supplierSel),
+    field('شماره فاکتور', invoiceInput),
     field('یادداشت', noteInput),
-  ]);
-
-  return {
-    formEl,
-    getValues: () => {
-      const pm: 'cash' | 'credit' | 'split' = creditR.checked ? 'credit' : splitR.checked ? 'split' : 'cash';
-      return {
-        actualPrice:    parseNumberInput(priceInput)  || undefined,
-        actualQty:      parseNumberInput(qtyInput)    || undefined,
-        paymentMethod:  pm,
-        cashAmount:   pm !== 'credit' ? (parseNumberInput(cashAmtEl)   || undefined) : undefined,
-        creditAmount: pm !== 'cash'   ? (parseNumberInput(creditAmtEl) || undefined) : undefined,
-        supplierId:   supplierSel.value.trim() || undefined,
-        invoiceRef:   invRefInput.value.trim() || undefined,
-        invoiceImageUrl: invoiceImageUrl || undefined,
-        note:         noteInput.value.trim()   || undefined,
-      };
-    },
-  };
-}
-
-// ── modals ─────────────────────────────────────────────────────────────────────
-
-function prItemLabel(pr: PurchaseRequest): string {
-  const items = Array.isArray(pr.items) ? pr.items : [];
-  if (items.length > 0) return `${items[0].ingredientName} — ${toPersian(items[0].suggestedQty ?? 0)} واحد`;
-  if (pr.requestedQty != null) return `${toPersian(pr.requestedQty)} واحد`;
-  return '—';
-}
-
-function prInfoBadge(pr: PurchaseRequest): HTMLElement {
-  return el('div', { class: 'pr-modal-info' }, [
-    el('span', { class: 'pr-modal-info__label' }, ['قلم درخواست:']),
-    el('span', { class: 'pr-modal-info__value' }, [prItemLabel(pr)]),
-  ]);
-}
-
-function openAcceptModal(pr: PurchaseRequest, onDone: () => void): void {
-  const estInput = el('input', { type: 'datetime-local', class: 'input' }) as HTMLInputElement;
-  const body = el('form', { class: 'form' }, [
-    prInfoBadge(pr),
-    field('زمان تخمینی خرید (اختیاری)', estInput),
     el('div', { class: 'modal-actions' }, [
       el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
-      el('button', { type: 'submit',  class: 'btn btn-primary'  }, ['پذیرفتن درخواست']),
+      el('button', { type: 'submit', class: 'btn btn-primary' }, ['ثبت خرید انجام‌شده']),
     ]),
   ]);
-  body.addEventListener('submit', async (e) => {
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const pm: 'cash' | 'credit' | 'split' = creditR.checked ? 'credit' : splitR.checked ? 'split' : 'cash';
     try {
-      await api.acceptPurchaseRequest(pr.id, estInput.value ? new Date(estInput.value).toISOString() : undefined);
-      showToast('درخواست پذیرفته شد', 'success');
+      await api.completePurchaseRequest(request.id, {
+        actualPrice:   parseNumberInput(priceInput)    || undefined,
+        actualQty:     parseNumberInput(qtyInput)      || undefined,
+        paymentMethod: pm,
+        cashAmount:    pm !== 'credit' ? (parseNumberInput(cashAmtInput)   || undefined) : undefined,
+        creditAmount:  pm !== 'cash'   ? (parseNumberInput(creditAmtInput) || undefined) : undefined,
+        supplierId:    supplierSel.value.trim() || undefined,
+        invoiceRef:    invoiceInput.value.trim() || undefined,
+        note:          noteInput.value.trim()   || undefined,
+      });
+      showToast('خرید انجام‌شده ثبت شد ✓', 'success');
       modal.close();
-      onDone();
+      onDone?.();
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'خطا', 'error');
     }
   });
-  const modal = openModal({ title: 'پذیرفتن درخواست خرید', body });
+
+  const modal = openModal({ title: 'ثبت تکمیل خرید', body: form, maxWidth: '520px' });
 }
 
-function openCompleteModal(pr: PurchaseRequest, onDone: () => void): void {
-  const { formEl, getValues } = buildPaymentForm(pr.supplierId ?? undefined);
-  const body = el('form', { class: 'form' }, [
-    prInfoBadge(pr),
-    formEl,
-    el('div', { class: 'modal-actions' }, [
-      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
-      el('button', { type: 'submit',  class: 'btn btn-primary'  }, ['ثبت تکمیل خرید']),
-    ]),
-  ]);
-  body.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      await api.completePurchaseRequest(pr.id, getValues());
-      showToast('خرید ثبت شد ✓', 'success');
-      modal.close();
-      onDone();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'خطا', 'error');
-    }
-  });
-  const modal = openModal({ title: 'تکمیل درخواست خرید', body, maxWidth: '520px' });
-}
-
-function openBatchCompleteModal(ids: string[], onDone: () => void): void {
-  const { formEl, getValues } = buildPaymentForm();
-  const body = el('form', { class: 'form' }, [
-    el('p', { class: 'field__hint' }, [`تکمیل ${toPersian(ids.length)} درخواست خرید`]),
-    formEl,
-    el('div', { class: 'modal-actions' }, [
-      el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => modal.close() }, ['انصراف']),
-      el('button', { type: 'submit',  class: 'btn btn-primary'  }, ['ثبت برای همه']),
-    ]),
-  ]);
-  body.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const v = getValues();
-    try {
-      const result = await api.batchCompletePurchaseRequests(ids.map((id) => ({ id, ...v })));
-      showToast(`${toPersian(result.completed.length)} درخواست تکمیل شد ✓`, 'success');
-      modal.close();
-      onDone();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'خطا', 'error');
-    }
-  });
-  const modal = openModal({ title: 'تکمیل دسته‌ای درخواست‌های خرید', body, maxWidth: '520px' });
-}
-
-// ── main view ──────────────────────────────────────────────────────────────────
+// ── Route view ────────────────────────────────────────────────────────────────
 
 export async function renderPurchaseRequests(container: HTMLElement): Promise<RouteCleanup> {
   const root = el('div', { class: 'view view-purchase-requests' });
   container.appendChild(root);
 
-  const user = currentUser.get();
-  const role = user?.role ?? '';
-  const canManage = role === 'buyer' || role === 'superadmin' || role === 'manager';
+  const user    = currentUser.get();
+  const role    = user?.role ?? '';
+  const canAct  = role === 'buyer' || role === 'superadmin' || role === 'manager';
+  const canCancel = role === 'superadmin' || role === 'manager';
 
   const selectedIds = new Set<string>();
 
   const batchBtn = el('button', { type: 'button', class: 'btn btn-primary', style: 'display:none' }, [
-    'تأیید انجام خرید برای موارد انتخاب‌شده',
-  ]);
+    'ثبت دسته‌ای خریدهای انجام‌شده',
+  ]) as HTMLButtonElement;
   batchBtn.addEventListener('click', () => {
     const ids = [...selectedIds];
     if (!ids.length) return;
-    openBatchCompleteModal(ids, () => { selectedIds.clear(); void load(); });
+    // open a single completion modal for batch (reuse renderCompletionModal with a synthetic object)
+    const synthetic = { id: ids[0], items: [], requestedQty: undefined } as unknown as PurchaseRequest;
+    renderCompletionModal(synthetic, () => { selectedIds.clear(); void load(); });
   });
 
   const printBtn = el('button', { type: 'button', class: 'btn btn-secondary no-print', onclick: () => window.print() }, ['چاپ']);
-
-  const listEl = el('div', { class: 'expense-list' });
+  const listEl   = el('div', { class: 'expense-list' });
 
   root.append(
     el('div', { class: 'view-header' }, [
@@ -263,10 +275,12 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
     }
 
     for (const pr of requests) {
-      const canAccept  = canManage && pr.status === 'pending';
-      const canComplete = canManage && (pr.status === 'pending' || pr.status === 'accepted');
-      const canCancel  = (role === 'superadmin' || role === 'manager') && pr.status !== 'completed' && pr.status !== 'cancelled';
-      const canSelect  = canManage && (pr.status === 'pending' || pr.status === 'accepted');
+      const items          = Array.isArray(pr.items) ? pr.items : [];
+      const ingredientLabel = items[0]?.ingredientName ?? items[0]?.name
+        ?? (pr.requestedQty != null ? `${toPersian(pr.requestedQty)} واحد` : '—');
+      const canAccept   = canAct  && pr.status === 'pending';
+      const canComplete = canAct  && (pr.status === 'pending' || pr.status === 'accepted');
+      const canSelect   = canAct  && (pr.status === 'pending' || pr.status === 'accepted');
 
       const wrap = el('div', { class: 'pr-row-wrap' });
 
@@ -279,11 +293,6 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
         wrap.appendChild(cb);
       }
 
-      const items = Array.isArray(pr.items) ? pr.items : [];
-      const ingredientLabel = items.length > 0
-        ? `${items[0].ingredientName} — ${toPersian(items[0].suggestedQty ?? 0)} واحد`
-        : pr.requestedQty != null ? `${toPersian(pr.requestedQty)} واحد` : '—';
-
       wrap.appendChild(
         el('div', { class: 'expense-row' }, [
           el('div', { class: 'expense-row__main' }, [
@@ -294,23 +303,21 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
             el('div', { class: 'expense-row__meta' }, [
               `درخواست‌دهنده: ${pr.createdByName} · ${formatDate(pr.createdAt)}`,
               pr.neededByDatetime ? ` · نیاز تا: ${formatDate(pr.neededByDatetime)}` : '',
-              pr.estimatedTotal ? ` · تخمین: ${formatMoney(pr.estimatedTotal)}` : '',
             ]),
             pr.actualTotal
               ? el('div', { class: 'expense-row__meta' }, [
                   `پرداخت: ${formatMoney(pr.actualTotal)}`,
-                  pr.paymentMethod === 'cash'   ? ' (نقد)'   :
-                  pr.paymentMethod === 'credit' ? ' (نسیه)'  :
-                  pr.paymentMethod === 'split'  ? ' (ترکیبی)' : '',
+                  pr.paymentMethod === 'cash'   ? ' (نقدی)'    :
+                  pr.paymentMethod === 'credit' ? ' (اعتباری)' :
+                  pr.paymentMethod === 'split'  ? ' (ترکیبی)'  : '',
                   pr.invoiceRef ? ` · فاکتور: ${pr.invoiceRef}` : '',
-                  pr.completionNote ? ` · ${pr.completionNote}` : '',
                 ])
               : null,
           ]),
           el('div', { class: 'expense-row__actions' }, [
-            canAccept  ? iconBtn('check',     'پذیرفتن',    () => openAcceptModal(pr,   () => void load())) : null,
-            canComplete ? iconBtn('clipboard', 'ثبت تکمیل', () => renderPurchaseCompletionModal(pr, () => void load())) : null,
-            canCancel  ? iconBtn('x',          'لغو',       async () => {
+            canAccept   ? iconBtn('check',     'تأیید',       () => renderAcceptModal(pr,     () => void load())) : null,
+            canComplete ? iconBtn('clipboard', 'ثبت خرید',   () => renderCompletionModal(pr, () => void load())) : null,
+            canCancel   ? iconBtn('x',         'لغو', async () => {
               const ok = await confirmModal({ title: 'لغو درخواست', message: 'این درخواست لغو شود؟', confirmLabel: 'لغو', danger: true });
               if (!ok) return;
               try { await api.cancelPurchaseRequest(pr.id); void load(); }
@@ -325,125 +332,4 @@ export async function renderPurchaseRequests(container: HTMLElement): Promise<Ro
   }
 
   void load();
-}
-
-// ── exact-label modal functions ────────────────────────────────────────────────
-
-/** Creation modal — called from ingredient cards.
- *  Labels: "مقدار درخواستی", "نیاز تا", submit: "درخواست خرید" */
-export function renderPurchaseRequestModal(ingredientId: string, ingredientName: string, onDone?: () => void): void {
-  const qtyInput = numberInput(0);
-  const dateInput = document.createElement('input');
-  dateInput.type = 'datetime-local';
-  dateInput.className = 'input';
-
-  const form = document.createElement('form');
-  form.className = 'form';
-  form.appendChild(field('مقدار درخواستی', qtyInput));
-  form.appendChild(field('نیاز تا', dateInput));
-
-  const actions = document.createElement('div');
-  actions.className = 'modal-actions';
-  const cancelBtn = document.createElement('button');
-  cancelBtn.type = 'button';
-  cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'انصراف';
-  cancelBtn.addEventListener('click', () => modal.close());
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.className = 'btn btn-primary';
-  submitBtn.textContent = 'درخواست خرید';
-  actions.append(cancelBtn, submitBtn);
-  form.appendChild(actions);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const qty = parseNumberInput(qtyInput);
-    if (!qty || !dateInput.value) { showToast('مقدار و زمان نیاز الزامی است', 'error'); return; }
-    try {
-      await api.createPurchaseRequest({
-        ingredientId,
-        requestedQty: qty,
-        neededByDatetime: new Date(dateInput.value).toISOString(),
-      });
-      showToast('درخواست خرید ثبت شد ✓', 'success');
-      modal.close();
-      onDone?.();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'خطا', 'error');
-    }
-  });
-
-  const modal = openModal({ title: `درخواست خرید — ${ingredientName}`, body: form });
-}
-
-/** Completion modal — called from purchase-request list rows.
- *  Labels: "روش پرداخت" (نقدی/اعتباری/ترکیبی), submit: "ثبت خرید انجام‌شده" */
-export function renderPurchaseCompletionModal(pr: PurchaseRequest, onDone?: () => void): void {
-  const rName = `pm2-${Date.now()}`;
-  const cashR   = document.createElement('input');
-  cashR.type = 'radio'; cashR.name = rName; cashR.value = 'cash'; cashR.checked = true;
-  const creditR = document.createElement('input');
-  creditR.type = 'radio'; creditR.name = rName; creditR.value = 'credit';
-  const splitR  = document.createElement('input');
-  splitR.type = 'radio'; splitR.name = rName; splitR.value = 'split';
-
-  const pmField = document.createElement('div');
-  pmField.className = 'field';
-  const pmLabel = document.createElement('label');
-  pmLabel.className = 'field__label';
-  pmLabel.textContent = 'روش پرداخت';
-  const radioGroup = document.createElement('div');
-  radioGroup.className = 'radio-group';
-  const mkLbl = (input: HTMLInputElement, text: string): HTMLLabelElement => {
-    const l = document.createElement('label');
-    l.className = 'radio-label';
-    l.appendChild(input);
-    l.append(' ' + text);
-    return l;
-  };
-  radioGroup.append(mkLbl(cashR, 'نقدی'), mkLbl(creditR, 'اعتباری'), mkLbl(splitR, 'ترکیبی'));
-  pmField.append(pmLabel, radioGroup);
-
-  const noteInput = document.createElement('input');
-  noteInput.type = 'text';
-  noteInput.className = 'input';
-  noteInput.placeholder = 'اختیاری';
-
-  const form = document.createElement('form');
-  form.className = 'form';
-  form.appendChild(pmField);
-  form.appendChild(field('یادداشت', noteInput));
-
-  const actions = document.createElement('div');
-  actions.className = 'modal-actions';
-  const cancelBtn = document.createElement('button');
-  cancelBtn.type = 'button';
-  cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'انصراف';
-  cancelBtn.addEventListener('click', () => modal.close());
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.className = 'btn btn-primary';
-  submitBtn.textContent = 'ثبت خرید انجام‌شده';
-  actions.append(cancelBtn, submitBtn);
-  form.appendChild(actions);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const pm: 'cash' | 'credit' | 'split' = creditR.checked ? 'credit' : splitR.checked ? 'split' : 'cash';
-    try {
-      await api.completePurchaseRequest(pr.id, {
-        paymentMethod: pm,
-        note: noteInput.value.trim() || undefined,
-      });
-      showToast('خرید انجام‌شده ثبت شد ✓', 'success');
-      modal.close();
-      onDone?.();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'خطا', 'error');
-    }
-  });
-
-  const modal = openModal({ title: 'ثبت تکمیل خرید', body: form, maxWidth: '480px' });
 }
