@@ -45,6 +45,7 @@ app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/petty-cash', require('./routes/petty-cash'));
 app.use('/api/purchase-requests', require('./routes/purchase-requests'));
 app.use('/api/audit', require('./routes/audit'));
+app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/uploads', require('./routes/uploads'));
 
 app.use((req, res) => res.status(404).json({ message: 'یافت نشد' }));

@@ -437,8 +437,9 @@ export class ApiClient {
   }
 
   async createPurchaseRequest(input: {
-    items: PurchaseRequestItem[];
-    neededByDatetime?: string;
+    ingredientId: string;
+    requestedQty: number;
+    neededByDatetime: string;
     estimatedTotal?: number;
     note?: string;
   }): Promise<PurchaseRequest> {
@@ -451,13 +452,45 @@ export class ApiClient {
     return data.request;
   }
 
-  async completePurchaseRequest(id: string, input: { actualTotal?: number; receiptUrl?: string; completionNote?: string }): Promise<PurchaseRequest> {
+  async completePurchaseRequest(id: string, input: {
+    actualPrice?: number;
+    actualQty?: number;
+    paymentMethod?: 'cash' | 'credit' | 'split';
+    cashAmount?: number;
+    creditAmount?: number;
+    supplierId?: string;
+    invoiceRef?: string;
+    invoiceImageUrl?: string;
+    receiptUrl?: string;
+    note?: string;
+  }): Promise<PurchaseRequest> {
     const data = await request<{ request: PurchaseRequest }>(`/api/purchase-requests/${id}/complete`, { method: 'POST', body: input });
     return data.request;
   }
 
   async cancelPurchaseRequest(id: string): Promise<void> {
     await request<{ ok: boolean }>(`/api/purchase-requests/${id}/cancel`, { method: 'POST' });
+  }
+
+  async batchCompletePurchaseRequests(items: Array<{
+    id: string;
+    actualPrice?: number;
+    actualQty?: number;
+    paymentMethod?: 'cash' | 'credit' | 'split';
+    cashAmount?: number;
+    creditAmount?: number;
+    supplierId?: string;
+    invoiceRef?: string;
+    invoiceImageUrl?: string;
+    receiptUrl?: string;
+    note?: string;
+  }>): Promise<{ completed: string[]; errors: Array<{ id: string; message: string }> }> {
+    return request<{ completed: string[]; errors: Array<{ id: string; message: string }> }>('/api/purchase-requests/batch-complete', { method: 'POST', body: { items } });
+  }
+
+  async listSuppliers(): Promise<Array<{ id: string; name: string; phone?: string; balance: number }>> {
+    const data = await request<{ suppliers: Array<{ id: string; name: string; phone?: string; balance: number }> }>('/api/suppliers');
+    return data.suppliers;
   }
 
   // ----- Audit log -----

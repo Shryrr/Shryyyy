@@ -1336,6 +1336,16 @@ canvas {
   filter: brightness(0.96);
 }
 
+.btn-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.btn-warning:hover {
+  background: #ffe69c;
+}
+
 .btn-sm {
   height: 34px;
   padding-inline: var(--space-3);
@@ -3084,6 +3094,38 @@ body.modal-open {
 /* ==========================================================================
    Print styles
    ========================================================================== */
+
+.radio-group {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.batch-toolbar {
+  display: flex;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+
+.pr-row-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.pr-checkbox {
+  margin-top: 14px;
+  flex-shrink: 0;
+}
 
 @media print {
   .app-sidebar,

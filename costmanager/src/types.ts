@@ -189,6 +189,8 @@ export interface PurchaseRequestItem {
 
 export interface PurchaseRequest {
   id: string;
+  ingredientId?: string | null;
+  requestedQty?: number | null;
   createdBy: string;
   createdByName: string;
   status: PurchaseRequestStatus;
@@ -201,7 +203,15 @@ export interface PurchaseRequest {
   estimatedPurchaseDatetime?: string | null;
   completedBy?: string | null;
   completedAt?: string | null;
+  actualPrice?: number | null;
+  actualQty?: number | null;
   actualTotal?: number | null;
+  paymentMethod?: string | null;
+  cashAmount?: number | null;
+  creditAmount?: number | null;
+  supplierId?: string | null;
+  invoiceRef?: string | null;
+  invoiceImageUrl?: string | null;
   receiptUrl?: string | null;
   completionNote?: string | null;
   createdAt: string;
