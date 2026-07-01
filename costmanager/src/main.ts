@@ -33,6 +33,7 @@ import { renderRecipes } from './views/recipes';
 import { renderSales } from './views/sales';
 import { renderSettings } from './views/settings';
 import { maybeShowBuyerLowStockAlert, renderShopping } from './views/shopping';
+import { renderPurchaseRequests } from './views/purchase-requests';
 import type { AppUser, UserRole } from './types';
 
 const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
@@ -46,6 +47,7 @@ const ALL_ROUTES: (Route & { roles: UserRole[] })[] = [
   { path: '/crm', title: 'CRM', render: renderCrm, roles: ['superadmin', 'manager'] },
   { path: '/menu-engineering', title: 'مهندسی منو', render: renderMenuEngineering, roles: ['superadmin', 'manager'] },
   { path: '/shopping', title: 'لیست خرید', render: renderShopping, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
+  { path: '/purchase-requests', title: 'درخواست‌های خرید', render: renderPurchaseRequests, roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
   { path: '/settings', title: 'تنظیمات', render: renderSettings, roles: ['superadmin'] },
   { path: '/admin', title: 'مدیریت', render: renderAdmin, roles: ['superadmin'] },
 ];

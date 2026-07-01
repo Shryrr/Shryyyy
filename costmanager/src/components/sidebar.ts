@@ -23,6 +23,7 @@ const SIDEBAR_LINKS: SidebarLink[] = [
   { path: '/crm', label: 'CRM', icon: 'users', roles: ['superadmin', 'manager'] },
   { path: '/menu-engineering', label: 'مهندسی منو', icon: 'cpu', roles: ['superadmin', 'manager'] },
   { path: '/shopping', label: 'لیست خرید', icon: 'cart', roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
+  { path: '/purchase-requests', label: 'درخواست‌های خرید', icon: 'send', roles: ['superadmin', 'manager', 'warehouse', 'buyer'] },
   { path: '/admin', label: 'مدیریت', icon: 'wrench', roles: ['superadmin'] },
   { path: '/settings', label: 'تنظیمات', icon: 'settings', roles: ['superadmin'] },
 ];
